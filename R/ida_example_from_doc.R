@@ -1,5 +1,7 @@
+library(pcalg)
 ## Simulate the true DAG
 set.seed(123)
+set.seed(12)
 p <- 7
 # p <- 2
 myDAG <- pcalg::randomDAG(p, prob = 0.2) ## true DAG
@@ -32,3 +34,35 @@ if(require(Rgraphviz)) {
 
 # ida(1,2,cov.d, pc.fit@graph, verbose = TRUE)
 # ida(7,3,cov.d, pc.fit@graph, verbose = TRUE)
+
+check_formula <- function(x, y, par_x) {
+  cat("IDA:")
+  cat(ida(x,y,cov.d,pc.fit@graph))
+  
+  cat("\n")
+  
+  if (!missing(par_x)) {
+    cat("Formel:")
+    formel_value <- solve(C[x, x], C[x, y, drop = FALSE])[1, ]
+    cat(formel_value)
+  } else {
+    cat("Formel:")
+    formel_value <- cov.d[x,y] / cov.d[x,x]
+    cat(formel_value)
+  }
+  
+  cat("\n")
+  
+  cat("equal?: ")
+  cat(as.numeric(ida(x,y,cov.d,pc.fit@graph)) == formel_value)
+  cat("\n")
+}
+
+for (x in c(1,2,3,5,6)) {  # immer TRUE
+  for (y in seq(1:7)) {
+    print(paste0("x = ", x, ", y = ", y))
+    check_formula(x,y)
+  }
+}
+
+
