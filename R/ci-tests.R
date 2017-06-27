@@ -30,7 +30,7 @@ ci_test_pc <- function(test, ...) {
     })
   } else {
     return(function(x, y, S, stat, ...) {
-      colnames(stat$dm) <- paste("P", seq(1:dim(stat$dm)[2]), sep = "")
+      # colnames(stat$dm) <- paste("P", seq(1:dim(stat$dm)[2]), sep = "")
       if (length(S) == 0) {
         result <- ci.test(x = paste("P", x, sep = ""), y = paste("P", y, sep = ""), data = data.frame(stat$dm), test = test, debug = TRUE, B = 1, ...)
       } else {
