@@ -2,8 +2,8 @@ library(graph)
 library(dagitty)
 library(pcalg)
 
-source("evaluate_DAG.R")
-source("linkcommunities.R")
+# source("evaluate_DAG.R")
+# source("linkcommunities.R")
 
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
                                  parameters_for_info_file, alpha, caption, analysis, stages, plot_types, coloring, colors, 
@@ -510,9 +510,11 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
   
   if (!nchar(outpath) == 0) {
     if (!is.null(coloring) && !(coloring == "")) {
-      postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
+        ## postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
+        pdf(paste(outpath, "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
     } else {
-      postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
+        ## postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
+        pdf(paste(outpath, ".pdf", sep = ""))
     }
     plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption) 
     dev.off()

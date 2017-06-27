@@ -4,10 +4,7 @@ library(grid)
 library(bnlearn)
 library(stringr)
 
-source("ci-tests.R")
-# source("compute_DAG_functions.R")
-
-setwd("~/Viren/R/Code")
+# setwd("~/Viren/R/Code")
 
 read_data <- function(filename, transpose=FALSE) {
   data = read.csv2(filename, row.names = 1, check.names=FALSE) # if check.names, an X is prepended to numerical column-names
@@ -28,7 +25,8 @@ estimate_DAG_from_numerical_data <- function(data, alpha, outpath) {
   suffStat <- list(C = cor(data), n=n, adaptDF = FALSE) #dm = dat$x        ### WHY COR?!
   
   sink(paste(outpath, "-pc.txt", sep = ""))
-    pc <- pc(suffStat, indepTest = ci_test_cor, alpha = alpha, labels = V, verbose = TRUE) #p=dim(MSA)[2]
+    # pc <- pc(suffStat, indepTest = ci_test_cor, alpha = alpha, labels = V, verbose = TRUE) #p=dim(MSA)[2]
+    pc <- pc(suffStat, indepTest = gaussCItest, alpha = alpha, labels = V, verbose = TRUE) #p=dim(MSA)[2]
   sink()
  
   return(pc)

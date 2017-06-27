@@ -1,5 +1,5 @@
 # source('/Volumes/Causality/Viren/R/Code/compute_DAG_G.R')
-source("general_functions.R")
+# source("general_functions.R")
 
 # adds results$ida
 causal_effects_ida <- function(data, perturbated_position, direction = "both", relatve_effects_on_pos = TRUE,
