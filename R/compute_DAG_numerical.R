@@ -4,10 +4,7 @@ library(grid)
 library(bnlearn)
 library(stringr)
 
-source("ci-tests.R")
-# source("compute_DAG_functions.R")
-
-setwd("~/Viren/R/Code")
+# setwd("~/Viren/R/Code")
 
 read_data <- function(filename, transpose=FALSE) {
   data = read.csv2(filename, row.names = 1, check.names=FALSE) # if check.names, an X is prepended to numerical column-names

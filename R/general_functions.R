@@ -2,8 +2,8 @@ library(graph)
 library(dagitty)
 library(pcalg)
 
-source("evaluate_DAG.R")
-source("linkcommunities.R")
+# source("evaluate_DAG.R")
+# source("linkcommunities.R")
 
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
                                  parameters_for_info_file, alpha, caption, analysis, stages, plot_types, coloring, colors, 
