@@ -6,18 +6,11 @@ library(stringr)
 
 # setwd("~/Viren/R/Code")
 
-read_data <- function(filename, transpose=FALSE) {
-  data = read.csv2(filename, row.names = 1, check.names=FALSE) # if check.names, an X is prepended to numerical column-names
-  if (transpose)
-    data <- t(data)
-  return(data)
-}
-
 # eqivalent to estimateDAG for numerical, Gauss-distributed data instead of an MSA
 estimate_DAG_from_numerical_data <- function(data, alpha, outpath) {
-  if (!length(only_cols) == 0) {
-    data = data[as.character(only_cols)]
-  }
+  # if (!length(only_cols) == 0) {
+  #   data = data[as.character(only_cols)]
+  # }
   
   n <- nrow(data)
   V <- colnames(data)

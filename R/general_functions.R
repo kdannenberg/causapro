@@ -2,8 +2,53 @@ library(graph)
 library(dagitty)
 library(pcalg)
 
-# source("evaluate_DAG.R")
-# source("linkcommunities.R")
+
+get_data_description <- function(protein, type_of_data, subtype_of_data = "", data_set = "") {
+  data_description <- ""
+  if (subtype_of_data != "") {
+    type_of_data <- paste(type_of_data, subtype_of_data, sep = "-")
+  }
+  data_description <- paste(protein, type_of_data, sep = "_")
+  if (data_set != "") {
+    data_description <- paste(data_description, data_set, sep = "_")
+  }
+  return(data_description)
+}
+
+
+read_data <- function(files, path_to_data = "Data/", extension = ".csv", filename, transpose = FALSE, only_cols = NULL) {
+  read <- function (file) {
+    filename <- paste(path_to_data, file, extension, sep = "")
+    data_i = read.csv2(filename, row.names = 1, check.names=FALSE) # if check.names, an X is prepended to numerical column-names
+    if (!length(only_cols) == 0) {
+      data_i = data_i[,as.character(only_cols)]
+    }
+    i <- which(files == file)
+    if ((length(transpose) > i && transpose[i]) || (length(transpose) == 1 && transpose[1])) {
+      data_i <- t(data_i)
+    }
+    rownames(data_i) <- paste(file, rownames(data_i), sep = "-")
+    return(data_i)
+  }
+  
+  if (length(files) == 1) {   # for very mysterious reasons, the matrixs gets transposed by do.call(rbind, data_i) otherwise (rbind(data_i) does NOT transpose the matrix!)
+    data <- read(files[1])
+  } else {
+    data <- do.call(rbind, lapply(files, read))
+  }
+  
+  # data <- matrix()
+  # for (file in files) {
+  #   filename <- paste(path_to_data, source_of_data, extension, sep = "")
+  #   data_i = read.csv2(filename, row.names = 1, check.names=FALSE) # if check.names, an X is prepended to numerical column-names
+  #   i <- which(files == file)
+  #   if ((length(transpose) > i && transpose[i]) || (length(transpose) == 1 && transpose[1])) {
+  #     data_i <- t(data_i)
+  #   }
+  #   data <- rbind(data, data_i)
+  # }
+  return(data)
+}
 
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
                                  parameters_for_info_file, alpha, caption, analysis, stages, plot_types, coloring, colors, 
@@ -159,7 +204,7 @@ plus_minus_x <- function(vector, offset) {
 # for_coloring -> output hierarchical (list with different sorts of interesting positions as vectors), otherwise one vector
 # std-Reihenfolge: grün-gelb-rot-blau
 interesting_positions <- function(protein, position_numbering, allpositions, for_coloring = FALSE, coloring = "auto", colors = "", counts) {
-  if (coloring == "none") {
+  if (is.null(coloring) || coloring == "none") {
    list <- list()
   } else {
     interesting_pos <- NULL     ## list?!
@@ -443,7 +488,7 @@ plot_graph <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "
     if (missing(coloring) || missing(colors)) {
       plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, outpath = outpath, caption = caption, plot_as_subgraphs = plot_as_subgraphs, subgraphs = subgraphs)
     } else {
-      for (i in 1:length(coloring)) {
+      for (i in 1:(max(c(1,length(coloring))))) {
         coloring_i <- coloring[i]
         if (length(colors) >= i) {
           colors_i <- colors[i]
@@ -510,11 +555,11 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
   
   if (!nchar(outpath) == 0) {
     if (!is.null(coloring) && !(coloring == "")) {
-        ## postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
-        pdf(paste(outpath, "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
+        postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
+        # pdf(paste(outpath, "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
     } else {
-        ## postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
-        pdf(paste(outpath, ".pdf", sep = ""))
+        postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
+        # pdf(paste(outpath, ".pdf", sep = ""))
     }
     plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption) 
     dev.off()
