@@ -1,6 +1,7 @@
-compute_DAG_G.R
+# compute_DAG_G.R
 compute_DAG_MSA.R
 compute_DAG_NMR.R
 compute_DAG_NMR-GTB.R
 compute_DAG_S.R
-compute_DAG-NoV.R
+# compute_DAG-NoV.R
+config.R
