@@ -3,7 +3,7 @@ library(dagitty)
 library(pcalg)
 
 
-get_data_description <- function(protein, type_of_data, subtype_of_data = "", data_set = "") {
+get_data_description <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "") {
   data_description <- ""
   if (subtype_of_data != "") {
     type_of_data <- paste(type_of_data, subtype_of_data, sep = "-")
@@ -11,6 +11,9 @@ get_data_description <- function(protein, type_of_data, subtype_of_data = "", da
   data_description <- paste(protein, type_of_data, sep = "_")
   if (data_set != "") {
     data_description <- paste(data_description, data_set, sep = "_")
+  }
+  if (suffix != "") {
+    data_description <- paste(data_description, suffix, sep = "_")
   }
   return(data_description)
 }
@@ -49,6 +52,32 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
   # }
   return(data)
 }
+
+get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
+            alpha = alpha, only_cols_label, file_separator = "/") {
+  dir_1 <- protein
+  dir_2 <- type_of_data
+  # if (subtype_of_data != "")
+  #   dir_3 <- paste(type_of_data, subtype_of_data, sep = "-")
+  # else {
+  #   dir_3 <- type_of_data
+  # }
+  dir_3 <- pastes(type_of_data, subtype_of_data, data_set, sep = "-")
+  dir_4 <- paste0(get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = suffix), "_alpha=", alpha)
+   
+  output_dir <- paste("Outputs", dir_1, dir_2, dir_3, dir_4, sep = file_separator) 
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
+  }
+  
+  filename <- dir_4
+  
+  return(paste(output_dir, filename, sep = file_separator))
+}
+
+# behaves like paste, but does not add seps when an element is "",
+# in other words, removes the "" before pasting
+pastes <- paste
 
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
                                  parameters_for_info_file, alpha, caption, analysis, stages, plot_types, coloring, colors, 
@@ -814,10 +843,10 @@ plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file,
   sink()
 }
   
-
+# TODO: use file_separator consistently
 plot_connected_components_in_pymol <- function(protein, position_numbering, graph, outpath, label = TRUE, pdb_file, only_int_pos = FALSE, 
                                                show_int_pos = TRUE, color_int_pos = TRUE, only_color_int_pos = FALSE, coloring_for_int_pos, no_colors = FALSE, only_dist = FALSE, 
-                                               show_positions = TRUE) {
+                                               show_positions = TRUE, file_separator = "/") {
   print(paste("Outpath for pymol-file:", outpath))
   connected_components <- connComp(graph)
   real_ones_ind <- which(sapply(connected_components, function(x) length(x) > 1))
@@ -831,6 +860,7 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
   
   # change this to be able to print for example only the found links between interesting positions, whcih are colored accoringly
   if (only_color_int_pos) {
+    # TODO: outpath aus dem übergebenen outpath konstruieren (per strsplit)
     # directories <- strsplit(outpath, "/")
     # outpath <- paste(directories[[1]][1:(length(directories[[1]])-3)], collapse = "/", sep = "/")
     outpath <- paste("../Outputs/", protein, "/", sep = "")
@@ -843,7 +873,7 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
     out_file <- paste(outpath, ".pml", sep = "")
   }
   sink(file = out_file)
-    pymol_header(protein = protein)
+    pymol_header(protein = protein, file_separator = file_separator)
     colors <- rainbow(length(connected_components))
     if (!only_dist) {
       # if (!show_int_pos) {
@@ -1139,14 +1169,18 @@ plot_total_effects_in_pymol <- function(positions_with_colors_by_effect, perturb
 }
 
 
-pymol_header <- function(protein, pdb_file, chain = "all") {
+pymol_header <- function(protein, pdb_file, chain = "all", file_separator = file_separator) {
   if (missing(pdb_file)) {
+    pdb_file <- paste("..", "..", "", sep = file_separator)
     if (protein == "GTB") {
-      pdb_file <- "../../5bxc.pdb" 
+      # pdb_file <- "../../5bxc.pdb" 
+      pdb_file <- paste0(pdb_file, "5bxc.pdb")
     } else if (protein == "PDZ" || protein == "pdz") {
-      pdb_file <- "../../1BE9.pdb"
+      # pdb_file <- "../../1BE9.pdb"
+      pdb_file <- paste0(pdb_file, "1BE9.pdb")
     } else if (protein == "p38g") {
-      pdb_file <- "../../1cm8.pdb"
+      # pdb_file <- "../../1cm8.pdb"
+      pdb_file <- paste0(pdb_file, "1cm8.pdb")
       chain = "chain A"
     } else {
       stop("No pdb-file given.")
