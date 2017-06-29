@@ -7,7 +7,7 @@ library(stringr)
 # setwd("~/Viren/R/Code")
 
 # eqivalent to estimateDAG for numerical, Gauss-distributed data instead of an MSA
-estimate_DAG_from_numerical_data <- function(data, alpha, outpath) {
+estimate_DAG_from_numerical_data <- function(data, alpha, outpath, solve_conflicts = TRUE) {
   # if (!length(only_cols) == 0) {
   #   data = data[as.character(only_cols)]
   # }
@@ -19,7 +19,8 @@ estimate_DAG_from_numerical_data <- function(data, alpha, outpath) {
   
   sink(paste(outpath, "-pc.txt", sep = ""))
     # pc <- pc(suffStat, indepTest = ci_test_cor, alpha = alpha, labels = V, verbose = TRUE) #p=dim(MSA)[2]
-    pc <- pc(suffStat, indepTest = gaussCItest, alpha = alpha, labels = V, verbose = TRUE) #p=dim(MSA)[2]
+    # without solve.confl = true, cycles can emerge in the final CPD"A"G.
+    pc <- pc(suffStat, indepTest = gaussCItest, alpha = alpha, labels = V, verbose = TRUE, solve.confl = solve_conflicts) #p=dim(MSA)[2]
   sink()
  
   return(pc)

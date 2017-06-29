@@ -80,7 +80,7 @@ get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_
 pastes <- paste
 
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
-                                 parameters_for_info_file, alpha, caption, analysis, stages, plot_types, coloring, colors, 
+                                 parameters_for_info_file, alpha, pc_solve_conflicts, caption, analysis, stages, plot_types, coloring, colors, 
                                  graph_layout = "dot", plot_as_subgraphs = plot_as_subgraphs, 
                                  plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console, 
                                  lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, print_analysis, plot_analysis) {
@@ -96,7 +96,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   
   # Computation of pc 
   pc_fun <- function(outpath) {
-    return(estimate_DAG_from_numerical_data(data, alpha = alpha, outpath = outpath))
+    return(estimate_DAG_from_numerical_data(data, alpha = alpha, outpath = outpath, solve_conflicts = pc_solve_conflicts))
   }
   pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file)
   

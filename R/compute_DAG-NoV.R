@@ -23,18 +23,22 @@ protein = "NoV"
 type_of_data = "NMR-Tit"
 # type_of_data = c("NMR_Tit-Fuc", "NMR_Tit-BTS")
 # type_of_data = "Fuc-Tit-only-assigned"
-subtype_of_data = "Fuc"
+subtype_of_data = "Fuc-old"
 # subtype_of_data = "BTS"
 # TODO: wieder ermöglichen
 # subtype_of_data = c("Fuc", "BTS")
+data_set = ""
 
 position_numbering = ""
 
 # transpose = FALSE
 
 # Analysis parameters
-alpha = 0.05
-ranked = TRUE
+alpha = 0.75
+ranked = FALSE
+
+# TODO: add in other scripts
+pc_solve_conflicts <- TRUE
 
 # TODO:
 # remove_cols <- c(210) 
@@ -51,6 +55,10 @@ colors = NULL
 
 plot_as_subgraphs = FALSE
 plot_only_subgraphs = NULL
+combined_plot = FALSE
+
+# description of other settings that should be appended to output-filename
+other = "" # cov" 
 
 # Technical parameters (print, plot, save, analysis)
 analysis = FALSE
@@ -64,6 +72,7 @@ lines_in_abbr_of_r <- 20
 stages <- c("orig") # "sub"
 plot_types <- c("localTests", "graphs")
 
+file_separator = "/"
 
 # INIT
 sink.reset()
@@ -77,7 +86,7 @@ outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_o
                        alpha = alpha, only_cols_label, file_separator = file_separator)
 
 directories <- strsplit(outpath, file_separator)
-filename <- directories[length(directories)]
+filename <- directories[[1]][length(directories[[1]])]
 output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = "/", sep = "/")
 
 # source_of_data = paste(protein, type_of_data, sep = "-")
@@ -116,22 +125,23 @@ if (ranked) {
   # }
 } 
 
-filename <- paste(only_cols_label, "_", source_of_data, "-alpha=", alpha, sep = "")
-output_dir <- paste("Outputs/", protein, "/", type_of_data, "/", filename, sep = "")
-# print(paste("Output will be written to ", getwd(), "/", substring(outpath, 0, nchar(outpath)), "...", sep = ""))
-if (!dir.exists(output_dir)) {
-  dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
-  print("Directory created.")
-}
-outpath <- paste(output_dir, filename, sep = "/")
+# filename <- paste(only_cols_label, "_", source_of_data, "-alpha=", alpha, sep = "")
+# output_dir <- paste("Outputs/", protein, "/", type_of_data, "/", filename, sep = "")
+# # print(paste("Output will be written to ", getwd(), "/", substring(outpath, 0, nchar(outpath)), "...", sep = ""))
+# if (!dir.exists(output_dir)) {
+#   dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
+#   print("Directory created.")
+# }
+# outpath <- paste(output_dir, filename, sep = "/")
 
 caption <- caption(protein = protein, data = paste(type_of_data, sep = ""), alpha = alpha, chars_per_line = 45)
 parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, 
-                                                     only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = "/")) 
+                                                     only_cols = only_cols, coloring = coloring, colors = colors, outpath = outpath) 
 
 results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
                                 output_dir = output_dir, filename = filename, parameters_for_info_file = parameters_for_info_file,
-                                alpha = alpha, caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
+                                alpha = alpha, pc_solve_conflicts = pc_solve_conflicts,
+                                caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
                                 graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                                 unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
                                 compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew, 

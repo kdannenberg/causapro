@@ -43,6 +43,8 @@ only_cols_label = ""
 
 alpha = 0.00001
 
+pc_solve_conflicts <- FALSE
+
 stages <- c("orig") # "sub"
 plot_types <- c("localTests", "graphs")
 
@@ -94,7 +96,7 @@ outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_o
                        alpha = alpha, only_cols_label, file_separator = file_separator)
 
 directories <- strsplit(outpath, file_separator)
-filename <- directories[length(directories)]
+filename <- directories[[1]][length(directories[[1]])]
 output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = "/", sep = "/")
 
 # output_dir = paste("../Outputs/", type_of_data, sep = "")
@@ -119,7 +121,8 @@ parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_
 
 results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
                      output_dir = output_dir, filename = filename, outpath = outpath, parameters_for_info_file = parameters_for_info_file,
-                     alpha = alpha, caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
+                     alpha = alpha, pc_solve_conflicts = pc_solve_conflicts, 
+                     caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
                      graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                      unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
                      compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew, 
