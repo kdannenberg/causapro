@@ -5,7 +5,7 @@ library(pcalg)
 
 get_data_description <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "") {
   data_description <- ""
-  if (subtype_of_data != "") {
+  if (is.null(subtype_of_data) || subtype_of_data != "") {
     type_of_data <- paste(type_of_data, subtype_of_data, sep = "-")
   }
   data_description <- paste(protein, type_of_data, sep = "_")
@@ -54,7 +54,7 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
 }
 
 get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
-            alpha = alpha, only_cols_label, file_separator = "/") {
+            alpha = alpha, only_cols_label, pc_solve_conflicts, file_separator = "/") {
   dir_1 <- protein
   dir_2 <- type_of_data
   # if (subtype_of_data != "")
@@ -62,8 +62,11 @@ get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_
   # else {
   #   dir_3 <- type_of_data
   # }
-  dir_3 <- pastes(type_of_data, subtype_of_data, data_set, sep = "-")
-  dir_4 <- paste0(get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = suffix), "_alpha=", alpha)
+  dir_3 <- pastes(type_of_data, paste(subtype_of_data, collapse = "+"), data_set, sep = "-")
+  dir_4 <- paste0(get_data_description(protein = protein, type_of_data = type_of_data, 
+                                       subtype_of_data = paste(subtype_of_data, collapse = "+"), 
+                                       data_set = data_set, suffix = suffix), "_alpha=", alpha)
+  
    
   output_dir <- paste("Outputs", dir_1, dir_2, dir_3, dir_4, sep = file_separator) 
   if (!dir.exists(output_dir)) {
@@ -71,6 +74,10 @@ get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_
   }
   
   filename <- dir_4
+  
+  if (pc_solve_conflicts) {
+    filename <- paste0(filename, "_sc")
+  }
   
   return(paste(output_dir, filename, sep = file_separator))
 }
@@ -83,7 +90,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
                                  parameters_for_info_file, alpha, pc_solve_conflicts, caption, analysis, stages, plot_types, coloring, colors, 
                                  graph_layout = "dot", plot_as_subgraphs = plot_as_subgraphs, 
                                  plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console, 
-                                 lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, print_analysis, plot_analysis) {
+                                 lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, print_analysis, plot_analysis, graph_output_formats) {
   print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
@@ -96,12 +103,15 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   
   # Computation of pc 
   pc_fun <- function(outpath) {
-    return(estimate_DAG_from_numerical_data(data, alpha = alpha, outpath = outpath, solve_conflicts = pc_solve_conflicts))
+    return(estimate_DAG_from_numerical_data(data, alpha = alpha, outpath = outpath, 
+                                            solve_conflicts = pc_solve_conflicts, u2pd = "retry"))
   }
   pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file)
   
   # garbage <- graphics.off()
-  plot_graph(graph = pc@graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs)
+  plot_graph(graph = pc@graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, 
+             coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
+             plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats)
   
   # Analysis
   if (analysis) {
@@ -512,10 +522,12 @@ colors_for_nodes <- function(node_clusters, protein, coloring, colors, clusterin
 
 plot_graph <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "", graph_layout = "dot", protein, 
                        position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE, 
-                       plot_only_subgraphs = NULL, subgraphs, numerical = TRUE) {
+                       plot_only_subgraphs = NULL, subgraphs, numerical = TRUE, output_formats) {
   if (numerical) {
     if (missing(coloring) || missing(colors)) {
-      plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, outpath = outpath, caption = caption, plot_as_subgraphs = plot_as_subgraphs, subgraphs = subgraphs)
+      plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout, protein = protein, 
+                           position_numbering = position_numbering, coloring = coloring, colors = colors, outpath = outpath, caption = caption, 
+                           plot_as_subgraphs = plot_as_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
     } else {
       for (i in 1:(max(c(1,length(coloring))))) {
         coloring_i <- coloring[i]
@@ -534,7 +546,9 @@ plot_graph <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "
         } else {
           graph_layout_i <- graph_layout[1]
         }
-        plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, protein = protein, position_numbering = position_numbering, coloring = coloring_i, colors = colors_i, outpath = outpath, caption = caption, plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs)
+        plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, protein = protein, 
+                             position_numbering = position_numbering, coloring = coloring_i, colors = colors_i, outpath = outpath, caption = caption, 
+                             plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
       }
     }
   }
@@ -542,7 +556,7 @@ plot_graph <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "
 
 plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "", graph_layout = "dot", protein,
                                  position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE, 
-                                 plot_only_subgraphs = NULL, subgraphs) {
+                                 plot_only_subgraphs = NULL, subgraphs, output_formats = "pdf") {
   # if (!(missing(subgraphs))) {
   #   plot_as_subgraphs <- TRUE
   # }
@@ -582,16 +596,24 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
   pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) # circle produziert cluster
   plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
   
-  if (!nchar(outpath) == 0) {
-    if (!is.null(coloring) && !(coloring == "")) {
-        postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
-        # pdf(paste(outpath, "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
-    } else {
-        postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
-        # pdf(paste(outpath, ".pdf", sep = ""))
+  for (format in output_formats) {
+    if (!nchar(outpath) == 0) {
+      if (!is.null(coloring) && !(coloring == "")) {
+        if (format == "pdf") {
+          pdf(paste(outpath, "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
+        } else if ((format == "ps") || (format == "postscript")) {
+          postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
+        }
+      } else {
+        if (format == "pdf") {
+          pdf(paste(outpath, ".pdf", sep = ""))
+        } else if ((format == "ps") || (format == "postscript")) {
+          postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
+        }
+      }
+      plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption) 
+      dev.off()
     }
-    plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption) 
-    dev.off()
   }
 }
 
@@ -1169,7 +1191,7 @@ plot_total_effects_in_pymol <- function(positions_with_colors_by_effect, perturb
 }
 
 
-pymol_header <- function(protein, pdb_file, chain = "all", file_separator = file_separator) {
+pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/") {
   if (missing(pdb_file)) {
     pdb_file <- paste("..", "..", "", sep = file_separator)
     if (protein == "GTB") {
@@ -1250,12 +1272,12 @@ paths_between_nodes <- function(graph, from, to, all_paths = FALSE) {
   return(paths)
 }
 
-plot_paths_in_pymol <- function(protein, pdb_file, graph, outpath, paths, no_colors = FALSE, label = TRUE, show_positions = TRUE) {
+plot_paths_in_pymol <- function(protein, pdb_file, graph, outpath, paths, no_colors = FALSE, label = TRUE, show_positions = TRUE, file_separator = "/") {
 
   out_file <- paste(outpath, "-paths.pml", sep = "")  # welche Pfade - hinzufügen
   
   sink(file = out_file)
-    pymol_header(protein = protein)
+    pymol_header(protein = protein, file_separator = file_separator)
     colors <- rainbow(length(paths))
     for (i in 1:length(paths)) {
       if (length(paths[[i]]) > 0) {

@@ -41,15 +41,16 @@ position_numbering = "crystal"
 only_cols = NULL
 only_cols_label = ""
 
-alpha = 0.00001
+alpha = 0.05
 
-pc_solve_conflicts <- FALSE
+pc_solve_conflicts <- TRUE
 
 stages <- c("orig") # "sub"
 plot_types <- c("localTests", "graphs")
 
 
 # Graphical parameters
+graph_output_formats = "ps"
 graph_layout <- "dot" # "dot", "circo", "fdp", "neato", "osage", "twopi"
 coloring = "auto"  # "auto-all" or "all"
 colors <- NULL
@@ -93,7 +94,7 @@ data <- read_data(data_description, only_cols = only_cols)
 # }
 
 outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
-                       alpha = alpha, only_cols_label, file_separator = file_separator)
+                       alpha = alpha, only_cols_label = only_cols_label, pc_solve_conflicts = pc_solve_conflicts, file_separator = file_separator)
 
 directories <- strsplit(outpath, file_separator)
 filename <- directories[[1]][length(directories[[1]])]
@@ -126,7 +127,7 @@ results <- protein_causal_graph(data = data, protein = protein, type_of_data = t
                      graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                      unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
                      compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew, 
-                     print_analysis = print_analysis, plot_analysis = plot_analysis)
+                     print_analysis = print_analysis, plot_analysis = plot_analysis, graph_output_formats = graph_output_formats)
 
 
 if (!is.null(plot_only_subgraphs)) {
@@ -144,12 +145,13 @@ plot_connected_components_in_pymol(protein = protein, position_numbering = posit
 
 
 paths <- paths_between_nodes(graph = results$orig$graph$NEL, from = c(314), to = c(383), all_paths = FALSE)
-plot_paths_in_pymol(protein = protein, graph = results$orig$graph$NEL, outpath = outpath, paths = paths, no_colors = FALSE, label = TRUE, show_positions = FALSE)
+plot_paths_in_pymol(protein = protein, graph = results$orig$graph$NEL, outpath = outpath, paths = paths, no_colors = FALSE, 
+                    label = TRUE, show_positions = FALSE, file_separator = file_separator)
 
-results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", relatve_effects_on_pos = TRUE, 
-               protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath, 
-               amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF", 
-               pymol_bg_color = "grey", 
+results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", relatve_effects_on_pos = TRUE,
+               protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
+               amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
+               pymol_bg_color = "grey",
                barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
 
 # TODO: wenn nicht ranked die trotzdem alles positiv machen (offset?) bevor die farben vergeben werden

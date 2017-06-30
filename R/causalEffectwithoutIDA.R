@@ -13,7 +13,7 @@ par(mfrow = c(3,3))
 pDAG <- pc.fit@graph
 plot(pDAG)  # Warum sind 3 und 4 hier andersrum??
 
-pseudo_ida_by_causalEffect(x = 2, y = 7, graphEst = pDAG, mcov = cov.d)
+pseudo_ida_by_causalEffect(x = 5, y = 1, graphEst = pDAG, mcov = cov.d)
 
 
 # only the parameters x, y and graphEst are used;  rest is only to mathc function definition of ida()
@@ -32,6 +32,8 @@ pseudo_ida_by_causalEffect <- function(x, y, mcov, graphEst, method = "", y.notp
     # source: https://support.bioconductor.org/p/90421/
     # DAG_ftM2 <- ftM2graphNEL()
     # plot(DAG)
+    cat(paste("ida:", ida(x.pos = x, y.pos = y, graphEst = DAG_as, mcov = mcov)))
+    cat("\n")
   }
-  cat(paste("ida:", ida(x.pos = x, y.pos = y, graphEst = pDAG, mcov = mcov)))
+  # cat(paste("ida:", ida(x.pos = x, y.pos = y, graphEst = pDAG, mcov = mcov)))
 }

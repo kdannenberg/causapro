@@ -23,10 +23,10 @@ protein = "NoV"
 type_of_data = "NMR-Tit"
 # type_of_data = c("NMR_Tit-Fuc", "NMR_Tit-BTS")
 # type_of_data = "Fuc-Tit-only-assigned"
-subtype_of_data = "Fuc-old"
-# subtype_of_data = "BTS"
+# subtype_of_data = "Fuc-old"
+# subtype_of_data = "Fuc"
 # TODO: wieder ermöglichen
-# subtype_of_data = c("Fuc", "BTS")
+subtype_of_data = c("Fuc", "BTS")
 data_set = ""
 
 position_numbering = ""
@@ -34,11 +34,11 @@ position_numbering = ""
 # transpose = FALSE
 
 # Analysis parameters
-alpha = 0.75
+alpha = 0.05
 ranked = FALSE
 
 # TODO: add in other scripts
-pc_solve_conflicts <- TRUE
+pc_solve_conflicts <- FALSE
 
 # TODO:
 # remove_cols <- c(210) 
@@ -49,7 +49,8 @@ only_cols_label = ""
 
 
 # Graphical parameters
-graph_layout <- "dot" # "dot", "circo", "fdp", "neato", "osage", "twopi"
+graph_output_formats = "ps"
+graph_layout = "dot" # "dot", "circo", "fdp", "neato", "osage", "twopi"
 coloring = NULL
 colors = NULL
 
@@ -83,7 +84,7 @@ data_description <- get_data_description(protein = protein, type_of_data = type_
 data <- read_data(data_description, only_cols = only_cols)
 
 outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
-                       alpha = alpha, only_cols_label, file_separator = file_separator)
+                       alpha = alpha, only_cols_label, pc_solve_conflicts = pc_solve_conflicts, file_separator = file_separator)
 
 directories <- strsplit(outpath, file_separator)
 filename <- directories[[1]][length(directories[[1]])]
@@ -145,5 +146,5 @@ results <- protein_causal_graph(data = data, protein = protein, type_of_data = t
                                 graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                                 unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
                                 compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew, 
-                                print_analysis = print_analysis, plot_analysis = plot_analysis)
+                                print_analysis = print_analysis, plot_analysis = plot_analysis, graph_output_formats = graph_output_formats)
 

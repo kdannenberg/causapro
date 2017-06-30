@@ -16,7 +16,7 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", r
   }
   
   graphics.off()
-  lines <- 3 # 1 für of, 2 für on (min, max)
+  lines <- 4 # 1 für of, 2 für on (min, max)
   columns <- 2
   par(mfrow=c(lines, columns))
 
