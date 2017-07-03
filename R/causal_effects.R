@@ -153,6 +153,8 @@ first_tests <- function(data, results) {
   ranks[sapply(int_pos, function(x) which(rownames(ranks) == x))]
 }
 
+### relevant measures: conflict_edges/(bidirected_edges + unidirected_edges)
+### or conflict_edges/(2 * bidirected_edges + unidirected_edges) (number of directed edges)
 conflict_edges <- function(graph) {
   adj_m <- wgtMatrix(graph)
   # m <- adj_m[apply(adj_m!=0, 1, any), , drop=FALSE]
@@ -162,11 +164,15 @@ conflict_edges <- function(graph) {
   print(adj_m_no_zero_rows_cols)
   n_conflic_edges <- length(which(adj_m == 2)) / 2
   # = length(which(unlist(edgeData(graph)) == 2))
-  n_bidirected_edges <- length(which(adj_m != t(adj_m))) / 2
-  n_unidirected_edges <- length(which(adj_m == 1)) - 2 * n_bidirected_edges
+  n_unidirected_edges <- length(which(adj_m != t(adj_m))) / 2
+  
+  n_bidirected_edges <- (length(which(adj_m == 1)) - n_unidirected_edges) / 2
+  
   print(paste("<-!-> : ", n_conflic_edges))
   print(paste("<---> : ", n_bidirected_edges))
   print(paste("----> : ", n_unidirected_edges))
+  
+  return(list(conflict = n_conflic_edges, directed = n_unidirected_edges, bidirected = n_bidirected_edges))
 }
 
 remove_zero_rows_or_columns <- function(matrix, rows_or_columns) {
