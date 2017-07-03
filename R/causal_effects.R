@@ -161,7 +161,7 @@ conflict_edges <- function(graph) {
   # adj_m_no_zero_rows_cols <- m[apply(m!=0, 2, any), , drop=FALSE]
   adj_m_no_zero_rows_cols <- remove_zero_rows_or_columns(adj_m, 1)
   adj_m_no_zero_rows_cols <- remove_zero_rows_or_columns(adj_m_no_zero_rows_cols, 2)
-  print(adj_m_no_zero_rows_cols)
+  # print(adj_m_no_zero_rows_cols)
   n_conflic_edges <- length(which(adj_m == 2)) / 2
   # = length(which(unlist(edgeData(graph)) == 2))
   n_unidirected_edges <- length(which(adj_m != t(adj_m))) / 2
