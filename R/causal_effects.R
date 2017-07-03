@@ -152,3 +152,28 @@ first_tests <- function(data, results) {
   ranks <- cbind(apply(effects_of_76, 2, rank))
   ranks[sapply(int_pos, function(x) which(rownames(ranks) == x))]
 }
+
+conflict_edges <- function(graph) {
+  adj_m <- wgtMatrix(graph)
+  # m <- adj_m[apply(adj_m!=0, 1, any), , drop=FALSE]
+  # adj_m_no_zero_rows_cols <- m[apply(m!=0, 2, any), , drop=FALSE]
+  adj_m_no_zero_rows_cols <- remove_zero_rows_or_columns(adj_m, 1)
+  adj_m_no_zero_rows_cols <- remove_zero_rows_or_columns(adj_m_no_zero_rows_cols, 2)
+  print(adj_m_no_zero_rows_cols)
+  n_conflic_edges <- length(which(adj_m == 2)) / 2
+  # = length(which(unlist(edgeData(graph)) == 2))
+  n_bidirected_edges <- length(which(adj_m != t(adj_m))) / 2
+  n_unidirected_edges <- length(which(adj_m == 1)) - 2 * n_bidirected_edges
+  print(paste("<-!-> : ", n_conflic_edges))
+  print(paste("<---> : ", n_bidirected_edges))
+  print(paste("----> : ", n_unidirected_edges))
+}
+
+remove_zero_rows_or_columns <- function(matrix, rows_or_columns) {
+  if (rows_or_columns == 1) {
+    return(matrix[rowSums(abs(matrix)) != 0, ])
+  } else {
+    return(matrix[,colSums(abs(matrix)) != 0])
+  }
+  # return(matrix[apply(matrix != 0, rows_or_columns, any), , drop = TRUE])
+}

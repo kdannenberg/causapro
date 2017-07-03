@@ -41,7 +41,7 @@ position_numbering = "crystal"
 only_cols = NULL
 only_cols_label = ""
 
-alpha = 0.05
+alpha = 0.0000000001
 
 pc_solve_conflicts <- TRUE
 
@@ -148,11 +148,11 @@ paths <- paths_between_nodes(graph = results$orig$graph$NEL, from = c(314), to =
 plot_paths_in_pymol(protein = protein, graph = results$orig$graph$NEL, outpath = outpath, paths = paths, no_colors = FALSE, 
                     label = TRUE, show_positions = FALSE, file_separator = file_separator)
 
-results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", relatve_effects_on_pos = TRUE,
-               protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
-               amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
-               pymol_bg_color = "grey",
-               barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
+# results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", relatve_effects_on_pos = TRUE,
+#                protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
+#                amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
+#                pymol_bg_color = "grey",
+#                barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
 
 # TODO: wenn nicht ranked die trotzdem alles positiv machen (offset?) bevor die farben vergeben werden
 
