@@ -84,8 +84,10 @@ get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_
 
 # behaves like paste, but does not add seps when an element is "",
 # in other words, removes the "" before pasting
-pastes <- paste
-
+pastes <- function(..., sep = " ", collapse = NULL) {
+    return(do.call("paste", c(list(...)[list(...) != ""], sep = sep, collapse = collapse)))
+}
+    
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
                                  parameters_for_info_file, alpha, pc_solve_conflicts, caption, analysis, stages, plot_types, coloring, colors, 
                                  graph_layout = "dot", plot_as_subgraphs = plot_as_subgraphs, 
