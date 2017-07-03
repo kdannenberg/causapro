@@ -4,7 +4,7 @@ set.seed(123) # default
 # set.seed(12) # used below
 # set.seed(14) # interesting
 # set.seed(16) # ungerichtete Kanten!
-set.seed(17)
+# set.seed(17)
 p <- 7
 # p <- 4
 myDAG <- pcalg::randomDAG(p, prob = 0.2) ## true DAG
@@ -12,15 +12,21 @@ myCPDAG <- dag2cpdag(myDAG) ## true CPDAG
 covTrue <- trueCov(myDAG) ## true covariance matrix
 
 ## simulate data from the true DAG
-n <- 10000
-dat <- rmvDAG(n, myDAG)
+n <- 600
+# dat <- rmvDAG(n, myDAG)
+rm(.Random.seed, envir=globalenv())
+dat <- rmvDAG(n, myDAG, errDist = "normal")
+print(dat)
 cov.d <- cov(dat)
 
 ## estimate CPDAG (see help on the function "pc")
 suffStat <- list(C = cor(dat), n = n)
-pc.fit <- pc(suffStat, indepTest = gaussCItest, alpha = 0.01, p=p)
+pc.fit <- pc(suffStat, indepTest = gaussCItest, alpha = 0.05, p=p, solve.confl = FALSE, u2pd = "retry")
+
+print(conflict_edges(pc.fit))
 
 if(require(Rgraphviz)) {
+  graphics.off()
   op <- par(mfrow=c(1,3))
   plot(myDAG,        main="true DAG")
   plot(myCPDAG,      main="true CPDAG")
@@ -47,7 +53,7 @@ check_formula <- function(x, y, par_x) {
   
   if (!missing(par_x)) {
     cat("Formel:")
-    formel_value <- solve(C[x, x], C[x, y, drop = FALSE])[1, ]
+    formel_value <- solve(cov.d[x, x], cov.d[x, y, drop = FALSE])[1, ]
     cat(formel_value)
   } else {
     cat("Formel:")
@@ -71,9 +77,9 @@ check_formula <- function(x, y, par_x) {
 # }
 # immer TRUE
 
-for (y in 1:7) {     # immer TRUE
-  check_formula(4,y,c(4,2,5))
-}
+# for (y in 1:7) {     # immer TRUE
+#   check_formula(4,y,c(4,2,5))
+# }
 
 # for (y in 1:7) {      # immer TRUE
 #   check_formula(7,y,c(7,2,6))
@@ -106,3 +112,21 @@ for (y in 1:7) {     # immer TRUE
 # Ende des Beispiels
 
 # causalEffect(pc.fit@graph, 1,2)
+
+
+# # causalEffect addiert für alle gerichteten Pfade zwischen x und y das Produkt der Kantengewichte entlang des Pfades:
+# set.seed(123)
+# p <- 7
+# myDAG <- pcalg::randomDAG(p, prob = 0.2)
+# 
+# plot(myDAG)
+# 
+# causalEffect(x=2, y=7, g=myDAG)
+# # [1] 0.7425168
+# myDAG@edgeData@data$`2|3`$weight*myDAG@edgeData@data$`3|5`$weight*myDAG@edgeData@data$`5|7`$weight+myDAG@edgeData@data$`2|7`$weight
+# # [1] 0.7425168
+# 
+# edgeWeight <- function(x,y) {
+#   cov.d[x,y] / cov.d[x,x]
+# }
+# 
