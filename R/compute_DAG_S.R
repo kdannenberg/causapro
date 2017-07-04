@@ -1,7 +1,42 @@
-setwd("~/Viren/R/Code")
 source("compute_DAG_numerical.R")
 source("general_functions.R")
 source("evaluate_DAG.R")
+## sets working directory depending on local config file
+source("configuration.R")
+
+## Data parameters
+
+## available data:
+## TODO
+
+numerical = TRUE
+protein = "PDZ"
+type_of_data = "DDS"
+source_of_data = "DDS_pdz"
+# source_of_data = "DDS_pdz_SVD"
+position_numbering = "crystal"
+
+## Analysis parameters
+## TODO: explain purpose of only_cols
+only_cols = NULL
+only_cols_label = ""
+alpha = 0.125
+
+## TODO: explain stages
+stages <- c("orig", "anc") # "sub"
+plot_types <- c("localTests", "graphs")
+
+## Graphical parameters
+## choose one of the layouts offered by Rgraphviz
+graph_layout <- "dot" # "dot", "circo", "fdp", "neato", "osage", "twopi"
+## TODO: explain auto-all and auto color
+coloring = "auto" # "auto", "auto-all" or "all"
+colors <- NULL
+
+## plot with clustering if set TRUE
+plot_as_subgraphs = FALSE
+## only plots cluster - shouldn't this be stored in a different file?
+plot_only_subgraphs = 1 #1 NULL
 
 ## Technical parameters (print, plot, save, analysis)
 ## those options are either set to FALSE or to TRUE (unused/used option)
@@ -23,29 +58,6 @@ unabbrev_r_to_info <- FALSE
 print_r_to_console <- FALSE
 lines_in_abbr_of_r <- 20
 
-## what are stages again?
-stages <- c("orig", "anc") # "sub"
-plot_types <- c("localTests", "graphs")
-## choose one of the layouts offered by Rgraphviz
-graph_layout <- "dot" # "dot", "circo", "fdp", "neato", "osage", "twopi"
-## auto-all and auto color more nodes - what exactly do they do?
-coloring = "auto" # "auto", "auto-all" or "all"
-colors <- NULL
-
-## plot with clustering if set TRUE
-plot_as_subgraphs = FALSE
-## only plots cluster - shouldn't this be stored in a different file?
-plot_only_subgraphs = 1 #1 NULL
-
-## DDS
-## choose data type - DDS is measure proposed by Halabi et al. (Cell, 2009)
-numerical = TRUE
-protein = "PDZ"
-type_of_data = "DDS"
-source_of_data = "DDS_pdz"
-# source_of_data = "DDS_pdz_SVD"
-position_numbering = "crystal"
-
 # graphics.off()
 # par(mfrow = c(3,2))
 
@@ -53,13 +65,6 @@ filename <- paste("../Data/", source_of_data, ".csv", sep = "")
 
 data <- read_data(filename, transpose = FALSE)
 # colnames(data) <- paste("X", colnames(data), sep = "")
-
-## choose level of significance
-alpha = 0.125
-
-## what is this for?
-only_cols = NULL
-only_cols_label = ""
 
 # outpath = paste("../Outputs/", type_of_data, "/", only_cols_label, source_of_data, "-alpha=", alpha, sep = "") 
 

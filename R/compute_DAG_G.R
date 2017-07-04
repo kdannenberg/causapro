@@ -8,7 +8,7 @@ source("linkcommunities.R")
 # source("ci-tests.R")
 
 # setwd("/Volumes/Causality/Viren/R/")
-source("config.R")
+source("configuration.R")
 
 # Data parameters
 
