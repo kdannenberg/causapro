@@ -1,6 +1,6 @@
-all_results <- list()
-all_graphs <- list()
-for (i in 1:100) {
+# all_results <- list()
+# all_graphs <- list()
+for (i in 18:100) {
   source('~/Documents/Uni/Viren/ProteinCausalPaths/R/compute_DAG_G.R')
   edges <- conflict_edges(results$pc@graph)
   all_results[[i]] <- results
