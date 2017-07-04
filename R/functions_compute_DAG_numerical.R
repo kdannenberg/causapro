@@ -1,3 +1,5 @@
+# all the functions that would be useful in an R package; top level computing functions
+
 library(pcalg)
 library(Rgraphviz)
 library(grid)

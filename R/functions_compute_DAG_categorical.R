@@ -1,12 +1,16 @@
+# all the functions that would be useful in an R package; top level computing functions
+
 #' if read_from_file, source_of_data should be string giving the path to the file, 
 #' otherwise source_of_data should be a matrix containing the alignment
 #' map_AS specifies wether to pool aminoacids in groups (vectors) given in a list "cluster", 
 #' in this case, all amino acids in one group are replaced by the name of the group in the list
 #' ...
+#' 
+#' 
 
 library(stringr)
 
-source("general_functions.R")
+# source("general_functions.R")
 
 estimate_DAG <- function(source_of_data, map_AS = TRUE, cluster, chop_MSA_from = 0, chop_MSA_to = NULL, chop_rownames = FALSE, 
                         remove_singular_columns = TRUE, remove_cols_gaps_threshold = 1, test_for_ci = "sp-x2", outpath, alpha = 0.01, output_neato = FALSE, output_twopi = FALSE) {

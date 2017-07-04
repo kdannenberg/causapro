@@ -1,5 +1,14 @@
-source("compute_DAG_numerical.R")
-source("general_functions.R")
+source("functions_causal_effects.R")
+source("functions_ci_tests.R")
+source("functions_compute_DAG_categorical.R")
+source("functions_compute_DAG_numerical.R")
+source("functions_conversions.R")
+source("functions_evaluate_DAG.R")
+source("functions_general.R")
+source("functions_i_o.R")
+source("functions_linkcommunities.R")
+source("functions_pymol.R")
+source("functions_tools.R")
 ## set working directory to 
 source("configuration.R")
 

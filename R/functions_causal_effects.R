@@ -95,22 +95,17 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", r
       }
         
       if (analysis) {
-        threshold = quantile(current_effects, probs = percentile)
-        most_influenced_positions <- colnames(data[(rownames(current_effects)[which(current_effects > threshold)])])
-        print(paste(length(most_influenced_positions), "positions over the threshold", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
-        # int_pos <- interesting_positions("PDZ", "crystal")
-        int_pos_strongly_influenced <- intersect(int_pos, most_influenced_positions)
-        print(paste("Thereof",  length(int_pos_strongly_influenced), "out of the", length(int_pos), "interesting positions:", paste(sort(int_pos_strongly_influenced), collapse = ", ")))
-        print(paste("Missing: ", paste(setdiff(int_pos, most_influenced_positions), collapse = ", ")))
+        statistics_of_influenced_positions(effects = current_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
         
         print("FOR SCALED EFFECTS:")
-        threshold = quantile(current_scaled_effects, probs = percentile)
-        most_influenced_positions <- colnames(data[(rownames(current_scaled_effects)[which(current_scaled_effects > threshold)])])
-        print(paste(length(most_influenced_positions), "positions over the threshold", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
-        # int_pos <- interesting_positions("PDZ", "crystal")
-        int_pos_strongly_influenced <- intersect(int_pos, most_influenced_positions)
-        print(paste("Thereof",  length(int_pos_strongly_influenced), "out of the", length(int_pos), "interesting positions:", paste(sort(int_pos_strongly_influenced), collapse = ", ")))
-        print(paste("Missing: ", paste(setdiff(int_pos, most_influenced_positions), collapse = ", ")))
+        statistics_of_influenced_positions(effects = current_scaled_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
+        # threshold = quantile(current_scaled_effects, probs = percentile)
+        # most_influenced_positions <- colnames(data[(rownames(current_scaled_effects)[which(current_scaled_effects > threshold)])])
+        # print(paste(length(most_influenced_positions), "positions over the threshold", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
+        # # int_pos <- interesting_positions("PDZ", "crystal")
+        # int_pos_strongly_influenced <- intersect(int_pos, most_influenced_positions)
+        # print(paste("Thereof",  length(int_pos_strongly_influenced), "out of the", length(int_pos), "interesting positions:", paste(sort(int_pos_strongly_influenced), collapse = ", ")))
+        # print(paste("Missing: ", paste(setdiff(int_pos, most_influenced_positions), collapse = ", ")))
       
       }
     }
@@ -123,6 +118,26 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", r
     # print(cbind(effects, current_scaled_effects, colors_by_effect))
   }
   return(results)
+}
+
+statistics_of_influenced_positions <- function(effects, percentile, interesting_positions, print = FALSE) {
+  threshold = quantile(effects, probs = percentile)
+  if (!is.null(dim(effects))) {
+    most_influenced_positions <- colnames(data[(rownames(effects)[which(effects > threshold)])])
+  } else {
+    most_influenced_positions <- colnames(data[(names(effects)[which(effects > threshold)])])
+  }
+  if (print) {
+    print(paste(length(most_influenced_positions), "positions over the threshold", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
+  }
+  # int_pos <- interesting_positions("PDZ", "crystal")
+  int_pos_strongly_influenced <- intersect(interesting_positions, most_influenced_positions)
+  if (print) {
+    print(paste("Thereof",  length(int_pos_strongly_influenced), "out of the", length(interesting_positions
+                                        ), "interesting positions:", paste(sort(int_pos_strongly_influenced), collapse = ", ")))
+    print(paste("Missing: ", paste(setdiff(interesting_positions, most_influenced_positions), collapse = ", ")))
+  }
+  return(int_pos_strongly_influenced)
 }
 
 # only to store code

@@ -6,10 +6,17 @@ library(bnlearn)
 
 # setwd("~/Documents/Uni/Viren/R/Code")
 
-source("ci-tests.R")
-source("compute_DAG_categorical.R")
-source("general_functions.R")
-source("evaluate_DAG.R")
+source("functions_causal_effects.R")
+source("functions_ci_tests.R")
+source("functions_compute_DAG_categorical.R")
+# source("functions_compute_DAG_numerical.R")
+source("functions_conversions.R")
+source("functions_evaluate_DAG.R")
+source("functions_general.R")
+source("functions_i_o.R")
+source("functions_linkcommunities.R")
+source("functions_pymol.R")
+source("functions_tools.R")
 
 # source_of_data should be string giving the path to the file (without the extension), 
 # if there exists an ".RData"-file, which needs to contain the matrix MSA, it is loaded from this file.
