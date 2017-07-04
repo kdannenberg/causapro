@@ -1,6 +1,3 @@
-# setwd("/Volumes/Causality/Viren/R/Code")
-setwd("~/Documents/Uni/Viren/ProteinCausalPaths/R")
-
 source("compute_DAG_numerical.R")
 source("general_functions.R")
 source("evaluate_DAG.R")
