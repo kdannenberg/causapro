@@ -6,7 +6,7 @@ source("linkcommunities.R")
 
 # setwd("/Volumes/Causality/Viren/R/Code")
 # setwd("/Volumes/Causality/Viren/R/")
-source("config.R")
+source("configuration.R")
 
 
 # Data parameters

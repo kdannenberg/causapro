@@ -1,12 +1,15 @@
-setwd("~/Viren/R/Code")
-
 source("compute_DAG_numerical.R")
 source("general_functions.R")
-
+## set working directory to 
+source("configuration.R")
 
 sink.reset()
 
-# General parameters
+## Data parameters
+
+## available data:
+## TODO
+
 numerical = TRUE
 protein = "p38g"
 type_of_data = "NMR"
@@ -31,34 +34,19 @@ if ((protein == "p38g") && (type_of_data == "NMR")) {
   transpose=FALSE
 }
 
-## tuning parameters
+## Analysis parameters
+## TODO: explain purpose of those parameters
+only_cols = NULL
+only_cols_label = ""
 ## level of significance
 alpha = 0.5 # 0.999999 infeasable
 ## if rank is TRUE instead of the numerical NMR data simply the ranking of the positions will be used
 rank = TRUE
-
-
-
-## Output parameters (print, plot, save, analysis)
-## those options are either set to FALSE or to TRUE (unused/used option)
-## analyse DAG using dagitty
-analysis = FALSE
-## do not print the dagitty analysis, but save it somewhere?
-print_analysis = TRUE
-## plot the dagitty analysis
-plot_analysis = FALSE
-## compute new dag/analysis (TRUE) or use precomputed one (FALSE)
-compute_pc_anew <- FALSE
-compute_localTests_anew <- FALSE
-## what is this doing, more information to info file?
-unabbrev_r_to_info <- FALSE
-## and this?
-print_r_to_console <- FALSE
-lines_in_abbr_of_r <- 10
-## what are stages again?
+## TODO: explain stages
 stages <- c("orig") # "sub"
 plot_types <- c("localTests", "graphs")
 
+## Graphical parameters
 
 # plot all
 # par(mfrow = c(3,2))
@@ -107,8 +95,22 @@ if (several_plots) {
 
 # colors = ""
 
-only_cols = NULL
-only_cols_label = ""
+## Technical parameters (print, plot, save, analysis)
+## those options are either set to FALSE or to TRUE (unused/used option)
+## analyse DAG using dagitty
+analysis = FALSE
+## do not print the dagitty analysis, but save it somewhere?
+print_analysis = TRUE
+## plot the dagitty analysis
+plot_analysis = FALSE
+## compute new dag/analysis (TRUE) or use precomputed one (FALSE)
+compute_pc_anew <- FALSE
+compute_localTests_anew <- FALSE
+## what is this doing, more information to info file?
+unabbrev_r_to_info <- FALSE
+## and this?
+print_r_to_console <- FALSE
+lines_in_abbr_of_r <- 10
 
 
 # Computation of Output-Location and Output Infos
