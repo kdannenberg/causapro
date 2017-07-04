@@ -41,9 +41,9 @@ position_numbering = "crystal"
 only_cols = NULL
 only_cols_label = ""
 
-alpha = 0.0000000001
+alpha = 0.01
 
-pc_solve_conflicts <- TRUE
+pc_solve_conflicts <- FALSE
 
 stages <- c("orig") # "sub"
 plot_types <- c("localTests", "graphs")
@@ -67,7 +67,7 @@ other = "" # cov"
 analysis = FALSE
 print_analysis = FALSE
 plot_analysis = FALSE
-compute_pc_anew <- FALSE
+compute_pc_anew <- TRUE
 compute_localTests_anew <- FALSE
 # if (compute_everything_anew) {
 #   compute_pc_anew <- TRUE
