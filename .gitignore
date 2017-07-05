@@ -7,3 +7,5 @@
 configuration.R
 configuration_code.R
 configuration_data.R
+.Rhistory
+.RData
