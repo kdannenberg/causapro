@@ -16,7 +16,7 @@ source("functions_causal_effects.R")
 # }
 
 conflicts_sorted <- sapply(all_graphs, conflict_edges)
-conflicts_sorted <-  matrix(unlist(conflicts_sorted), nrow = 3)
+conflicts_sorted <- matrix(unlist(conflicts_sorted), nrow = 3)
 rownames(conflicts_sorted) = c("conflict", "directed", "bidirected")
 colnames(conflicts_sorted) <- as.character(1:100) # Graph number
 conflicts_sorted <- conflicts_sorted[, order(conflicts_sorted["bidirected",])]
@@ -80,9 +80,9 @@ find_graphs_with_highest_int_pos <- function() {
   print(paste("max_pos_85", paste(max_pos_85, collapse = ", "), sep = ": "))
   print(paste("max_pos_95", paste(max_pos_95, collapse = ", "), sep = ": "))
   
-  print(paste("max_diff_pos_75", paste(max_pos_75, collapse = ", "), sep = ": "))
-  print(paste("max_diff_pos_85", paste(max_pos_85, collapse = ", "), sep = ": "))
-  print(paste("max_diff_pos_95", paste(max_pos_95, collapse = ", "), sep = ": "))
+  print(paste("max_diff_pos_75", paste(max_diff_pos_75, collapse = ", "), sep = ": "))
+  print(paste("max_diff_pos_85", paste(max_diff_pos_85, collapse = ", "), sep = ": "))
+  print(paste("max_diff_pos_95", paste(max_diff_pos_95, collapse = ", "), sep = ": "))
   
   # cat(paste0("max_pos_75: ", paste(max_pos_75, collapse = ", "), "\n"))
   # cat(paste0("max_pos_85: ", paste(max_pos_85, collapse = ", "), "\n"))
@@ -136,6 +136,9 @@ sum_all_effects <- function(all_results) {
   return(list(sum_effect_of, sum_effect_on))
 }
 
+sum_all_effects(all_results)
+
+
 test_sum_all_effects <- function() {
   scaled_results_1_of <- matrix(c(1,0,0.5,1,1,1,2,2,-0.5), byrow = TRUE, ncol = 3)
   scaled_results_1_on <- matrix(c(1,0,1,1,2,1), byrow = TRUE, ncol = 2)
@@ -153,4 +156,4 @@ test_sum_all_effects <- function() {
   sum_all_effects(fake_results)
 }
 
-test_sum_all_effects()
+# test_sum_all_effects()

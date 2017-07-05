@@ -5,30 +5,33 @@ set.seed(123) # default
 # set.seed(14) # interesting
 # set.seed(16) # ungerichtete Kanten!
 # set.seed(17)
-p <- 7
-# p <- 4
-myDAG <- pcalg::randomDAG(p, prob = 0.2) ## true DAG
+# p <- 7 # default
+p <- 100
+myDAG <- pcalg::randomDAG(p, prob = 0.03) ## true DAG; default: prob = 0.2
 myCPDAG <- dag2cpdag(myDAG) ## true CPDAG
 covTrue <- trueCov(myDAG) ## true covariance matrix
 
 ## simulate data from the true DAG
-n <- 600
+# n <- 10000 # default
+n <- 1000
 # dat <- rmvDAG(n, myDAG)
 rm(.Random.seed, envir=globalenv())
 dat <- rmvDAG(n, myDAG, errDist = "normal")
+
 print(dat)
+
 cov.d <- cov(dat)
 
 ## estimate CPDAG (see help on the function "pc")
 suffStat <- list(C = cor(dat), n = n)
-pc.fit <- pc(suffStat, indepTest = gaussCItest, alpha = 0.05, p=p, solve.confl = FALSE, u2pd = "retry")
+pc.fit <- pc(suffStat, indepTest = gaussCItest, alpha = 0.01, p=p, solve.confl = TRUE, u2pd = "relaxed") # retry
 
 print(conflict_edges(pc.fit))
 
 if(require(Rgraphviz)) {
   graphics.off()
-  op <- par(mfrow=c(1,3))
-  plot(myDAG,        main="true DAG")
+  op <- par(mfrow=c(1,2))
+  # plot(myDAG,        main="true DAG")
   plot(myCPDAG,      main="true CPDAG")
   plot(pc.fit@graph, main="pc()-estimated CPDAG")
   par(op)
@@ -130,3 +133,11 @@ check_formula <- function(x, y, par_x) {
 #   cov.d[x,y] / cov.d[x,x]
 # }
 # 
+
+
+# statistic
+# p = 100
+# n = 1000000 -> 8 Konflikt-Kanten
+# n = 100000  -> 14 Konflikt-Kanten
+# n = 10000   -> 9 / 20 / 25 / 6 / 11 Konflikt-Kanten
+# n = 1000    -> 50 Konflikt-Kanten

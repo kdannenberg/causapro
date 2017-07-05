@@ -1,6 +1,6 @@
 library(linkcomm)
 library(igraph)
-library(colorspace)  # for mixcolor
+library(colorspace)  # for mixcolor, hex
 
 node_function_for_graph <- function(pie = FALSE, counts, colors = c("#1874CD", "#69A019", "#FFD700", "#CC0000")) {
   if (pie) {

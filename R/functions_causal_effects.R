@@ -2,6 +2,9 @@
 # source("general_functions.R")
 
 # adds results$ida
+
+library(colorspace)  # for mixcolor, hex
+
 causal_effects_ida <- function(data, perturbated_position, direction = "both", relatve_effects_on_pos = TRUE,
                 results = results, protein, coloring = "all", outpath, 
                 amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, 
@@ -77,10 +80,10 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", r
       if (!show_neg_causation) {
         current_effects <- NULL
       }
-      plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbated_position = perturbated_position, protein = protein, 
-                                  outpath = current_outpath,
-                                  amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, ranked = opacity_ranked, 
-                                  index = i, no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = current_effects)
+      # plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbated_position = perturbated_position, protein = protein, 
+                                  # outpath = current_outpath,
+                                  # amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, ranked = opacity_ranked, 
+                                  # index = i, no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = current_effects)
     
       if (barplot) {
         # graphics.off()
