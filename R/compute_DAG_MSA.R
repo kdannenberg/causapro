@@ -5,6 +5,7 @@ library(seqinr)
 library(bnlearn)
 
 # setwd("~/Documents/Uni/Viren/R/Code")
+source("configuration_code.R")
 
 source("functions_causal_effects.R")
 source("functions_ci_tests.R")
@@ -17,6 +18,8 @@ source("functions_i_o.R")
 source("functions_linkcommunities.R")
 source("functions_pymol.R")
 source("functions_tools.R")
+
+source("configuration_data.R")
 
 # source_of_data should be string giving the path to the file (without the extension), 
 # if there exists an ".RData"-file, which needs to contain the matrix MSA, it is loaded from this file.

@@ -1,4 +1,4 @@
-setwd("~/Documents/Uni/Viren/ProteinCausalPaths/R")
+source("configuration_code.R")
 
 source("functions_causal_effects.R")
 source("functions_ci_tests.R")
@@ -20,7 +20,7 @@ source("functions_tools.R")
 # source("ci-tests.R")
 
 # setwd("/Volumes/Causality/Viren/R/")
-source("configuration.R")
+source("configuration_data.R")
 
 # Data parameters
 

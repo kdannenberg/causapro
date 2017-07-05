@@ -1,3 +1,9 @@
+source("functions_general.R")
+
+# data besorgen
+source("compute_DAG_G.R")
+graphics.off()
+
 pos <- "353"
 
 effect_on_position <- function(pos, direct = TRUE, with_regard_to_372 = TRUE, colors) {

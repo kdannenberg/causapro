@@ -1,3 +1,5 @@
+source("configuration_code.R")
+
 source("functions_causal_effects.R")
 source("functions_ci_tests.R")
 source("functions_compute_DAG_categorical.R")
@@ -10,7 +12,7 @@ source("functions_linkcommunities.R")
 source("functions_pymol.R")
 source("functions_tools.R")
 ## set working directory from configuration.R
-source("configuration.R")
+source("configuration_data.R")
 
 sink.reset()
 
