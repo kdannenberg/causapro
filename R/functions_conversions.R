@@ -6,6 +6,40 @@
 # library(pcalg)
 # library(graph)
 
+comp_dags <- function(g1, g2) {
+    ## list of nodes
+    ln1 <- names(nodeData(g1))
+    ## list of edges in format "a|b"
+    le1 <- names(edgeData(g1))
+    ## construct adjacency matrix
+    n1 <- length(ln1)
+    am1 <- matrix(0, nrow = n1, ncol = n1)
+    ## go through all edges and mark them in adjacency matrix
+    for(edge in le1) {
+        splt <- strsplit(edge, "\\|")
+        ## this takes linear time and could be replaced by hashmaps
+        from <- which(splt[[1]][1] == ln1)[[1]]
+        to <- which(splt[[1]][2] == ln1)[[1]]
+        am1[[from, to]] <- 1
+    }
+    ## list of nodes
+    ln2 <- names(nodeData(g2))
+    ## list of edges in format "a|b"
+    le2 <- names(edgeData(g2))
+    ## construct adjacency matrix
+    n2 <- length(ln2)
+    am2 <- matrix(0, nrow = n2, ncol = n2)
+    ## go through all edges and mark them in adjacency matrix
+    for(edge in le2) {
+        splt <- strsplit(edge, "\\|")
+        ## this takes linear time and could be replaced by hashmaps
+        from <- which(splt[[1]][1] == ln2)[[1]]
+        to <- which(splt[[1]][2] == ln2)[[1]]
+        am2[[from, to]] <- 1
+    }
+    return(identical(am1,am2))
+}
+
 ## gets a pcAlgo object and returns a corresponding dagitty r object
 ## nodename_prefix" is prepended to each node name
 conv_to_r <- function(g, type_of_graph = "pdag", nodename_prefix = "") {
