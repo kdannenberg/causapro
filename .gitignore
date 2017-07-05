@@ -9,5 +9,7 @@ configuration_code.R
 configuration_data.R
 .Rhistory
 .RData
+.DS_Store
 R/.Rhistory
 R/.RData
+R/.DS_Store
