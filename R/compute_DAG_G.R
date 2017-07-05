@@ -79,7 +79,7 @@ other = "" # cov"
 analysis = FALSE
 print_analysis = FALSE
 plot_analysis = FALSE
-compute_pc_anew <- TRUE
+compute_pc_anew <- FALSE
 compute_localTests_anew <- FALSE
 # if (compute_everything_anew) {
 #   compute_pc_anew <- TRUE
