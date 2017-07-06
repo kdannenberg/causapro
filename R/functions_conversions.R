@@ -6,7 +6,7 @@
 # library(pcalg)
 # library(graph)
 
-comp_graphs <- function(g1, g2) {
+compare_graphs <- function(g1, g2) {
     ## list of nodes
     ln1 <- names(nodeData(g1))
     ## list of edges in format "a|b"
@@ -40,7 +40,7 @@ comp_graphs <- function(g1, g2) {
     return(identical(am1,am2))
 }
 
-comp_all_graphs <- function(list_of_graphs) {
+compare_all_graphs <- function(list_of_graphs) {
   equal <- sapply(list_of_graphs, function(x) sapply(list_of_graphs, function(y) comp_graphs(x,y)))
   print(which(equal, arr.ind = TRUE))
   return(equal)
