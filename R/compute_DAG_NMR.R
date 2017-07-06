@@ -144,6 +144,8 @@ if (state == "allstates") {
   data <- read_data(filename, transpose = transpose)
 }
 
+
+# TODO Marcel: use adjust_data as in _NMR-GTB
 if (rank) {
   # data <- cbind(apply(data, 2, rank)) # positionsweise (über alle Obeservationen)
   # type_of_data <- paste(type_of_data, "ranked-otherway", sep = "-")

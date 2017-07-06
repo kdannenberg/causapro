@@ -159,18 +159,20 @@ if (!is.null(nuclei) && !(nuclei == "all") && !(nuclei == "")) {
   # source_of_data <- paste(protein, type_of_data, state, sep = "-")  # sollte das gleiche liefern
 }
 
-
-if (ranked) {
-  # if (rank) {
-  # data <- cbind(apply(data, 2, rank))
-  data <- t(apply(data, 1, rank))
-  # }
-  # if (state == "all") {
-  #   stop("Data not available (ranked).")
-  # } else {
-  type_of_data <- paste(type_of_data, "ranked", sep = "-")
-  # }
-} 
+## TODO Marcel: test!
+data <- adjust_data(data = data, rank = ranked, remove_low_variance = FALSE)
+type_of_data <- type_of_data_after_adjustment(type_of_data = type_of_data, rank = ranked, remove_low_variance = FALSE)
+# if (ranked) {
+#   # if (rank) {
+#   # data <- cbind(apply(data, 2, rank))
+#   data <- t(apply(data, 1, rank))
+#   # }
+#   # if (state == "all") {
+#   #   stop("Data not available (ranked).")
+#   # } else {
+#   type_of_data <- paste(type_of_data, "ranked", sep = "-")
+#   # }
+# } 
 
 filename <- paste(only_cols_label, source_of_data, "-alpha=", alpha, sep = "")
 output_dir <- paste("../Outputs/", protein, "/", type_of_data, "/", filename, sep = "")

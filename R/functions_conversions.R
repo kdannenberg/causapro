@@ -6,7 +6,7 @@
 # library(pcalg)
 # library(graph)
 
-comp_dags <- function(g1, g2) {
+comp_graphs <- function(g1, g2) {
     ## list of nodes
     ln1 <- names(nodeData(g1))
     ## list of edges in format "a|b"
@@ -39,6 +39,15 @@ comp_dags <- function(g1, g2) {
     }
     return(identical(am1,am2))
 }
+
+comp_all_graphs <- function(list_of_graphs) {
+  equal <- sapply(list_of_graphs, function(x) sapply(list_of_graphs, function(y) comp_graphs(x,y)))
+}
+
+comp_all_graphs_2 <- function(list_of_graphs) {
+  equal <- outer(list_of_graphs,list_of_graphs,Vectorize(comp_graphs))
+}
+
 
 ## gets a pcAlgo object and returns a corresponding dagitty r object
 ## nodename_prefix" is prepended to each node name

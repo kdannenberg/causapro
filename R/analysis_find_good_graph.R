@@ -2,18 +2,24 @@ source("configuration_code.R")
 
 source("functions_causal_effects.R")
 
-## all_graphs saved
-# all_results <- list()
-# all_graphs <- list()
-# for (i in 18:100) {
-#   source('~/Documents/Uni/Viren/ProteinCausalPaths/R/compute_DAG_G.R')
-#   edges <- conflict_edges(results$pc@graph)
-#   all_results[[i]] <- results
-#   all_graphs[[i]] <- results$pc@graph
-#   if ((edges$conflict == 0) && (edges$bidirected == 0)) {
-#     break
-#   }
-# }
+# all_graphs saved
+all_results <- list()
+all_graphs <- list()
+for (i in 1:100) {
+  source('~/Documents/Uni/Viren/ProteinCausalPaths/R/compute_DAG_G.R')
+  edges <- conflict_edges(results$pc@graph)
+  all_results[[i]] <- results
+  all_graphs[[i]] <- results$pc@graph
+  if ((edges$conflict == 0) && (edges$bidirected == 0)) {
+    break
+  }
+}
+
+equal <- comp_all_graphs(all_graphs)
+print(equal)
+
+save(all_graphs, file = paste0(outpath, "-pc-retry_graphs.RData"))
+save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
 
 conflicts_sorted <- sapply(all_graphs, conflict_edges)
 conflicts_sorted <- matrix(unlist(conflicts_sorted), nrow = 3)

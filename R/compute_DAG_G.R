@@ -50,12 +50,18 @@ data_set <- ""
 position_numbering = "crystal"
 
 # Analysis parameters
+# remove_positions_with_low_variance = TRUE
+min_pos_var = 0.001
 only_cols = NULL
 only_cols_label = ""
 
 alpha = 0.01
+ranked = FALSE
 
 pc_solve_conflicts <- FALSE
+pc_u2pd = "retry"
+
+effects_on_weighting <- FALSE
 
 stages <- c("orig") # "sub"
 plot_types <- c("localTests", "graphs")
@@ -79,7 +85,7 @@ other = "" # cov"
 analysis = FALSE
 print_analysis = FALSE
 plot_analysis = FALSE
-compute_pc_anew <- FALSE
+compute_pc_anew <- TRUE
 compute_localTests_anew <- FALSE
 # if (compute_everything_anew) {
 #   compute_pc_anew <- TRUE
@@ -99,6 +105,11 @@ data_description <- get_data_description(protein = protein, type_of_data = type_
 
 # filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
 data <- read_data(data_description, only_cols = only_cols)
+
+data <- adjust_data(data = data, rank = ranked, min_var = min_pos_var)
+type_of_data <- type_of_data_after_adjustment(type_of_data = type_of_data, rank = ranked, min_var = min_pos_var)
+
+
 # colnames(data) <- paste("X", colnames(data), sep = "")
 
 # if (other != "") {
@@ -106,7 +117,8 @@ data <- read_data(data_description, only_cols = only_cols)
 # }
 
 outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
-                       alpha = alpha, only_cols_label = only_cols_label, pc_solve_conflicts = pc_solve_conflicts, file_separator = file_separator)
+                       alpha = alpha, only_cols_label = only_cols_label, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, 
+                       file_separator = file_separator)
 
 directories <- strsplit(outpath, file_separator)
 filename <- directories[[1]][length(directories[[1]])]
@@ -134,7 +146,7 @@ parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_
 
 results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
                      output_dir = output_dir, filename = filename, outpath = outpath, parameters_for_info_file = parameters_for_info_file,
-                     alpha = alpha, pc_solve_conflicts = pc_solve_conflicts, 
+                     alpha = alpha, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
                      caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
                      graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                      unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
@@ -156,25 +168,17 @@ plot_connected_components_in_pymol(protein = protein, position_numbering = posit
 
 
 
-paths <- paths_between_nodes(graph = results$orig$graph$NEL, from = c(314), to = c(383), all_paths = FALSE)
-plot_paths_in_pymol(protein = protein, graph = results$orig$graph$NEL, outpath = outpath, paths = paths, no_colors = FALSE, 
-                    label = TRUE, show_positions = FALSE, file_separator = file_separator)
+# paths <- paths_between_nodes(graph = results$orig$graph$NEL, from = c(314), to = c(383), all_paths = FALSE)
+# plot_paths_in_pymol(protein = protein, graph = results$orig$graph$NEL, outpath = outpath, paths = paths, no_colors = FALSE, 
+#                     label = TRUE, show_positions = FALSE, file_separator = file_separator)
 
-# results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", relatve_effects_on_pos = TRUE,
-#                protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
-#                amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
-#                pymol_bg_color = "grey",
-#                barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
+results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", relatve_effects_on_pos = TRUE,
+               protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
+               amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
+               pymol_bg_color = "grey",
+               barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
 
 # TODO: wenn nicht ranked die trotzdem alles positiv machen (offset?) bevor die farben vergeben werden
-
-# neg beeinflusste positionen
-# results <- ida(data = data, perturbated_position = "372", protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath, 
-#                amplification_exponent = 0.5, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF", pymol_bg_color = "white", 
-#                barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE)
-
-# results <- ida(data = data, perturbated_position = "372", protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath, 
-#                amplification_exponent = 5, caption = caption, show_neg_causation = FALSE, abs = FALSE)
 
 # effects_of_76 <- idaFast(which(colnames(data) == "372"), 1:92, cov(data), results$pc@graph)
 # rownames(effects_of_76) <- colnames(data)
