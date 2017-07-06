@@ -42,11 +42,20 @@ comp_graphs <- function(g1, g2) {
 
 comp_all_graphs <- function(list_of_graphs) {
   equal <- sapply(list_of_graphs, function(x) sapply(list_of_graphs, function(y) comp_graphs(x,y)))
+  print(which(equal, arr.ind = TRUE))
+  return(equal)
 }
 
-comp_all_graphs_2 <- function(list_of_graphs) {
-  equal <- outer(list_of_graphs,list_of_graphs,Vectorize(comp_graphs))
-}
+
+# equally fast (10 runs)
+#                                 expr      min      lq      mean      median    uq    max neval
+# comp_all_graphs(all_graphs)   99.88195 101.56125 103.3518 104.4831 105.2169 105.5934    10
+# comp_all_graphs_2(all_graphs) 99.47638  99.81868 103.6929 103.7426 105.3471 112.0963    10
+# comp_all_graphs_2 <- function(list_of_graphs) {
+#   equal <- outer(list_of_graphs,list_of_graphs,Vectorize(comp_graphs))
+#   print(which(equal, arr.ind = TRUE))
+#   return(equal)
+# }
 
 
 ## gets a pcAlgo object and returns a corresponding dagitty r object
