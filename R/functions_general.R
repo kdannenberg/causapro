@@ -12,7 +12,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
     print("Directory created.")
-  }
+  } 
   
   if (missing(outpath)) {
     outpath <- paste(output_dir, filename, sep = "/")
@@ -36,7 +36,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
     
     # print_analysis <- FALSE
     # plot_analysis <- FALSE
-    } 
+  } 
   else {
     results <- list()
     results$pc <- pc
@@ -45,7 +45,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
     results$orig$graph$NEL <- pc@graph
     # results <- analysis_after_pc(pc, data, outpath = outpath, protein = protein, position_numbering = position_numbering, layout = graph_layout, coloring = coloring, colors = colors,  stages = c(), plot_types = plot_types, unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r, compute_localTests_anew = compute_localTests_anew, print = FALSE, plot = FALSE)
   }
-    
+  
   return(results)
 } 
 
@@ -79,7 +79,7 @@ ancestorgraph_of_interesting_positions <- function(graph_dagitty, positions = NU
 # std-Reihenfolge: grün-gelb-rot-blau
 interesting_positions <- function(protein, position_numbering, allpositions, for_coloring = FALSE, coloring = "auto", colors = "", counts) {
   if (is.null(coloring) || coloring == "none") {
-   list <- list()
+    list <- list()
   } else {
     interesting_pos <- NULL     ## list?!
     if ((protein == "pdz") || (protein == "PDZ")) {
@@ -381,13 +381,13 @@ plot_graph <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "
         } else {
           graph_layout_i <- graph_layout[1]
         }
-        #TODO: call plot.graph (TODO: rausfinden ob der Punkt im Sinne des R-Styleguides hier angemessen ist)
-        #TODO: remove parameters protein, position_numbering, coloring, colors, ... die nur für int_pos nötig sind. (stattdessen fillcolor übergeben)
-        #TODO: zusammenfügen:
-        # node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
-        # fillcolor <- colors_for_nodes(node_clusters = node_clustering, protein, coloring = coloring, colors = colors)
-        # zu einer in bel. skript möglichst eindach aufrufbaren Fkt. die für protein, pos_numbering etc (colors mit default wert) fillcolors so zurückgibt, 
-        # dass man sie für diese plot.graph-Fkt nutzen kann
+        ## TODO: call plot.graph (TODO: rausfinden ob der Punkt im Sinne des R-Styleguides hier angemessen ist)
+        ## TODO: remove parameters protein, position_numbering, coloring, colors, ... die nur für int_pos nötig sind. (stattdessen fillcolor übergeben)
+        ## TODO: zusammenfügen:
+        ## node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
+        ## fillcolor <- colors_for_nodes(node_clusters = node_clustering, protein, coloring = coloring, colors = colors)
+        ## zu einer in bel. skript möglichst eindach aufrufbaren Fkt. die für protein, pos_numbering etc (colors mit default wert) fillcolors so zurückgibt, 
+        ## dass man sie für diese plot.graph-Fkt nutzen kann
         plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, protein = protein, 
                              position_numbering = position_numbering, coloring = coloring_i, colors = colors_i, outpath = outpath, caption = caption, 
                              plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
@@ -396,6 +396,7 @@ plot_graph <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "
   }
 }
 
+## calculate fillcolor, already done by colors_for_nodes
 # TODO: default-Wert für subgraphs
 plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "", graph_layout = "dot", protein,
                                  position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE, 
@@ -416,13 +417,13 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
   
   eAttrs <- list()
   eAttrs$color <- edgecolor
-  
+  ## message when no subgraphs but plot_as_subgraphs true
   if (missing(subgraphs)) {
     if (plot_as_subgraphs || !is.null(plot_only_subgraphs)) {
       subgraphs <- subgraphs_from_node_clusters(node_clustering, graph, protein = protein)
-    } else {
-      subgraphs <- NULL
-    }
+        } else {
+          subgraphs <- NULL
+        }
   }
   
   # node shapes (pie)

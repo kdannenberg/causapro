@@ -24,6 +24,7 @@ protein = "PDZ"
 type_of_data = "DDS"
 source_of_data = "DDS_pdz"
 # source_of_data = "DDS_pdz_SVD"
+subtype_of_data = ""
 position_numbering = "crystal"
 
 ## Analysis parameters
