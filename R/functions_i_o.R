@@ -48,8 +48,75 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
   return(data)
 }
 
+
+# rank_obs_per_pos: should the ranking be done the other way round? 
+#   That is, per position, over all observations?
+adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, remove_low_variance = FALSE,
+                        zero_var_fct, min_var = 0.01) {
+  if (rank) {
+    if (!rank_obs_per_pos) {
+      if (!missing(data)) {
+        data <- t(apply(data, 1, rank))  # observationsweise (über alle Positionen)
+      }
+      if (!missing(type_of_data)) {
+        type_of_data <- paste(type_of_data, "ranked", sep = "-")
+        # type_of_data <- paste(type_of_data, "ranked-pos-per-obs", sep = "-")
+      }
+    } else {
+      if (!missing(data)) {
+        data <- cbind(apply(data, 2, rank)) # positionsweise (über alle Obeservationen)
+      }
+      if (!missing(type_of_data)) {
+        type_of_data <- paste(type_of_data, "ranked-obs-per-pos", sep = "-")
+      }
+    }
+  }
+  
+  # TODO: statistical test for zero variance
+  if (typeof(min_var) == "closure") {
+    # remove_low_var_cols <-  nearZeroVar(data, freqCut = 15, saveMetrics = FALSE)
+    drop <-  min_var(data)
+  } else {
+    drop <- which(apply(data, 2, var) <= min_var)
+  }
+  colors <- rep("#FFFFFF", 92)
+  colors[drop] <- "#000000"
+  barplot(apply(data, 2, var), col = colors)
+  # var unter min_var wegschmeißen
+  # data <- data[,-drop]
+  # data <- subset(data, select = -drop)
+  data <- data[, !names(data) %in% names(drop)]
+  
+  return(data)
+}
+
+type_of_data_after_adjustment <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, remove_low_variance = FALSE,
+                                          zero_var_fct, min_var = 0.01) {
+  if (rank) {
+    if (!rank_obs_per_pos) {
+        type_of_data <- paste(type_of_data, "ranked", sep = "-")
+        # type_of_data <- paste(type_of_data, "ranked-pos-per-obs", sep = "-")
+    } else {
+        type_of_data <- paste(type_of_data, "ranked-obs-per-pos", sep = "-")
+    }
+  }
+  
+  # TODO: statistical test for zero variance
+    if (!typeof(min_var) == "closure") {
+      if (min_var > 0) {
+        type_of_data <- paste0(type_of_data, "-var>", min_var)
+      }
+    } else {
+      type_of_data <- paste(type_of_data, "var>fct", sep = "-")
+    }
+  
+  return(type_of_data)
+}
+
+
+
 get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
-                        alpha = alpha, only_cols_label, pc_solve_conflicts, file_separator = "/") {
+                        alpha = alpha, only_cols_label, pc_solve_conflicts, pc_u2pd, file_separator = "/") {
   dir_1 <- protein
   dir_2 <- type_of_data
   # if (subtype_of_data != "")
@@ -72,6 +139,8 @@ get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_
   
   if (pc_solve_conflicts) {
     filename <- paste0(filename, "_sc")
+  } else {
+    filename <- paste(filename, substr(pc_u2pd, 1, 3), sep = "_")
   }
   
   return(paste(output_dir, filename, sep = file_separator))
