@@ -6,7 +6,7 @@
 # library(pcalg)
 # library(graph)
 
-comp_graphs <- function(g1, g2) {
+comp_graphs <-f function(g1, g2) {
     ## list of nodes
     ln1 <- names(nodeData(g1))
     ## list of edges in format "a|b"
