@@ -221,8 +221,8 @@ rem_cols_by_colname <- function(data, remove) {
   return(data[, !(colnames(data) %in% remove)])
 }
 
-caption <- function(protein, data, alpha, chars_per_line = 50) {
-  par_string = paste("protein: ", protein, ", data: ", data, ", alpha: ", alpha, sep = "")
+caption <- function(protein, data, alpha, min_pos_var, chars_per_line = 50) {
+  par_string = paste("protein: ", protein, ", data: ", data, ", alpha: ", alpha, ", var_cutoff: ", min_pos_var, sep = "")
   caption = strwrap(par_string, width = chars_per_line)
   return(caption)
 }
@@ -261,7 +261,7 @@ print_pc_results_to_info_file <- function(outpath, pc) {
   sink()
 }
 
-outpath_for_ida <- function(outpath, direction, relatve_effects_on_pos, option_nr, neg_effects, perturbated_position, amplification_exponent, 
+outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr, neg_effects, perturbated_position, amplification_exponent, 
                             amplification_factor, no_colors, rank_effects, effect_to_color_mode) {
   outpath <- paste0(outpath, "-total_effects_(", neg_effects, ")")
   
@@ -269,12 +269,8 @@ outpath_for_ida <- function(outpath, direction, relatve_effects_on_pos, option_n
   if (option_nr != "") {
     out_file <- paste0(out_file, "_#", option_nr)
   }
-  if (direction == "on" && relatve_effects_on_pos) {
-    rel = "(rel)_"
-  } else {
-    rel = ""
-  }
-  out_file <- paste0(out_file, "_", rel, direction, "_pos_", perturbated_position)
+  
+  out_file <- paste0(out_file, "_", direction, "_pos_", perturbated_position)
   
   if (effect_to_color_mode == "opacity") {
     out_file <- paste0(out_file, "-opac")

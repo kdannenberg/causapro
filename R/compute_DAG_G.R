@@ -51,7 +51,7 @@ position_numbering = "crystal"
 
 # Analysis parameters
 # remove_positions_with_low_variance = TRUE
-min_pos_var = 0.001
+min_pos_var = 0.01
 only_cols = NULL
 only_cols_label = ""
 
@@ -61,7 +61,10 @@ ranked = FALSE
 pc_solve_conflicts <- FALSE
 pc_u2pd = "retry"
 
-effects_on_weighting <- FALSE
+weight_effects_on_by = ""
+# weight_effects_on_by = "var"
+# weight_effects_on_by = "mean"
+# weight_effects_on_by = "median"
 
 stages <- c("orig") # "sub"
 plot_types <- c("localTests", "graphs")
@@ -140,7 +143,7 @@ output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse =
 
 # outpath = paste("/Outputs/", type_of_data, "/", only_cols_label, source_of_data, "-alpha=", alpha, sep="") 
 
-caption <- caption(protein = protein, data = data_description, alpha = alpha, chars_per_line = 45) #TODO rem_gaps_threshold hinzufügen
+caption <- caption(protein = protein, data = data_description, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = 45) #TODO rem_gaps_threshold hinzufügen
 parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, 
                                                      only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = "/"))  
 
@@ -172,7 +175,7 @@ plot_connected_components_in_pymol(protein = protein, position_numbering = posit
 # plot_paths_in_pymol(protein = protein, graph = results$orig$graph$NEL, outpath = outpath, paths = paths, no_colors = FALSE, 
 #                     label = TRUE, show_positions = FALSE, file_separator = file_separator)
 
-results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", relatve_effects_on_pos = TRUE,
+results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
                protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
                amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
                pymol_bg_color = "grey",

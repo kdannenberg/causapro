@@ -5,7 +5,7 @@
 
 library(colorspace)  # for mixcolor, hex
 
-causal_effects_ida <- function(data, perturbated_position, direction = "both", relatve_effects_on_pos = TRUE,
+causal_effects_ida <- function(data, perturbated_position, direction = "both", weight_effects_on_by = "mean_abs_effect",
                 results = results, protein, coloring = "all", outpath, 
                 amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, 
                 effect_to_color_mode = "#FFFFFF", pymol_bg_color = "black", barplot = TRUE, caption, no_colors, 
@@ -19,9 +19,10 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", r
   }
   
   graphics.off()
-  lines <- 4 # 1 für of, 2 für on (min, max)
+  lines <- 4 # 1/2 für of, 2 für on (min, max)
   columns <- 2
-  par(mfrow=c(lines, columns))
+  oma <- c( 0, 0, length(caption) + 1, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
+  par(mfrow=c(lines, columns), oma = oma) 
 
   for (dir in direction) {
     cat("CAUSAL EFFECTS ")
@@ -42,10 +43,19 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", r
       effects_max <- sapply(effects_list, function(list) return(max(list)))
       effects <- cbind(effects_max, effects_min)
       colnames(effects) <- c("max", "min")
-      if (relatve_effects_on_pos) {
+      if (grepl("mean", weight_effects_on_by)) { # (weight_effects_on_by == "mean_abs_effect") {
+        dir <- "on-rel-to-mean"
         means <- sapply(1:dim(data)[2], function(pos) {mean(abs(idaFast(pos, 1:dim(data)[2], cov(data), results$pc@graph)))})
         # medians <- sapply(1:dim(data)[2], function(pos) {median(idaFast(pos, 1:dim(data)[2], cov(data), results$pc@graph))})
-        effects <- effects/means
+        effects <- effects / means
+      } else if (grepl("median", weight_effects_on_by)) { # if (weight_effects_on_by == "median_abs_effect") {
+        dir <- "on-rel-to-median"
+        medians <- sapply(1:dim(data)[2], function(pos) {median(abs(idaFast(pos, 1:dim(data)[2], cov(data), results$pc@graph)))})
+        effects <- effects / medians
+      } else if (weight_effects_on_by == "var" || weight_effects_on_by == "vars") {
+        dir <- "on-rel-to-var"
+        vars <- apply(data, 2, var)
+        effects <- effects * vars
       }
     }
     rownames(effects) <- colnames(data)
@@ -67,7 +77,7 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", r
       } else {
         index <- i
       }
-      current_outpath <- outpath_for_ida(outpath = outpath, direction = dir, relatve_effects_on_pos = relatve_effects_on_pos, option_nr = index, neg_effects = neg_effects, perturbated_position = perturbated_position,
+      current_outpath <- outpath_for_ida(outpath = outpath, direction = dir, option_nr = index, neg_effects = neg_effects, perturbated_position = perturbated_position,
                                  amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, 
                                  no_colors = no_colors, rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode)
       
@@ -88,13 +98,20 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", r
       if (barplot) {
         # graphics.off()
         # par(mfrow=c(m,n))
+        # plot.new()
+        # title("My 'Title' in a strange place", side = 3, line = -21, outer = TRUE)
+        # mtext( "Centered Overall Title", outer = TRUE )
         
         vector_effects <- as.vector(current_effects)
+        is.na(vector_effects) <- sapply(vector_effects, is.infinite)   # set infinite values to NA
         names(vector_effects) <- rownames(current_effects)
-        barplot(vector_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbated_position), col = colors_by_effect)
+        # barplot(vector_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbated_position), col = colors_by_effect)
+        barplot(vector_effects, main = paste("\n total causal effect", dir, "position", perturbated_position), col = colors_by_effect)
         vector_scaled_effects <- as.vector(current_scaled_effects)
+        is.na(vector_scaled_effects) <- sapply(vector_scaled_effects, is.infinite)   # set infinite values to NA
         names(vector_scaled_effects) <- rownames(current_scaled_effects)
-        barplot(vector_scaled_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbated_position), col = colors_by_effect)
+        # barplot(vector_scaled_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbated_position), col = colors_by_effect)
+        barplot(vector_scaled_effects, main = paste("\n total causal effect", dir, "position", perturbated_position), col = colors_by_effect)
       }
         
       if (analysis) {
@@ -120,6 +137,7 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", r
     
     # print(cbind(effects, current_scaled_effects, colors_by_effect))
   }
+  title(caption, outer = TRUE )
   return(results)
 }
 
