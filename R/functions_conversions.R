@@ -7,7 +7,7 @@
 # library(graph)
 
 # returns adjacency matrix of g with 1s indicating an edge. Edge weights are ignored
-get_adjmatrix <- function(g) {
+get_adjmatrix <- function(g, option="") {
   ## list of nodes
   ln <- names(nodeData(g))
   ## list of edges in format "a|b"
@@ -22,13 +22,62 @@ get_adjmatrix <- function(g) {
     from <- which(splt[[1]][1] == ln)[[1]]
     to <- which(splt[[1]][2] == ln)[[1]]
     am[[from, to]] <- 1
+    if(option == "skeleton") {
+      am[[to,from]] <- 1
+    }
   }
   return(am)
 }
 
 # checks if two graphs g1 and g2 are identical
-compare_graphs <-function(g1, g2) {
+compare_graphs <-function(g1, g2, type="graph", diff="") {
+  # I assume both graphs have the same number of nodes
+  n = length(names(nodeData(g1)))
+  if(diff == "missing") {
+    am1 = get_adjmatrix(g1, option="skeleton")
+    am2 = get_adjmatrix(g2, option="skeleton")
+    for(i in 1:n) {
+      for(j in (i+1):n) {
+        if(j > n) next
+        if(am1[[i, j]] == am2[[i, j]]) {
+          next
+        }
+        if(am1[[i, j]] == 1) {
+          cat("second graph misses edge", "(", i, j, ")")
+        } else {
+          cat("first graph misses edge", "(", i, j, ")")
+        }
+      }
+    }
+  }
+  if(diff == "all") {
+    am1 = get_adjmatrix(g1)
+    am2 = get_adjmatrix(g2)
+    for(i in 1:n) {
+      for(j in (i+1):n) {
+        if(j > n) next
+        if((am1[[i, j]] == am2[[i, j]]) && (am1[[j, i]] == am2[[j, i]])) {
+          next
+        }
+        cat("first graph has edge(s): ")
+        if(am1[[i, j]] == 1) cat("(",i, j,") ")
+        if(am1[[j, i]] == 1) cat("(",j, i,") ")
+        cat("\n")
+        cat("second graph has edge(s): ")
+        if(am2[[i, j]] == 1) cat("(",i, j,") ")
+        if(am2[[j, i]] == 1) cat("(",j, i,") ")
+        cat("\n")
+        cat("--------------------------")
+        cat("\n")
+      }
+    }
+  }
+  if(type == "graph") {
     return(identical(get_adjmatrix(g1),get_adjmatrix(g2)))
+  }
+  if(type == "skeleton") {
+    return(identical(get_adjmatrix(g1, option="skeleton"), get_adjmatrix(g2, option="skeleton")))
+  }
 }
 
 compare_all_graphs <- function(list_of_graphs) {
