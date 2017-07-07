@@ -30,6 +30,15 @@ get_adjmatrix <- function(g, option="") {
 }
 
 # checks if two graphs g1 and g2 are identical
+# for this comparison one can choose type "graph" which compares
+# all edges and their directions
+# type skeleton, however, only compares the existence of edges and
+# does not consider the direction
+# apart from this one can make a diff of the graphs
+# this outputs all differences between the two graphs
+# diff="all" outputs every difference, while diff="missing" only
+# reports missing edges in the skeleton meaning that the direction of
+# edges is ignored
 compare_graphs <-function(g1, g2, type="graph", diff="") {
   # I assume both graphs have the same number of nodes
   n = length(names(nodeData(g1)))
