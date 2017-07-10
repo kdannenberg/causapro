@@ -473,7 +473,7 @@ plot_graph <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", g
   # what happens if edgecolor is NULL
   eAttrs <- list()
   eAttrs$color <- edgecolor
-
+  
   # this plots the graph with the given options
   pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) 
   plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
@@ -503,6 +503,28 @@ plot_graph <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", g
     }
   }
 }
+
+# function that computes the edgecolors of a given graph
+# edges with weight 2 (conflict edges) are colored red
+get_eAttrs <- function(graph) {
+  # list of nodes
+  ln <- nodes(graph)
+  n <- length(ln)
+  wm <- wgtMatrix(graph)
+  # init eAtrrs
+  eAttrs <- list()
+  eAttrs$color <- c()
+  for (i in 1:n) {
+    for (j in 1:n) {
+      if(wm[i,j] == 2) {
+        str = paste0(ln[[i]], "~", ln[[j]])
+        eAttrs$color <- c(eAttrs$color, str = "red")
+      }
+    }
+  }
+  return(eAttrs)
+}
+
 # Compute pc if necessary
 get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info) {
   parameters_to_info_file(parameters_for_info, outpath)
