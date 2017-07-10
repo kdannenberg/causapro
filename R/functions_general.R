@@ -461,9 +461,48 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
   }
 }
 
+## instead of fixing/working on the above function I think it is easier to write a new plot function the way we need it and then integrate it into the program if necessary
+## what to do about drawnode, if it would be missing it was previously computed through
+## node_function_for_graph which, however needs coloring
+## for now I assume that this has been already computed and is NOT missing
+plot_graph <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="", plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs, output_formats = "pdf") {
+  
+  nAttrs <- list()
+  nAttrs$fillcolor <- fillcolor
 
+  # what happens if edgecolor is NULL
+  eAttrs <- list()
+  eAttrs$color <- edgecolor
 
+  # this plots the graph with the given options
+  pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) 
+  plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
 
+  ## just a thought...
+  ## how about splitting plotting and writing to a file
+  ## seems a lot cleaner to me especially if one wants to just
+  ## take a short look on something without storing it forever on
+  ## a hard drive
+  for (format in output_formats) {
+    if (!nchar(outpath) == 0) {
+      if (!is.null(coloring) && !(coloring == "")) {
+        if (format == "pdf") {
+          pdf(paste(outpath, "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
+        } else if ((format == "ps") || (format == "postscript")) {
+          postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
+        }
+      } else {
+        if (format == "pdf") {
+          pdf(paste(outpath, ".pdf", sep = ""))
+        } else if ((format == "ps") || (format == "postscript")) {
+          postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
+        }
+      }
+      plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption) 
+      dev.off()
+    }
+  }
+}
 # Compute pc if necessary
 get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info) {
   parameters_to_info_file(parameters_for_info, outpath)
