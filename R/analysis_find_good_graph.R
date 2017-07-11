@@ -5,24 +5,39 @@ source("functions_causal_effects.R")
 source("configuration_data.R")
 
 ## all_graphs saved
-all_results <- list()
-all_graphs <- list()
-for (i in 1:100) {
-  print(paste("DURCHLAUF", i))
-  source('~/Documents/Uni/Viren/ProteinCausalPaths/R/compute_DAG_G.R')
-  edges <- conflict_edges(results$pc@graph)
-  all_results[[i]] <- results
-  all_graphs[[i]] <- results$pc@graph
-  if ((edges$conflict == 0) && (edges$bidirected == 0)) {
-    break
-  }
-}
+# all_results <- list()
+# all_graphs <- list()
+# for (i in 1:100) {
+#   print(paste("DURCHLAUF", i))
+#   source('~/Documents/Uni/Viren/ProteinCausalPaths/R/compute_DAG_G.R')
+#   edges <- conflict_edges(results$pc@graph)
+#   all_results[[i]] <- results
+#   all_graphs[[i]] <- results$pc@graph
+#   if ((edges$conflict == 0) && (edges$bidirected == 0)) {
+#     break
+#   }
+# }
+# 
+# save(all_graphs, file = paste0(outpath, "-pc-retry_graphs.RData"))
+#### save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
 
-save(all_graphs, file = paste0(outpath, "-pc-retry_graphs.RData"))
+load(file = paste0(outpath, "-pc-retry_graphs.RData"))
+
+# all_results saved
+# for (i in 1:100) {
+#   print(paste("DURCHLAUF", i))
+#   all_results[[i]] <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+#                                          protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
+#                                          amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
+#                                          pymol_bg_color = "grey",
+#                                          barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
+# }
 # save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
 
+load(file = paste0(outpath, "-pc-retry_results.RData"))
 
-# equal <- comp_all_graphs(all_graphs)
+
+equal <- comp_all_graphs(all_graphs)
 print(which(equal, arr.ind = TRUE))
 
 
@@ -55,16 +70,7 @@ conflicts_sorted <- conflicts_sorted[, order(conflicts_sorted["bidirected",])]
 print("Different types of edges in the different graphs (columns)")
 print(conflicts_sorted)
 
-# all_results saved
-for (i in 1:100) {
-print(paste("DURCHLAUF", i))
-all_results[[i]] <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
-                              protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
-                              amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
-                              pymol_bg_color = "grey",
-                              barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
-}
-save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
+
 
 # of_max <- quality_measure(apply(of_effects, 1, max))
 

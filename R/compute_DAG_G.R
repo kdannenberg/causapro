@@ -51,15 +51,15 @@ position_numbering = "crystal"
 
 # Analysis parameters
 # remove_positions_with_low_variance = TRUE
-min_pos_var = 0.01
+min_pos_var = 0.001
 only_cols = NULL
 only_cols_label = ""
 
 alpha = 0.01
 ranked = FALSE
 
-pc_solve_conflicts <- FALSE
-pc_u2pd = "retry"
+pc_solve_conflicts <- TRUE
+pc_u2pd = "relaxed"
 
 weight_effects_on_by = ""
 # weight_effects_on_by = "var"

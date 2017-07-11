@@ -522,7 +522,7 @@ get_eAttrs <- function(graph) {
       }
     }
   }
-  return(eAttrs)
+  return(eAttrs$color)
 }
 
 # Compute pc if necessary
