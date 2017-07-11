@@ -396,6 +396,8 @@ plot_graph <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "
         if (missing(drawnode)) {
           drawnode <- node_function_for_graph(!is.null(coloring) && (grepl("pie", coloring)))
         }
+        ## very ugly - I just overwrite edgecolor
+        edgecolor <- get_eAttrs(graph)
         plot_graph_new(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, outpath = outpath, caption = caption, plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
       }
     }
