@@ -355,7 +355,7 @@ colors_for_nodes <- function(node_clusters, protein, coloring, colors, clusterin
 }
 
 # TODO: call plot_graphs oder so
-plot_graph <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "", graph_layout = "dot", protein, 
+plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", graph_layout = "dot", protein, 
                        position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE, 
                        plot_only_subgraphs = NULL, subgraphs, numerical = TRUE, output_formats) {
   if (numerical) {
@@ -391,13 +391,24 @@ plot_graph <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "
         #                     plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
         ## can not use missing here because those are not the parameters of this function
         node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
-        subgraphs <- subgraphs_from_node_clusters(node_clustering, graph, protein = protein)
-        fillcolor <- colors_for_nodes(node_clusters = node_clustering, protein, coloring = coloring, colors = colors)
+        if (missing(subgraphs)) {
+          if (plot_as_subgraphs_i || !is.null(plot_only_subgraphs)) {
+            subgraphs <- subgraphs_from_node_clusters(node_clustering, graph, protein = protein)
+          } else {
+            subgraphs <- NULL
+          }
+        }
+        if (missing(fillcolor)) {
+          fillcolor <- colors_for_nodes(node_clusters = node_clustering, protein, coloring = coloring, colors = colors)
+        }
         if (missing(drawnode)) {
           drawnode <- node_function_for_graph(!is.null(coloring) && (grepl("pie", coloring)))
         }
         ## very ugly - I just overwrite edgecolor
-        edgecolor <- get_eAttrs(graph)
+        if (missing(edgecolor)) {
+          edgecolor <- get_eAttrs(graph)
+        }
+        
         plot_graph_new(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, outpath = outpath, caption = caption, plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
       }
     }

@@ -51,20 +51,20 @@ position_numbering = "crystal"
 
 # Analysis parameters
 # remove_positions_with_low_variance = TRUE
-min_pos_var = 0.001
+min_pos_var = 0.01
 only_cols = NULL
 only_cols_label = ""
 
 alpha = 0.01
 ranked = FALSE
 
-pc_solve_conflicts <- TRUE
-pc_u2pd = "relaxed"
+pc_solve_conflicts <- FALSE
+pc_u2pd = "retry"
 
-weight_effects_on_by = ""
+# weight_effects_on_by = ""
 # weight_effects_on_by = "var"
 # weight_effects_on_by = "mean"
-# weight_effects_on_by = "median"
+weight_effects_on_by = "median"
 
 stages <- c("orig") # "sub"
 plot_types <- c("localTests", "graphs")
