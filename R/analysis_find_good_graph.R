@@ -1,49 +1,77 @@
 source("configuration_code.R")
 
 source("functions_causal_effects.R")
+source("functions_general.R")
 
 source("configuration_data.R")
 
-## all_graphs saved
-all_results <- list()
-all_graphs <- list()
-for (i in 1:100) {
-  print(paste("DURCHLAUF", i))
-  source('~/Documents/Uni/Viren/ProteinCausalPaths/R/compute_DAG_G.R')
-  edges <- conflict_edges(results$pc@graph)
-  all_results[[i]] <- results
-  all_graphs[[i]] <- results$pc@graph
-  if ((edges$conflict == 0) && (edges$bidirected == 0)) {
-    break
+protein = "PDZ"
+int_pos <- interesting_positions(protein = protein, coloring = "")
+
+results <- protein_causity_G(min_pos_var = min_pos_var, alpha = alpha,
+                          pc_solve_conflicts = FALSE, pc_u2pd = "retry", 
+                          graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
+                          data_in_results = TRUE, outpars_in_results = TRUE)
+data <- results$data
+caption <- results$
+
+top_11_percetile <- 1 - 11 / dim(data)[2]
+
+alpha = 0.01
+min_pos_var = 0.01
+
+s = 10     # sample size
+
+new = TRUE
+save = FALSE
+
+if (new) {
+  ## all_graphs saved
+  # all_results <- list()
+  # all_graphs <- list()
+  # for (i in 1:s) {
+  #   print(paste("DURCHLAUF", i))
+  #   # source('~/Documents/Uni/Viren/ProteinCausalPaths/R/compute_DAG_G.R')
+  #   results <- protein_causity_G(min_pos_var = min_pos_var, alpha = alpha,
+  #                                pc_solve_conflicts = FALSE, pc_u2pd = "retry",
+  #                                evaluation = FALSE, analysis = FALSE)
+  #   edges <- conflict_edges(results$pc@graph)
+  #   all_results[[i]] <- results
+  #   all_graphs[[i]] <- results$pc@graph
+  #   if ((edges$conflict == 0) && (edges$bidirected == 0)) {
+  #     break
+  #   }
+  # }
+  if (save) {
+    save(all_graphs, file = paste0(outpath, "-pc-retry_graphs.RData"))
   }
+  
+  
+  #### save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
+  
+  
+  #### all_results saved
+  for (i in 1:s) {
+    print(paste("DURCHLAUF", i))
+    all_results[[i]] <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+                                           protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
+                                           amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
+                                           pymol_bg_color = "grey",
+                                           barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
+  }
+  if (save) {
+    save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
+  }
+} else {
+  load(file = paste0(outpath, "-pc-retry_graphs.RData"))
+  load(file = paste0(outpath, "-pc-retry_results.RData"))
 }
-
-save(all_graphs, file = paste0(outpath, "-pc-retry_graphs.RData"))
-#### save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
-
-# load(file = paste0(outpath, "-pc-retry_graphs.RData"))
-
-#### all_results saved
-for (i in 1:100) {
-  print(paste("DURCHLAUF", i))
-  all_results[[i]] <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
-                                         protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
-                                         amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
-                                         pymol_bg_color = "grey",
-                                         barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
-}
-save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
-
-load(file = paste0(outpath, "-pc-retry_results.RData"))
-
 
 # equal <- comp_all_graphs(all_graphs)
 main_diagonal <- matrix(as.logical(diag(nrow = dim(equal)[1])), ncol = dim(equal)[2])
 print(which(equal & !main_diagonal, arr.ind = TRUE))
 
 
-protein = "PDZ"
-int_pos <- interesting_positions(protein = protein, coloring = "")
 # n_nodes <- dim(all_results$)
 all_one_effects <- as.matrix(all_results[[1]]$ida$`372`$of$effects[,1])
 all_one_effects[,] <- 1
@@ -56,8 +84,8 @@ weight_effects_on_by = "median"  # sieht (in der Summe) am besten aus
 
 
 # which part of the analysis should be plotted?
-# plot = "sum over all graphs"
-plot = "best graph"
+plot = "sum over all graphs"
+# plot = "best graph"
 # plot = 1:25     ## if (is.numeric(plot) && length(plot) > 1) --> deviation from mean for graphs nr. plot
 
 
@@ -145,16 +173,18 @@ element_in_most_of_the_6_sets <- function(max_pos_75, max_pos_85, max_pos_95,
   return(as.integer(names(which(table(all) == max(table(all))))))
 }
 
-i <- find_graphs_with_highest_int_pos(all_results = all_results, obj_fct = element_in_most_of_the_6_sets)
+best_graphs <- find_graphs_with_highest_int_pos(all_results = all_results, obj_fct = element_in_most_of_the_6_sets)
 
 # i <- 76 # ist in max_pos_85 und _95 und in max_diff_pos_75 und _95
 # i <- 98 # für min_var = 0.001
-if (plot == "best graph") {
-  causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
-                    protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
-                    amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
-                    pymol_bg_color = "grey", barplot = TRUE,
-                    caption = c(paste("Graph", i), caption), show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
+for (i in best_graphs) {
+  if (plot == "best graph") {
+    causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+                      protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
+                      amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
+                      pymol_bg_color = "grey", barplot = TRUE,
+                      caption = c(paste("Graph", i), caption), show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
+  }
 }
 
 # select for a results object the mean results on and of position 372, respectively and return both as a list
@@ -209,7 +239,12 @@ sum_all_effects <- function(all_results, weight_effects_on_by, print = TRUE) {
 }
 
 if (plot == "sum over all graphs") {
-  sum_all_effects(all_results, weight_effects_on_by = weight_effects_on_by)
+  cat("\n")
+  sum_effect <- sum_all_effects(all_results, weight_effects_on_by = weight_effects_on_by)
+  print("SUM EFFECTS OF:")
+  stat_sum_on <- statistics_of_influenced_positions(sum_effect$sum_of, percentile = top_11_percetile, interesting_positions = int_pos, print = TRUE)
+  print("SUM EFFECTS ON:")
+  stat_sum_of <- statistics_of_influenced_positions(sum_effect$sum_on, percentile = top_11_percetile, interesting_positions = int_pos, print = TRUE)
 }
 
 

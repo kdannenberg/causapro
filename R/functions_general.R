@@ -7,7 +7,8 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
                                  parameters_for_info_file, alpha, pc_solve_conflicts, pc_u2pd, caption, analysis, stages, plot_types, coloring, colors, 
                                  graph_layout = "dot", plot_as_subgraphs = plot_as_subgraphs, 
                                  plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console, 
-                                 lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, print_analysis, plot_analysis, graph_output_formats) {
+                                 lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, graph_output_formats,
+                                 numerical) {
   print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
@@ -30,21 +31,8 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
              coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
              plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats)
   
-  # Analysis
-  if (analysis) {
-    results <- analysis_after_pc(pc, data, outpath = outpath, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, coloring = coloring, colors = colors,  stages = stages, plot_types = plot_types, unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r, compute_localTests_anew = compute_localTests_anew, print = print_analysis, plot = plot_analysis, caption = caption)
-    
-    # print_analysis <- FALSE
-    # plot_analysis <- FALSE
-  } 
-  else {
-    results <- list()
-    results$pc <- pc
-    
-    results$orig <- list()
-    results$orig$graph$NEL <- pc@graph
-    # results <- analysis_after_pc(pc, data, outpath = outpath, protein = protein, position_numbering = position_numbering, layout = graph_layout, coloring = coloring, colors = colors,  stages = c(), plot_types = plot_types, unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r, compute_localTests_anew = compute_localTests_anew, print = FALSE, plot = FALSE)
-  }
+  results <- list()
+  results$pc <- pc
   
   return(results)
 } 
@@ -60,8 +48,9 @@ sink.reset <- function() {
 subgraph_of_interesting_positions <- function(graphNEL, graph_dagitty, positions = NULL, protein = NULL, position_numbering = NULL) {
   if (is.null(positions)) {
     positions <- interesting_positions(protein, position_numbering)
+    positions <- intersect(positions, graphNEL@nodes)
   }
-  subgraph <- subGraph(positions, graphNEL)
+  subgraph <- subGraph(as.character(positions), graphNEL)
   return(subgraph)
 }
 
@@ -404,11 +393,12 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         if (missing(drawnode)) {
           drawnode <- node_function_for_graph(!is.null(coloring) && (grepl("pie", coloring)))
         }
-        ## very ugly - I just overwrite edgecolor
         if (missing(edgecolor)) {
           edgecolor <- get_eAttrs(graph)
         }
-        
+        if (!is.null(coloring) && !(coloring == "")) {
+            outpath <- paste(outpath, "_", graph_layout, "_colored-", coloring, sep = "")
+        } 
         plot_graph_new(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, outpath = outpath, caption = caption, plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
       }
     }
@@ -508,21 +498,23 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
   ## seems a lot cleaner to me especially if one wants to just
   ## take a short look on something without storing it forever on
   ## a hard drive
+  ## 
+  ## I think you are right. Still if an outpath is given, I would save it there as a file!
   for (format in output_formats) {
     if (!nchar(outpath) == 0) {
-      if (!is.null(coloring) && !(coloring == "")) {
-        if (format == "pdf") {
-          pdf(paste(outpath, "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
-        } else if ((format == "ps") || (format == "postscript")) {
-          postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
-        }
-      } else {
+      # if (!is.null(coloring) && !(coloring == "")) {
+      #   if (format == "pdf") {
+      #     pdf(paste(outpath, "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
+      #   } else if ((format == "ps") || (format == "postscript")) {
+      #     postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
+      #   }
+      # } else {
         if (format == "pdf") {
           pdf(paste(outpath, ".pdf", sep = ""))
         } else if ((format == "ps") || (format == "postscript")) {
           postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
         }
-      }
+      # }
       plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption) 
       dev.off()
     }

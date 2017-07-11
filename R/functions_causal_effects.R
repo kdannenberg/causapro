@@ -156,8 +156,11 @@ statistics_of_influenced_positions <- function(effects, percentile, interesting_
   if (print) {
     print(paste("Thereof",  length(int_pos_strongly_influenced), "out of the", length(interesting_positions
                                         ), "interesting positions:", paste(sort(int_pos_strongly_influenced), collapse = ", ")))
-    print(paste("Missing: ", paste(setdiff(interesting_positions, most_influenced_positions), collapse = ", ")))
+    print(paste("and also (FALSE POSITIVE): ", paste(setdiff(most_influenced_positions, int_pos_strongly_influenced), collapse = ", ")))
+    print(paste("missing  (FALSE NEGATIVE): ", paste(setdiff(interesting_positions, most_influenced_positions), collapse = ", ")))
+    
   }
+  cat("\n")
   return(int_pos_strongly_influenced)
 }
 

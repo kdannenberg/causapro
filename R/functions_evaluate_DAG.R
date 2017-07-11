@@ -16,7 +16,7 @@ analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, gr
                               coloring = coloring, colors = colors, stages = c("orig", "anc"), 
                               plot_types = c("localTests", "graphs"), unabbrev_r_to_info, print_r_to_console, 
                               lines_in_abbr_of_r, compute_localTests_anew = FALSE, print = TRUE, plot = TRUE, 
-                              caption = "") {
+                              caption = "", graph_output_formats = "pdf") {
   results <- list()
   results$pc <- pc
   
@@ -44,7 +44,7 @@ analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, gr
     # }
     # plot(subgraph)
     results$sub$graph$NEL <- subgraph
-    subgraph_dagitty <- conv_to_r(subgraph, type_of_graph = type_of_graph, nodename_prefix = "P")
+    subgraph_dagitty <- conv_to_r(subgraph, type_of_graph = "pdag", nodename_prefix = "P")
     results$sub$localTests <- evaluate_DAG(data = data, graph = subgraph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, stage = "sub", plot = TRUE, compute_localTests_anew = compute_localTests_anew)
   }
   
@@ -67,8 +67,8 @@ analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, gr
   }
   
   if (plot) {
-    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, coloring = coloring, colors = colors, caption = caption, outpath = outpath)
-    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, coloring = coloring, colors = colors, caption = caption, outpath = "")
+    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats)
+    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats)
   }
   if (print) {
     results$r_statistics <- print_evaluation_results_to_info_file(results = results, outpath = outpath, stages, unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r)
@@ -196,10 +196,15 @@ pairs_of_pos <- function(r) {
 # plotstages: "main", "sub", "anc", "all"
 plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph_layout, 
                   plot_as_subgraphs = FALSE, plot_only_subgraphs = FALSE, 
-                  coloring, colors, outpath = "", caption = "") {
+                  coloring, colors, outpath = "", caption = "", graph_output_formats = graph_output_formats) {
   if (!(outpath == "" || is.null(outpath))) {
-    # postscript(paste(outpath, "_analysis.ps",  sep = ""), paper="special", width=10, height=9)
-    postscript(paste(outpath, "_analysis.ps",  sep = ""), paper="special", width=10, height=8)
+    for (format in graph_output_formats) {
+      if (format == "pdf") {
+        pdf(paste(outpath, "_analysis.pdf", sep = ""))
+      } else if ((format == "ps") || (format == "postscript")) {
+        postscript(paste(outpath, "_analysis.ps",  sep = ""), paper = "special", width=10, height=8)
+      }
+    }
   } else if (!combined_plot) {
     garbage <- graphics.off()
   }
@@ -232,7 +237,7 @@ plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph
       if (!is.null(results[[stage]]$graph$NEL)) {
         plot_graph(graph = results[[stage]]$graph$NEL, caption = caption, protein = protein, position_numbering = position_numbering, 
                    graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, 
-                   coloring = coloring, colors = colors, outpath = "")
+                   coloring = coloring, colors = colors, outpath = "", output_formats = "")
         
         # colors <- colors_for_graph(protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors)
         # nAttrs <- list()
