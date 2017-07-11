@@ -465,7 +465,7 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
 ## what to do about drawnode, if it would be missing it was previously computed through
 ## node_function_for_graph which, however needs coloring
 ## for now I assume that this has been already computed and is NOT missing
-plot_graph <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="", plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs, output_formats = "pdf") {
+plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="", plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs, output_formats = "pdf") {
   
   nAttrs <- list()
   nAttrs$fillcolor <- fillcolor
