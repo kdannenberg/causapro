@@ -73,7 +73,7 @@ plot_only_subgraphs = NULL
 ## analyse DAG using dagitty
 analysis = FALSE
 ## do not print the dagitty analysis, but save it somewhere?
-print_analysis = TRUE
+print_analysis = FALSE
 ## plot the dagitty analysis
 plot_analysis = FALSE
 ## compute new dag/analysis (TRUE) or use precomputed one (FALSE)
@@ -135,9 +135,9 @@ if (type_of_data == "NMR") {
 #   data <- do.call(rbind, data_list)
 # } else {
 
-  source_of_data = paste(protein, type_of_data, state, sep = "-")
-  filename <- paste("../Data/", source_of_data, ".csv", sep = "")
-  data <- read_data(filename, transpose = transpose)
+source_of_data = paste(protein, type_of_data, state, sep = "-")
+filename <- paste("../Data/", source_of_data, ".csv", sep = "")
+data <- read_data(filename, transpose = transpose)
 # }
 colnames(data) <- sapply(strsplit(colnames(data), " "), function(x) x[1])
 

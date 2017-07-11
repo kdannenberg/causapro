@@ -381,16 +381,22 @@ plot_graph <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "
         } else {
           graph_layout_i <- graph_layout[1]
         }
-        ## TODO: call plot.graph (TODO: rausfinden ob der Punkt im Sinne des R-Styleguides hier angemessen ist)
-        ## TODO: remove parameters protein, position_numbering, coloring, colors, ... die nur für int_pos nötig sind. (stattdessen fillcolor übergeben)
         ## TODO: zusammenfügen:
         ## node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
         ## fillcolor <- colors_for_nodes(node_clusters = node_clustering, protein, coloring = coloring, colors = colors)
         ## zu einer in bel. skript möglichst eindach aufrufbaren Fkt. die für protein, pos_numbering etc (colors mit default wert) fillcolors so zurückgibt, 
         ## dass man sie für diese plot.graph-Fkt nutzen kann
-        plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, protein = protein, 
-                             position_numbering = position_numbering, coloring = coloring_i, colors = colors_i, outpath = outpath, caption = caption, 
-                             plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
+        # plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, protein = protein, 
+        #                     position_numbering = position_numbering, coloring = coloring_i, colors = colors_i, outpath = outpath, caption = caption, 
+        #                     plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
+        ## can not use missing here because those are not the parameters of this function
+        node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
+        subgraphs <- subgraphs_from_node_clusters(node_clustering, graph, protein = protein)
+        fillcolor <- colors_for_nodes(node_clusters = node_clustering, protein, coloring = coloring, colors = colors)
+        if (missing(drawnode)) {
+          drawnode <- node_function_for_graph(!is.null(coloring) && (grepl("pie", coloring)))
+        }
+        plot_graph_new(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, outpath = outpath, caption = caption, plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
       }
     }
   }
@@ -465,7 +471,7 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
 ## what to do about drawnode, if it would be missing it was previously computed through
 ## node_function_for_graph which, however needs coloring
 ## for now I assume that this has been already computed and is NOT missing
-plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="", plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs, output_formats = "pdf") {
+plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="", plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL, output_formats = "pdf") {
   
   nAttrs <- list()
   nAttrs$fillcolor <- fillcolor
@@ -473,6 +479,12 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
   # what happens if edgecolor is NULL
   eAttrs <- list()
   eAttrs$color <- edgecolor
+
+  if (!is.null(plot_only_subgraphs)) {
+    # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
+    graph <- subgraphs[[plot_only_subgraphs]]$graph
+    subgraphs <- NULL
+  }
   
   # this plots the graph with the given options
   pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) 
@@ -518,7 +530,7 @@ get_eAttrs <- function(graph) {
     for (j in 1:n) {
       if(wm[i,j] == 2) {
         str = paste0(ln[[i]], "~", ln[[j]])
-        eAttrs$color <- c(eAttrs$color, str = "red")
+        eAttrs$color[str] <- "red"
       }
     }
   }
