@@ -493,13 +493,6 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
   pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) 
   plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
 
-  ## just a thought...
-  ## how about splitting plotting and writing to a file
-  ## seems a lot cleaner to me especially if one wants to just
-  ## take a short look on something without storing it forever on
-  ## a hard drive
-  ## 
-  ## I think you are right. Still if an outpath is given, I would save it there as a file!
   for (format in output_formats) {
     if (!nchar(outpath) == 0) {
       # if (!is.null(coloring) && !(coloring == "")) {
