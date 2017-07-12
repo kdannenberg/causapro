@@ -2,28 +2,54 @@ source("configuration_code.R")
 
 source("functions_causal_effects.R")
 source("functions_general.R")
+source("functions_conversions.R")
 
 source("configuration_data.R")
 
 protein = "PDZ"
 int_pos <- interesting_positions(protein = protein, coloring = "")
 
+alpha = 0.01
+min_pos_var = 0.001
+
+s = 10     # sample size
+
+new = FALSE
+save = FALSE
+
+pc_solve_conflicts = FALSE
+pc_u2pd = "retry"
+
+use_scaled_effects_for_sum = FALSE   # otherwise scaling is done in the end, for the sum
+
 results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
-                          pc_solve_conflicts = FALSE, pc_u2pd = "retry", 
+                          pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, 
                           graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
                           data_in_results = TRUE, output_parameters_in_results = TRUE)
 data <- results$data
 caption <- results$caption
+outpath <- results$outpath
 
-top_11_percetile <- 1 - 11 / dim(data)[2]
+top_11_percetile <- 1 - (11 / dim(data)[2])
 
-alpha = 0.01
-min_pos_var = 0.01
 
-s = 10     # sample size
+# n_nodes <- dim(all_results$)
+all_one_effects <- as.matrix(all_results[[1]]$ida$`372`$of$effects[,1])
+all_one_effects[,] <- 1
+colors_for_barplot <- color_by_effect(all_one_effects, int_pos, mode = "#FFFFFF")
 
-new = TRUE
-save = FALSE
+# weight_effects_on_by = ""          # in der Summe ganz schlecht
+# weight_effects_on_by = "var"
+# weight_effects_on_by = "mean"
+weight_effects_on_by = "median"  # sieht (in der Summe) am besten aus
+
+
+# which part of the analysis should be plotted?
+plot = "sum over all graphs"
+# plot = "best graph"
+# plot = 1:25     ## if (is.numeric(plot) && length(plot) > 1) --> deviation from mean for graphs nr. plot
+
+
 
 if (new) {
   ## all_graphs saved
@@ -67,27 +93,9 @@ if (new) {
   load(file = paste0(outpath, "-pc-retry_results.RData"))
 }
 
-# equal <- comp_all_graphs(all_graphs)
-main_diagonal <- matrix(as.logical(diag(nrow = dim(equal)[1])), ncol = dim(equal)[2])
-print(which(equal & !main_diagonal, arr.ind = TRUE))
-
-
-# n_nodes <- dim(all_results$)
-all_one_effects <- as.matrix(all_results[[1]]$ida$`372`$of$effects[,1])
-all_one_effects[,] <- 1
-colors_for_barplot <- color_by_effect(all_one_effects, int_pos, mode = "#FFFFFF")
-
-# weight_effects_on_by = ""
-# weight_effects_on_by = "var"
-# weight_effects_on_by = "mean"
-weight_effects_on_by = "median"  # sieht (in der Summe) am besten aus
-
-
-# which part of the analysis should be plotted?
-plot = "sum over all graphs"
-# plot = "best graph"
-# plot = 1:25     ## if (is.numeric(plot) && length(plot) > 1) --> deviation from mean for graphs nr. plot
-
+# equal <- compare_all_graphs(all_graphs)
+# main_diagonal <- matrix(as.logical(diag(nrow = dim(equal)[1])), ncol = dim(equal)[2])
+# print(which(equal & !main_diagonal, arr.ind = TRUE))
 
 
 conflicts_sorted <- sapply(all_graphs, conflict_edges)
@@ -188,15 +196,24 @@ for (i in best_graphs) {
 }
 
 # select for a results object the mean results on and of position 372, respectively and return both as a list
-mean_effects <- function(results, weight_effects_on_by) {
+mean_effects <- function(results, weight_effects_on_by, scaled_effects = FALSE) {
   on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
   
-  of_effects <- results$ida$`372`$of$scaled_effects
+  if (scaled_effects) {
+    of_effects <- results$ida$`372`$of$scaled_effects
+  } else {
+    of_effects <- results$ida$`372`$of$effects
+  }
   of_max <- apply(of_effects, 1, max)
   of_min <- apply(of_effects, 1, min)
   
-  on_max <- results$ida$`372`[[on]]$scaled_effects[, 1]
-  on_min <- results$ida$`372`[[on]]$scaled_effects[, 2]
+  if (scaled_effects) {
+    on_max <- results$ida$`372`[[on]]$scaled_effects[, 1]
+    on_min <- results$ida$`372`[[on]]$scaled_effects[, 2]
+  } else {
+    on_max <- results$ida$`372`[[on]]$effects[, 1]
+    on_min <- results$ida$`372`[[on]]$effects[, 2]
+  }
   
   ret_list <- list()
   ret_list$of <- apply(cbind(of_max, of_min), 1, mean)
@@ -207,7 +224,7 @@ mean_effects <- function(results, weight_effects_on_by) {
 # sum all effects:
 # should rather be devided by 100, thus mean
 sum_all_effects <- function(all_results, weight_effects_on_by, print = TRUE) {
-  all_mean_effects <- lapply(all_results, mean_effects, weight_effects_on_by = weight_effects_on_by)
+  all_mean_effects <- lapply(all_results, mean_effects, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum)
   all_mean_effects_of <- do.call(cbind, (lapply(all_mean_effects, function(list) return(list$of))))
   sum_effect_of <- apply(all_mean_effects_of, 1, sum)
   on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
@@ -221,17 +238,23 @@ sum_all_effects <- function(all_results, weight_effects_on_by, print = TRUE) {
   all_mean_effects_on <- do.call(cbind, (lapply(all_mean_effects, function(list) return(list[[on]]))))
   sum_effect_on <- apply(all_mean_effects_on, 1, sum)   
   
-  
-  
   if (print) {
     par(mfrow = c(2,1))
     scaled_effects_for_coloring_of <- scale_effects(as.matrix(sum_effect_of), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
     colors_by_effect <- color_by_effect(scaled_effects_for_coloring_of, int_pos, mode = "#FFFFFF")
-    barplot(sum_effect_of, main = "sum of effects of position 372", col = colors_by_effect)
+    if (use_scaled_effects_for_sum) {
+      barplot(sum_effect_of, main = "sum of effects of position 372", col = colors_by_effect)
+    } else {
+      barplot(as.vector(scaled_effects_for_coloring_of), main = "sum of effects of position 372", col = colors_by_effect)
+    }
     
     scaled_effects_for_coloring_on <- scale_effects(as.matrix(sum_effect_on), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
     colors_by_effect <- color_by_effect(scaled_effects_for_coloring_on, int_pos, mode = "#FFFFFF")
-    barplot(sum_effect_on, main = paste("sum of effects", on, "position 372"), col = colors_by_effect)
+    if (use_scaled_effects_for_sum) {
+      barplot(sum_effect_on, main = paste("sum of effects", on, "position 372"), col = colors_by_effect)
+    } else {
+      barplot(as.vector(scaled_effects_for_coloring_on), main = paste("sum of effects", on, "position 372"), col = colors_by_effect)
+    }
   }
   # if (plot == "of") {
   
@@ -252,14 +275,18 @@ test_sum_all_effects <- function() {
   scaled_results_1_of <- matrix(c(1,0,0.5,1,1,1,2,2,-0.5), byrow = TRUE, ncol = 3)
   scaled_results_1_on <- matrix(c(1,0,1,1,2,1), byrow = TRUE, ncol = 2)
   rownames(scaled_results_1_of) <- rownames(scaled_results_1_on) <- as.character(1:3)
-  fake_result_1 <- list(ida=list(`372` = list(of = list(scaled_effects = scaled_results_1_of), 
-                                              on = list(scaled_effects = scaled_results_1_on))))
+  # fake_result_1 <- list(ida=list(`372` = list(of = list(scaled_effects = scaled_results_1_of), 
+  #                                             on = list(scaled_effects = scaled_results_1_on))))
+  fake_result_1 <- list(ida=list(`372` = list(of = list(effects = scaled_results_1_of), 
+                                              on = list(effects = scaled_results_1_on))))
   
   scaled_results_2_of <- matrix(c(2,3,1), byrow = TRUE, ncol = 1)
   scaled_results_2_on <- matrix(c(0,0,1,1,2,2), byrow = TRUE, ncol = 2)
   rownames(scaled_results_2_of) <- rownames(scaled_results_2_on) <- as.character(1:3)
-  fake_result_2 <- list(ida=list(`372` = list(of = list(scaled_effects = scaled_results_2_of), 
-                                              on = list(scaled_effects = scaled_results_2_on))))
+  # fake_result_2 <- list(ida=list(`372` = list(of = list(scaled_effects = scaled_results_2_of), 
+                                              # on = list(scaled_effects = scaled_results_2_on))))
+  fake_result_2 <- list(ida=list(`372` = list(of = list(effects = scaled_results_2_of), 
+                                              on = list(effects = scaled_results_2_on))))
   fake_results <- list(fake_result_1, fake_result_2)
   
   return(sum_all_effects(fake_results, weight_effects_on_by = "", print = FALSE))
@@ -287,7 +314,7 @@ deviation_from_mean <- function(all_results, dir, weight_effects_on_by, plot_gra
     all_mean_effects <- do.call(cbind, (lapply(all_mean_effects_all, function(list) return(list[[dir]]))))
     mean_effect <- apply(all_mean_effects, 1, sum) / length(all_results)
     
-    dev_from_mean <- apply(all_mean_effects_of, 2, function(distribution) {return(distribution - mean_effect)})
+    dev_from_mean <- apply(all_mean_effects, 2, function(distribution) {return(distribution - mean_effect)})
     
     graphics.off()
     par(mfrow = c(5,5))

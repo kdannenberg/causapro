@@ -16,7 +16,7 @@ analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, gr
                               coloring = coloring, colors = colors, stages = c("orig", "anc"), 
                               plot_types = c("localTests", "graphs"), unabbrev_r_to_info, print_r_to_console, 
                               lines_in_abbr_of_r, compute_localTests_anew = FALSE, print = TRUE, plot = TRUE, 
-                              caption = "", graph_output_formats = "pdf") {
+                              caption = "", graph_output_formats = "pdf", combined_plot = FALSE) {
   results <- list()
   results$pc <- pc
   
@@ -67,8 +67,12 @@ analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, gr
   }
   
   if (plot) {
-    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats)
-    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats)
+    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, 
+          coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats, 
+          combined_plot = combined_plot, position_numbering = position_numbering)
+    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, 
+          coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats, 
+          combined_plot = combined_plot, position_numbering = position_numbering)
   }
   if (print) {
     results$r_statistics <- print_evaluation_results_to_info_file(results = results, outpath = outpath, stages, unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r)
@@ -195,8 +199,9 @@ pairs_of_pos <- function(r) {
 # plottypes: "graphs", "localTests", "both"
 # plotstages: "main", "sub", "anc", "all"
 plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph_layout, 
-                  plot_as_subgraphs = FALSE, plot_only_subgraphs = FALSE, 
-                  coloring, colors, outpath = "", caption = "", graph_output_formats = graph_output_formats) {
+                  plot_as_subgraphs = FALSE, plot_only_subgraphs = FALSE, coloring, colors, 
+                  outpath = "", caption = "", graph_output_formats = graph_output_formats, 
+                  combined_plot = FALSE, position_numbering) {
   if (!(outpath == "" || is.null(outpath))) {
     for (format in graph_output_formats) {
       if (format == "pdf") {

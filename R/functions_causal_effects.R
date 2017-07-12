@@ -144,9 +144,11 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
 statistics_of_influenced_positions <- function(effects, percentile, interesting_positions, print = FALSE) {
   threshold = quantile(effects, probs = percentile)
   if (!is.null(dim(effects))) {
-    most_influenced_positions <- colnames(data[(rownames(effects)[which(effects > threshold)])])
+    # most_influenced_positions <- colnames(data[(rownames(effects)[which(effects > threshold)])])
+    most_influenced_positions <- (rownames(effects)[which(effects > threshold)])
   } else {
-    most_influenced_positions <- colnames(data[(names(effects)[which(effects > threshold)])])
+    # most_influenced_positions <- colnames(data[(names(effects)[which(effects > threshold)])])
+    most_influenced_positions <- (names(effects)[which(effects > threshold)])
   }
   if (print) {
     print(paste(length(most_influenced_positions), "positions over the threshold", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))

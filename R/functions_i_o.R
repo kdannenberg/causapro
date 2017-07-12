@@ -1,3 +1,5 @@
+library(stringr) # for str_replace_all
+
 get_data_description <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "") {
   data_description <- ""
   if (is.null(subtype_of_data) || subtype_of_data != "") {
@@ -221,7 +223,8 @@ rem_cols_by_colname <- function(data, remove) {
   return(data[, !(colnames(data) %in% remove)])
 }
 
-caption <- function(protein, data, alpha, min_pos_var, chars_per_line = 50) {
+## previously: "caption"
+get_caption <- function(protein, data, alpha, min_pos_var, chars_per_line = 50) {
   par_string = paste("protein: ", protein, ", data: ", data, ", alpha: ", alpha, ", var_cutoff: ", min_pos_var, sep = "")
   caption = strwrap(par_string, width = chars_per_line)
   return(caption)

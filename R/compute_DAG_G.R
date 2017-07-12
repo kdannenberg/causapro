@@ -53,7 +53,7 @@ protein_causality_G <- function(
   # 
   # Analysis parameters
   # remove_positions_with_low_variance = TRUE,
-  min_pos_var = 0.01,
+  min_pos_var = 0.005,
   only_cols = NULL,
   only_cols_label = "",
   # 
@@ -91,7 +91,7 @@ protein_causality_G <- function(
   graph_computation = FALSE,
   evaluation = FALSE,
   analysis = FALSE,#!pc_solve_conflicts,
-  stages = c("orig", "sub"), # "sub"
+  stages = c("orig"), #c("orig", "sub"), # "sub"
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
@@ -151,13 +151,15 @@ protein_causality_G <- function(
   
   # outpath = paste("/Outputs/", type_of_data, "/", only_cols_label, source_of_data, "-alpha=", alpha, sep="") 
   
-  caption <- caption(protein = protein, data = data_description, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = 45) #TODO rem_gaps_threshold hinzufügen
+  caption <- get_caption(protein = protein, data = data_description, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = 45) #TODO rem_gaps_threshold hinzufügen
   parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, 
                                                        only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = "/"))  
   
   
   graph_computation <- graph_computation || evaluation || analysis
   # Computation of the Graph
+  results <- list()
+  
   if (graph_computation) {
     results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
                          output_dir = output_dir, filename = filename, outpath = outpath, parameters_for_info_file = parameters_for_info_file,
@@ -177,7 +179,7 @@ protein_causality_G <- function(
                                  plot_types = plot_types, unabbrev_r_to_info = unabbrev_r_to_info, 
                                  print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r, 
                                  compute_localTests_anew = compute_localTests_anew, print = print_analysis, plot = plot_analysis, 
-                                 caption = caption, graph_output_formats = graph_output_formats)
+                                 caption = caption, graph_output_formats = graph_output_formats, combined_plot = combined_plot)
     # print_analysis <- FALSE
     # plot_analysis <- FALSE
   } 
@@ -229,4 +231,4 @@ protein_causality_G <- function(
   return(results)
 }
 
-# results_G <- protein_causality_G()
+results_G <- protein_causality_G()

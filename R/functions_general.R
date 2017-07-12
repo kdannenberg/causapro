@@ -573,6 +573,19 @@ get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info) {
 
 
 scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, neg_effects = "pos") {
+  
+  amplify_with_factor <- function(effects, element_that_should_be_scaled_to = 2, 
+                                  value_the_element_should_be_scaled_to = 0.9, cut_values_at = 1) {
+    sorted_effects <- sort(effects, decreasing = TRUE)
+    factor = value_the_element_should_be_scaled_to / sorted_effects[element_that_should_be_scaled_to]
+    # factor <- 0.9 / sorted_effects_pos[2] # permutated_position nicht skalieren, alle anderen so, dass der Zweitgrößte bei 0.9 ist
+    effects <- effects * factor
+    if (is.numeric(cut_values_at)) {
+      effects[,1][effects[,1] > cut_values_at] <- cut_values_at
+    }
+    # pos_with_colors[,2][pos_with_colors[,2] > 1] <- 1 # sollte nur eine Position sein, falls factor != 1, dann keine
+  }
+  
   if (neg_effects == "discard") {
     effects[,1][effects[,1] < 0] <- 0
   } else if (neg_effects == "abs") {
@@ -609,35 +622,21 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
       if (min_eff < 0) {
         effects = (effects - min_eff) / 2
       }
-      sorted_effects <- sort(effects, decreasing = TRUE)
       if (amplification_factor) {
-        factor <- 0.9 / sorted_effects[2] # permutated_position nicht skalieren, alle anderen so, dass der Zweitgrößte bei 0.9 ist
-        effects <- effects * factor
-        effects[,1][effects[,1] > 1] <- 1
-        # pos_with_colors[,2][pos_with_colors[,2] > 1] <- 1 # sollte nur eine Position sein, falls factor != 1, dann keine
+        effects <- amplify_with_factor(effects)
       }
     } else {
       effects_pos <- as.matrix(effects[,1][effects[,1] >= 0])
       effects_neg <- as.matrix(effects[,1][effects[,1] < 0])
       effects_neg <- -effects_neg
       
-      sorted_effects_pos <- sort(effects_pos, decreasing = TRUE)
       if (amplification_factor) {
-        factor <- 0.9 / sorted_effects_pos[2] # permutated_position nicht skalieren, alle anderen so, dass der Zweitgrößte bei 0.9 ist
-        effects_pos <- effects_pos * factor
-        effects_pos[,1][effects_pos[,1] > 1] <- 1
-        # pos_with_colors[,2][pos_with_colors[,2] > 1] <- 1 # sollte nur eine Position sein, falls factor != 1, dann keine
+        effects_pos <- amplify_with_factor(effects_pos)
       }
       
-      
-      sorted_effects_neg <- sort(effects_neg, decreasing = TRUE)
       if (amplification_factor && dim(effects_neg)[1] > 1) {
-        factor <- 0.9 / sorted_effects_neg[2] # permutated_position nicht skalieren, alle anderen so, dass der Zweitgrößte bei 0.9 ist
-        effects_neg <- effects_neg * factor
-        effects_neg[,1][effects_neg[,1] > 1] <- 1
-        # pos_with_colors[,2][pos_with_colors[,2] > 1] <- 1 # sollte nur eine Position sein, falls factor != 1, dann keine
+        effects_neg <- amplify_with_factor(effects_neg)
       }
-      
       
       effects_neg <- -effects_neg
       effects_ <- rbind(effects_pos, effects_neg)
