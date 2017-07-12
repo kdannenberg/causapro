@@ -8,12 +8,12 @@ source("configuration_data.R")
 protein = "PDZ"
 int_pos <- interesting_positions(protein = protein, coloring = "")
 
-results <- protein_causity_G(min_pos_var = min_pos_var, alpha = alpha,
+results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
                           pc_solve_conflicts = FALSE, pc_u2pd = "retry", 
                           graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
-                          data_in_results = TRUE, outpars_in_results = TRUE)
+                          data_in_results = TRUE, output_parameters_in_results = TRUE)
 data <- results$data
-caption <- results$
+caption <- results$caption
 
 top_11_percetile <- 1 - 11 / dim(data)[2]
 

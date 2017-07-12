@@ -23,7 +23,7 @@ source("functions_tools.R")
 source("configuration_data.R")
 
 
-protein_causity_G <- function(
+protein_causality_G <- function(
   # Data parameters
   # 
   # available data:
@@ -53,7 +53,7 @@ protein_causity_G <- function(
   # 
   # Analysis parameters
   # remove_positions_with_low_variance = TRUE,
-  min_pos_var = 0.05,
+  min_pos_var = 0.01,
   only_cols = NULL,
   only_cols_label = "",
   # 
@@ -88,9 +88,9 @@ protein_causity_G <- function(
   # 
   # Technical parameters (print, plot, save, analysis)
   # steps = c("evaluation", "analysis"),
-  graph_computation = TRUE,
-  evaluation = TRUE,
-  analysis = TRUE,
+  graph_computation = FALSE,
+  evaluation = FALSE,
+  analysis = FALSE,#!pc_solve_conflicts,
   stages = c("orig", "sub"), # "sub"
   print_analysis = FALSE,
   plot_analysis = TRUE,
@@ -105,7 +105,7 @@ protein_causity_G <- function(
   print_r_to_console = TRUE,
   lines_in_abbr_of_r = 10,
   data_in_results = FALSE,
-  outpars_in_results = FALSE,
+  output_parameters_in_results = FALSE,
   # 
   file_separator = "/"
 ) {
@@ -156,8 +156,9 @@ protein_causity_G <- function(
                                                        only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = "/"))  
   
   
+  graph_computation <- graph_computation || evaluation || analysis
   # Computation of the Graph
-  if (graph_computation || evaluation || analysis) {
+  if (graph_computation) {
     results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
                          output_dir = output_dir, filename = filename, outpath = outpath, parameters_for_info_file = parameters_for_info_file,
                          alpha = alpha, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
@@ -182,18 +183,19 @@ protein_causity_G <- function(
   } 
   
   # Pymol
-  if (!is.null(plot_only_subgraphs)) {
-    # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
-    node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
-    subgraphs <- subgraphs_from_node_clusters(node_clustering, graph = results$orig$graph$NEL, protein = protein)
-    graph <- subgraphs[[plot_only_subgraphs]]$graph
-  } else {
-    graph <- results$pc@graph
-  }
-  
-  plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = graph, 
+  if (graph_computation) {
+    if (!is.null(plot_only_subgraphs)) {
+      # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
+      node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
+      subgraphs <- subgraphs_from_node_clusters(node_clustering, graph = results$orig$graph$NEL, protein = protein)
+      graph <- subgraphs[[plot_only_subgraphs]]$graph
+    } else {
+      graph <- results$pc@graph
+    }
+    
+    plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = graph, 
                                      outpath = outpath, show_int_pos = TRUE, show_positions = FALSE, file_separator = file_separator)
-  
+  }
   
   
   # paths <- paths_between_nodes(graph = results$orig$graph$NEL, from = c(314), to = c(383), all_paths = FALSE)
@@ -227,4 +229,4 @@ protein_causity_G <- function(
   return(results)
 }
 
-results_G <- protein_causity_G()
+# results_G <- protein_causality_G()

@@ -254,9 +254,10 @@ plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph
       }
     }
   }
-  if (!(outpath == "" || is.null(outpath))) {
-    dev.off()
-  }
+  # TODO: einfach rausgenommen. ist das ok?
+  # if (!(outpath == "" || is.null(outpath))) {
+  #   dev.off()
+  # }
   
   if (!combined_plot) {
     par(old_par)
