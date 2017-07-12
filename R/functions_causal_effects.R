@@ -193,11 +193,21 @@ first_tests <- function(data, results) {
   ranks <- cbind(apply(effects_of_76, 2, rank))
   ranks[sapply(int_pos, function(x) which(rownames(ranks) == x))]
 }
+# calls edge_information with full adj_matrix if interesting_positions is missing or the rows and columns of that vector if it is given
+conflict_edges <- function(graph, print = FALSE, interesting_positions) {
+  gm <- wgtMatrix(graph)
+  if(missing(interesting_positions)) {
+    return(edge_information(gm, print = print))
+  } else {
+    igm <- gm[as.character(interesting_positions), as.character(interesting_positions)]
+    return(edge_information(igm, print = print))
+  }
+}
 
 ### relevant measures: conflict_edges/(bidirected_edges + unidirected_edges)
 ### or conflict_edges/(2 * bidirected_edges + unidirected_edges) (number of directed edges)
-conflict_edges <- function(graph, print = FALSE) {
-  adj_m <- wgtMatrix(graph)
+edge_information <- function(adj_m, print = FALSE) {
+
   # m <- adj_m[apply(adj_m!=0, 1, any), , drop=FALSE]
   # adj_m_no_zero_rows_cols <- m[apply(m!=0, 2, any), , drop=FALSE]
   adj_m_no_zero_rows_cols <- remove_zero_rows_or_columns(adj_m, 1)
@@ -205,6 +215,7 @@ conflict_edges <- function(graph, print = FALSE) {
   # print(adj_m_no_zero_rows_cols)
   n_conflic_edges <- length(which(adj_m == 2)) / 2
   # = length(which(unlist(edgeData(graph)) == 2))
+  # this works as there are no unidirected conflict edges
   n_unidirected_edges <- length(which(adj_m != t(adj_m))) / 2
   
   n_bidirected_edges <- (length(which(adj_m == 1)) - n_unidirected_edges) / 2
