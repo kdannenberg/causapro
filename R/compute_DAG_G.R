@@ -53,7 +53,7 @@ protein_causality_G <- function(
   # 
   # Analysis parameters
   # remove_positions_with_low_variance = TRUE,
-  min_pos_var = 0.005,
+  min_pos_var = 0.0001,
   only_cols = NULL,
   only_cols_label = "",
   # 
@@ -64,6 +64,8 @@ protein_causality_G <- function(
   # pc_u2pd = "retry",
   pc_solve_conflicts = TRUE,
   pc_u2pd = "relaxed",
+  pc_conservative = FALSE,
+  pc_maj_rule = FALSE,
   # 
   # weight_effects_on_by = "",
   # weight_effects_on_by = "var",
@@ -80,6 +82,7 @@ protein_causality_G <- function(
   # 
   plot_as_subgraphs = FALSE,
   plot_only_subgraphs = NULL, # 1 oder NULL
+  # TODO Marcel: dafür sorgen dass, wenn diese Option aktiv ist, kein graphics.off() o.ä. ausgeführt wird (und nur der graph geplottet wird)
   combined_plot = FALSE,
   # 
   # description of other settings that should be appended to output-filename
@@ -88,7 +91,7 @@ protein_causality_G <- function(
   # 
   # Technical parameters (print, plot, save, analysis)
   # steps = c("evaluation", "analysis"),
-  graph_computation = FALSE,
+  graph_computation = TRUE,
   evaluation = FALSE,
   analysis = FALSE,#!pc_solve_conflicts,
   stages = c("orig"), #c("orig", "sub"), # "sub"
@@ -129,7 +132,7 @@ protein_causality_G <- function(
   
   outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
                          alpha = alpha, only_cols_label = only_cols_label, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, 
-                         file_separator = file_separator)
+                         pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule, file_separator = file_separator)
   
   directories <- strsplit(outpath, file_separator)
   filename <- directories[[1]][length(directories[[1]])]
@@ -152,6 +155,7 @@ protein_causality_G <- function(
   # outpath = paste("/Outputs/", type_of_data, "/", only_cols_label, source_of_data, "-alpha=", alpha, sep="") 
   
   caption <- get_caption(protein = protein, data = data_description, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = 45) #TODO rem_gaps_threshold hinzufügen
+  # TODO Marcel: add all the new ones
   parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, 
                                                        only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = "/"))  
   
@@ -163,7 +167,7 @@ protein_causality_G <- function(
   if (graph_computation) {
     results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
                          output_dir = output_dir, filename = filename, outpath = outpath, parameters_for_info_file = parameters_for_info_file,
-                         alpha = alpha, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
+                         alpha = alpha, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
                          caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
                          graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                          unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
@@ -231,4 +235,26 @@ protein_causality_G <- function(
   return(results)
 }
 
-results_G <- protein_causality_G()
+results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "retry", pc_solve_confl = FALSE, analysis = TRUE)
+
+# TODO: warum geht das nur für effects of pos. 372
+# results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "retry", pc_solve_confl = TRUE, analysis = TRUE)
+
+
+
+# results_G <- protein_causality_G(min_pos_var = 0.05)
+# g <- results_G$pc@graph
+# g_w <- set_edge_weights_for_graph(g, cov(data))
+# # ida()
+# print(wgtMatrix(g))
+# print(wgtMatrix(g_w))
+# 
+# 
+# print(paste("1,2: ", paste(ida(x.pos = 1, y.pos = 2, mcov = cov(data), graphEst = g), collapse = " / ")))
+# print(paste("1,2: ", causalEffect(x = 1, y = 2, g = g_w)))
+# 
+# print(paste("1,3: ", paste(ida(x.pos = 1, y.pos = 3, mcov = cov(data), graphEst = g), collapse = " / ")))
+# print(paste("1,3: ", causalEffect(x = 1, y = 3, g = g_w)))
+# 
+# print(paste("7,2: ", paste(ida(x.pos = 7, y.pos = 2, mcov = cov(data), graphEst = g), collapse = " / ")))
+# print(paste("7,2: ", causalEffect(x = 7, y = 2, g = g_w)))

@@ -4,7 +4,8 @@ library(pcalg)
 
 
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
-                                 parameters_for_info_file, alpha, pc_solve_conflicts, pc_u2pd, caption, analysis, stages, plot_types, coloring, colors, 
+                                 parameters_for_info_file, alpha, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule,
+                                 caption, analysis, stages, plot_types, coloring, colors, 
                                  graph_layout = "dot", plot_as_subgraphs = plot_as_subgraphs, 
                                  plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console, 
                                  lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, graph_output_formats,
@@ -22,7 +23,8 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   # Computation of pc 
   pc_fun <- function(outpath) {
     return(estimate_DAG_from_numerical_data(data, alpha = alpha, outpath = outpath, 
-                                            solve_conflicts = pc_solve_conflicts, u2pd = pc_u2pd))
+                                            solve_conflicts = pc_solve_conflicts, u2pd = pc_u2pd, 
+                                            conservative = pc_conservative, maj_rule = pc_maj_rule))
   }
   pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file)
   
@@ -577,6 +579,7 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
       effects[,1][effects[,1] > cut_values_at] <- cut_values_at
     }
     # pos_with_colors[,2][pos_with_colors[,2] > 1] <- 1 # sollte nur eine Position sein, falls factor != 1, dann keine
+    return(effects)
   }
   
   if (neg_effects == "discard") {

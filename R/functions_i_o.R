@@ -118,7 +118,7 @@ type_of_data_after_adjustment <- function(data, type_of_data, rank = FALSE, rank
 
 
 get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
-                        alpha = alpha, only_cols_label, pc_solve_conflicts, pc_u2pd, file_separator = "/") {
+                        alpha = alpha, only_cols_label, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/") {
   dir_1 <- protein
   dir_2 <- type_of_data
   # if (subtype_of_data != "")
@@ -141,9 +141,18 @@ get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_
   
   if (pc_solve_conflicts) {
     filename <- paste0(filename, "_sc")
-  } else {
+  } 
+  if (pc_conservative) {
+    filename <- paste0(filename, "_cons")
+  }
+  if (pc_maj_rule) {
+    filename <- paste0(filename, "_maj")
+  }
+  if (!(pc_solve_conflicts || pc_conservative)) {
     filename <- paste(filename, substr(pc_u2pd, 1, 3), sep = "_")
   }
+  
+  
   
   return(paste(output_dir, filename, sep = file_separator))
 }
