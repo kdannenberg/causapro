@@ -78,16 +78,21 @@ interesting_positions <- function(protein, position_numbering, allpositions, for
         position_numbering <- "crystal"
       }
       if (grepl("crystal", position_numbering)) {
-        # numbering crystal structure
-        main = c(372) 
-        high = c(322, 325, 329, 330, 347, 353, 362, 376, 380, 386) # interesting ones
-        low = c(328, 340, 371, 385)
-        rather_high = c(336, 341, 363, 365) # 352 (missing)
-        # if (for_coloring && grepl("all", coloring)) {
-        if (grepl("all", coloring)) {
-          list <- list(main = main, high = high, low = low, rather_high = rather_high)
+        if(coloring == "es") {
+          blue = c(312, 318, 322, 323, 324, 326, 327, 328, 330, 331, 332, 334, 337, 348, 352, 354, 355, 357, 366, 373, 380, 391, 395)
+          list <- list(blue = blue)
         } else {
-          list <- list(main = main, high = high)
+          # numbering crystal structure
+          main = c(372) 
+          high = c(322, 325, 329, 330, 347, 353, 362, 376, 380, 386) # interesting ones
+          low = c(328, 340, 371, 385)
+          rather_high = c(336, 341, 363, 365) # 352 (missing)
+          # if (for_coloring && grepl("all", coloring)) {
+          if (grepl("all", coloring)) {
+            list <- list(main = main, high = high, low = low, rather_high = rather_high)
+          } else {
+            list <- list(main = main, high = high)
+          }
         }
       }
       if (position_numbering == "alignment") {
