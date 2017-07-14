@@ -582,6 +582,9 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
     return(effects)
   }
   
+  effects_na <- as.matrix(effects[,1][is.na(effects[,1])])
+  effects <- as.matrix(effects[,1][!is.na(effects[,1])])
+  
   if (neg_effects == "discard") {
     effects[,1][effects[,1] < 0] <- 0
   } else if (neg_effects == "abs") {
@@ -601,9 +604,9 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
       effects_neg <- effects_neg / max(effects_neg)
       
       effects_neg <- -effects_neg
-      effects_ <- rbind(effects_pos, effects_neg)
-      effects_ <- effects_[order(rownames(effects_)), , drop = FALSE]
-      effects <- effects_
+      effects <- rbind(effects_pos, effects_neg)
+      # effects_ <- effects_[order(rownames(effects_)), , drop = FALSE]
+      # effects <- effects_
     } else {
       effects <- cbind(apply(effects, 2, rank))
       
@@ -623,8 +626,13 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
       }
     } else {
       effects_pos <- as.matrix(effects[,1][effects[,1] >= 0])
+      # effects_pos <- as.matrix(effects[,1][effects[,1] >= 0 & !is.na(effects[,1])])
       effects_neg <- as.matrix(effects[,1][effects[,1] < 0])
+      # effects_neg <- as.matrix(effects[,1][effects[,1] < 0 & !is.na(effects[,1])])
+      # effects_neg <- cbind(effects_neg[!is.na(effects_neg),]) # NAs nicht doppelt haben -- in neg rausschmeißen! 
+                                                              # TODO: in dan anderen Fällen ggf. auch !!!!! 
       effects_neg <- -effects_neg
+      
       
       if (amplification_factor) {
         effects_pos <- amplify_with_factor(effects_pos)
@@ -635,11 +643,17 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
       }
       
       effects_neg <- -effects_neg
-      effects_ <- rbind(effects_pos, effects_neg)
-      effects_ <- effects_[order(rownames(effects_)), , drop = FALSE]
-      effects <- effects_
+      effects <- rbind(effects_pos, effects_neg)
+      # effects_ <- effects_[order(rownames(effects_)), , drop = FALSE]
+      # effects <- effects_
     }
   }
+  
+  effects <- rbind(effects, effects_na)
+  
+  effects <- effects[order(rownames(effects)), , drop = FALSE]
+  # effects <- effects
+  
   return(effects)
 }
 
@@ -661,11 +675,17 @@ color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874
   
   if (mode == "opacity") { 
     color_function <- function(vector) {
+      if (is.na(vector[2])) {
+        vector <- c("#FF6347", 1)
+      }
       return(adjustcolor(vector[1], alpha.f = vector[2]))
     }
   } else { # mode assumed to be a color # if (mode == "mix") {
     # with white
     color_function <- function(vector) {
+      if (is.na(vector[2])) {
+        vector <- c("#FF6347", 1)
+      }
       if (vector[2] >= 0) {
         return(hex(mixcolor(alpha = vector[2], color1 = hex2RGB(mode), color2 = hex2RGB(vector[1]))))
       } else {

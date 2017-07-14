@@ -11,6 +11,6 @@ pastes <- function(..., sep = " ", collapse = NULL) {
   return(do.call("paste", c(list(...)[list(...) != ""], sep = sep, collapse = collapse)))
 }
 
-get_index <- function(position) {
+get_index <- function(position, data) {
   return(which(colnames(data) == as.character(position)))
 }

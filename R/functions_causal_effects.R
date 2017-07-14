@@ -142,7 +142,7 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
 }
 
 statistics_of_influenced_positions <- function(effects, percentile, interesting_positions, print = FALSE) {
-  threshold = quantile(effects, probs = percentile)
+  threshold = quantile(effects, probs = percentile, na.rm = TRUE)
   if (!is.null(dim(effects))) {
     # most_influenced_positions <- colnames(data[(rownames(effects)[which(effects > threshold)])])
     most_influenced_positions <- (rownames(effects)[which(effects > threshold)])
