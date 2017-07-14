@@ -95,8 +95,8 @@ interesting_positions <- function(protein, position_numbering, allpositions, for
           } else {
             list <- list(main = main, high = high)
           }
+          names(list) <- c("#69A019", "#FFD700", "#CC0000", "#FF9933")[1:length(list)]
         }
-        names(list) <- c("#69A019", "#FFD700", "#CC0000", "#FF9933")[1:length(list)]
       }
       if (position_numbering == "alignment") {
         # numbering alignment
