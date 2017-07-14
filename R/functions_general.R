@@ -79,7 +79,7 @@ interesting_positions <- function(protein, position_numbering, allpositions, for
       }
       if (grepl("crystal", position_numbering)) {
         if(coloring == "es") {
-          blue = c(312, 318, 322, 323, 324, 326, 327, 328, 330, 331, 332, 334, 337, 348, 352, 354, 355, 357, 366, 373, 380, 391, 395)
+          blue = c(304, 305, 306, 309, 312, 318, 322, 323, 324, 326, 327, 328, 330, 331, 332, 334, 337, 348, 352, 354, 355, 357, 366, 373, 380, 391, 395)
           list <- list(blue = blue)
         } else {
           # numbering crystal structure
