@@ -79,8 +79,10 @@ interesting_positions <- function(protein, position_numbering, allpositions, for
       }
       if (grepl("crystal", position_numbering)) {
         if(coloring == "es") {
-          blue = c(304, 305, 306, 309, 312, 318, 322, 323, 324, 326, 327, 328, 330, 331, 332, 334, 337, 348, 352, 354, 355, 357, 366, 373, 380, 391, 395)
-          list <- list(blue = blue)
+          ligand = c(318, 322, 323, 324, 326, 327, 328, 330, 331, 332, 334, 337, 348, 352, 366, 373, 380)
+          cluster = c(304, 305, 306, 309, 312, 354, 355, 357, 391, 395)
+          list <- list(ligand = ligand, cluster = cluster)
+          names(list) <- c("#3b73b1","#b0c7df")
         } else {
           # numbering crystal structure
           main = c(372) 
@@ -93,6 +95,7 @@ interesting_positions <- function(protein, position_numbering, allpositions, for
           } else {
             list <- list(main = main, high = high)
           }
+          names(list) <- c("#69A019", "#FFD700", "#CC0000", "#FF9933")[1:length(list)]
         }
       }
       if (position_numbering == "alignment") {
@@ -100,8 +103,8 @@ interesting_positions <- function(protein, position_numbering, allpositions, for
         main = c(98)
         high = c(24, 28, 32, 33, 65, 72, 81, 102, 106, 119) # interesting ones
         list <- list(main = main, high = high)
+        names(list) <- c("#69A019", "#FFD700", "#CC0000", "#FF9933")[1:length(list)]
       }
-      names(list) <- c("#69A019", "#FFD700", "#CC0000", "#FF9933")[1:length(list)]
     } else if (protein == "GTB") {
       bind_donor <- c(c(121, 123, 126, 213, 346, 352), c(301, 302, 188, 211))       # source: first group:pdb, second group: GTAB-Paper von Friedemann
       bind_acceptor <- c(c(233, 245, 303, 326, 348), 266)  # source: first group: pdb, 266: GTA/B-Paper von Friedemann

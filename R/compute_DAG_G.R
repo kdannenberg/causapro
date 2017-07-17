@@ -77,7 +77,7 @@ protein_causality_G <- function(
   # Graphical parameters
   graph_output_formats = "ps",
   graph_layout = "dot", # "dot", "circo", "fdp", "neato", "osage", "twopi"
-  coloring = "auto",  # "auto-all" or "all"
+  coloring = "es",#"auto",  # "auto-all" or "all"
   colors = NULL,
   # 
   plot_as_subgraphs = FALSE,
