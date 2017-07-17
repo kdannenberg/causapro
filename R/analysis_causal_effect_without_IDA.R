@@ -18,23 +18,24 @@ plot(pDAG)  # Warum sind 3 und 4 hier andersrum??
 # only the parameters x, y and graphEst are used;  rest is only to mathc function definition of ida()
 pseudo_ida_by_causalEffect <- function(x, y, mcov, graphEst, method = "", y.notparent = FALSE, verbose = FALSE, all.dags = NA) {
   cat(paste("Effect from", x, "on", y, "\n"))
-  allDAGS <- pdag2allDags(wgtMatrix(pDAG))$dags
-  
-  for (i in 1:dim(allDAGS)[1]) {
-    print(paste("DAG", i))
-    m <- matrix(allDAGS[i,], nrow = p, ncol = p, byrow = TRUE)
-    
-    #Why is it necessary to transpose m?!
-    DAG_as <-  as(t(m), "graphNEL")
+  # allDAGS <- pdag2allDags(wgtMatrix(graphEst))$dags
+  allDAGs <- set_of_DAGs(graphEst) 
+  # 
+  for (DAG_as in allDAGs) {
+  #   print(paste("DAG", i))
+  #   m <- matrix(allDAGS[i,], nrow = p, ncol = p, byrow = TRUE)
+  #   
+  #   #Why is it necessary to transpose m?!
+  #   DAG_as <-  as(t(m), "graphNEL")
     # in einer Zeile: 
     # DAG_as <- as(t(matrix(pdag2allDags(wgtMatrix(pDAG))$dags[i,],p,p, byrow = TRUE)), "graphNEL")
     plot(DAG_as)
     
-    DAG_as_wgt <- set_edge_weights_for_graph(DAG_as, mcov)
+    # DAG_as_wgt <- set_edge_weights_for_graph(DAG_as, mcov)
     
-    print(wgtMatrix(DAG_as_wgt))
+    print(wgtMatrix(DAG_as))
     
-    cat(paste("hier:", causalEffect(DAG_as_wgt, x = x, y = y), "\n"))
+    cat(paste("hier:", causalEffect(DAG_as, x = x, y = y), "\n"))
     # #maybe better: ftM2graphNEL???
     # source: https://support.bioconductor.org/p/90421/
     # DAG_ftM2 <- ftM2graphNEL()
@@ -72,3 +73,26 @@ set_edge_weights_for_graph <- function(graph, cov) {
 
 # pseudo_ida_by_causalEffect(x = 2, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!
 pseudo_ida_by_causalEffect(x = 5, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!
+
+set_of_DAGs <- function(pdag) {
+  allDAGS_m <- pdag2allDags(wgtMatrix(pdag))$dags
+  m <- function (line) {
+    return(matrix(line, nrow = p, ncol = p, byrow = TRUE))
+  }
+  allDAGS_adj <- alply(allDAGS_m, 1, m)
+  # allDAGS_adj <- apply(allDAGS_m, 1, matrix, nrow = p, ncol = p, byrow = TRUE)
+    # m <- matrix(allDAGS[i,], nrow = p, ncol = p, byrow = TRUE)
+    
+    # Why is it necessary to transpose m?!
+    # DAG_as <-  as(t(m), "graphNEL")
+  allDAGs <- lapply(allDAGS_adj, function(m) {return(as(t(m), "graphNEL"))})
+  return(allDAGs)
+}
+
+ida_for_set_of_DAGs <- function(x, y, mcov, graphEst, method = "", y.notparent = FALSE, verbose = FALSE, all.dags = NA) {
+  allDAGs <- set_of_DAGs(graphEst) 
+  ida_DAG <- function(graphEst) {
+    return(ida(x, y, mcov, graphEst, method = "", y.notparent = FALSE, verbose = FALSE, all.dags = NA))
+  }
+  effects <- lapply(allDAGs, ida_DAG)
+}

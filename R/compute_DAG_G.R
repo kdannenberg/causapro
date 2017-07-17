@@ -53,7 +53,7 @@ protein_causality_G <- function(
   # 
   # Analysis parameters
   # remove_positions_with_low_variance = TRUE,
-  min_pos_var = 0.0001,
+  min_pos_var = 0,
   only_cols = NULL,
   only_cols_label = "",
   # 
@@ -131,7 +131,7 @@ protein_causality_G <- function(
   # }
   
   outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
-                         alpha = alpha, only_cols_label = only_cols_label, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, 
+                         alpha = alpha, min_pos_var = min_pos_var, only_cols_label = only_cols_label, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, 
                          pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule, file_separator = file_separator)
   
   directories <- strsplit(outpath, file_separator)
@@ -239,7 +239,7 @@ protein_causality_G <- function(
 
 # TODO: warum geht das nur für effects of pos. 372
 # results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "retry", pc_solve_confl = TRUE, analysis = TRUE)
-results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "retry", pc_solve_confl = TRUE, analysis = TRUE, weight_effects_on_by = "")
+results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "relaxed", pc_solve_confl = TRUE, analysis = FALSE, weight_effects_on_by = "", min_pos_var = 0)
 
 
 

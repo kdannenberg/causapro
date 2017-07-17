@@ -117,8 +117,8 @@ type_of_data_after_adjustment <- function(data, type_of_data, rank = FALSE, rank
 
 
 
-get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
-                        alpha = alpha, only_cols_label, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/") {
+get_outpath <- function(protein, type_of_data, subtype_of_data, data_set, suffix, alpha, min_pos_var, only_cols_label, 
+                        pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/") {
   dir_1 <- protein
   dir_2 <- type_of_data
   # if (subtype_of_data != "")
@@ -131,6 +131,9 @@ get_outpath <- function(protein = protein, type_of_data = type_of_data, subtype_
                                        subtype_of_data = paste(subtype_of_data, collapse = "+"), 
                                        data_set = data_set, suffix = suffix), "_alpha=", alpha)
   
+  # if (min_pos_var > 0) {
+  #   dir_4 <- paste0(dir_min_pos_var, "_mv=", min_pos_var)
+  # }
   
   output_dir <- paste("Outputs", dir_1, dir_2, dir_3, dir_4, sep = file_separator) 
   if (!dir.exists(output_dir)) {
