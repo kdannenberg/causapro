@@ -110,6 +110,9 @@ protein_causality_G <- function(
   data_in_results = FALSE,
   output_parameters_in_results = FALSE,
   # 
+  ida_percentile = "11", # top 11
+  # ida_percentile = 0.75, # top 75%
+  #
   file_separator = "/"
 ) {
   # INIT
@@ -123,6 +126,9 @@ protein_causality_G <- function(
   data <- adjust_data(data = data, rank = ranked, min_var = min_pos_var)
   type_of_data <- type_of_data_after_adjustment(type_of_data = type_of_data, rank = ranked, min_var = min_pos_var)
   
+  if (!is.numeric(ida_percentile)) {
+    ida_percentile <- 1 - (as.numeric(ida_percentile) / dim(data)[2])
+  }
   
   # colnames(data) <- paste("X", colnames(data), sep = "")
   
@@ -215,7 +221,7 @@ protein_causality_G <- function(
                    protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
                    amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
                    pymol_bg_color = "grey",
-                   barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = 0.75)
+                   barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = ida_percentile)
   }
   
   if (data_in_results) {
@@ -239,8 +245,9 @@ protein_causality_G <- function(
 
 # TODO: warum geht das nur für effects of pos. 372
 # results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "retry", pc_solve_confl = TRUE, analysis = TRUE)
-results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "relaxed", pc_solve_confl = TRUE, analysis = FALSE, weight_effects_on_by = "", min_pos_var = 0)
-
+results_G <- protein_causality_G(pc_conservative = FALSE, pc_maj_rule = TRUE, pc_u2pd = "relaxed", pc_solve_confl = TRUE, 
+                                 analysis = TRUE, weight_effects_on_by = "mean", min_pos_var = 0, alpha = 0.01)
+print(conflict_edges(results_G$pc@graph))
 
 
 # results_G <- protein_causality_G(min_pos_var = 0.05)

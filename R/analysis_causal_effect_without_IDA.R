@@ -1,3 +1,5 @@
+library("plyr") # für alply
+
 set.seed(17)
 p <- 7
 
@@ -71,9 +73,6 @@ set_edge_weights_for_graph <- function(graph, cov) {
 }
 
 
-# pseudo_ida_by_causalEffect(x = 2, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!
-pseudo_ida_by_causalEffect(x = 5, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!
-
 set_of_DAGs <- function(pdag) {
   allDAGS_m <- pdag2allDags(wgtMatrix(pdag))$dags
   m <- function (line) {
@@ -88,6 +87,11 @@ set_of_DAGs <- function(pdag) {
   allDAGs <- lapply(allDAGS_adj, function(m) {return(as(t(m), "graphNEL"))})
   return(allDAGs)
 }
+
+
+# pseudo_ida_by_causalEffect(x = 2, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!
+pseudo_ida_by_causalEffect(x = 5, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!
+
 
 ida_for_set_of_DAGs <- function(x, y, mcov, graphEst, method = "", y.notparent = FALSE, verbose = FALSE, all.dags = NA) {
   allDAGs <- set_of_DAGs(graphEst) 

@@ -19,11 +19,13 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
   }
   
   graphics.off()
-  lines <- 4 # 1/2 für of, 2 für on (min, max)
+  # lines <- 6 # 1/2 für of, 2 für on (min, max)
   columns <- 2
   oma <- c( 0, 0, length(caption) + 1, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
-  par(mfrow=c(lines, columns), oma = oma) 
-
+  # par(mfrow=c(lines, columns), oma = oma) 
+  par(oma = oma)
+  
+  cat("\n")
   for (dir in direction) {
     cat("CAUSAL EFFECTS ")
     cat(toupper(dir))
@@ -68,7 +70,24 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
     scaled_effects <- matrix(nrow = dim(effects)[1], ncol = 0)
     rownames(scaled_effects) <- rownames(effects)
     
+    if (dir == "of" && ("of" %in% direction)) {
+      lines <- dim(effects)[2] + 2
+    } else if (dir == "of" && !("of" %in% direction)) {
+      lines <- dim(effects)[2]
+    } else if (grepl("on", dir) && direction == "on") {
+      lines <- 2
+    } 
+    
+    if (!(grepl("on", dir) && ("of" %in% direction))) {
+      par(mfrow=c(lines, columns))
+    }
+      
+    
     for (i in 1:dim(effects)[2]) {
+      cat("OPTION ")
+      cat(i)
+      cat("\n")
+      
       current_effects <- as.matrix(effects[,i])
       rownames(current_effects) <- rownames(effects)
       
@@ -117,8 +136,10 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
       if (analysis) {
         statistics_of_influenced_positions(effects = current_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
         
-        print("FOR SCALED EFFECTS:")
-        statistics_of_influenced_positions(effects = current_scaled_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
+        
+        # print("FOR SCALED EFFECTS:")        # sollte es immer gleich sein
+        # statistics_of_influenced_positions(effects = current_scaled_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
+        
         # threshold = quantile(current_scaled_effects, probs = percentile)
         # most_influenced_positions <- colnames(data[(rownames(current_scaled_effects)[which(current_scaled_effects > threshold)])])
         # print(paste(length(most_influenced_positions), "positions over the threshold", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
