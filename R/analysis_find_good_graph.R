@@ -196,13 +196,13 @@ best_graphs <- find_graphs_with_highest_int_pos(all_results = all_results, obj_f
 # i <- 98 # für min_var = 0.001
 
 # # plotten:
-  # plot_graph(graph = all_results[[75]]$pc@graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout,
+  # plot_graph(graph = all_results[[28]]$pc@graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout,
   #                       coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs,
   #                       plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats)
 
 cat("\n")
-# for (i in best_graphs) {
-i= 28
+for (i in best_graphs) {
+# i= 28
   if (plot == "best graph") {
     cat(paste0("BEST GRAPH #", which(best_graphs == i), ": ", i))
     causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
@@ -211,7 +211,7 @@ i= 28
                       pymol_bg_color = "grey", barplot = TRUE,
                       caption = c(paste("Graph", i), caption), show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = top_11_percetile)
   }
-# }
+}
 
 # select for a results object the mean results on and of position 372, respectively and return both as a list
 mean_effects <- function(results, weight_effects_on_by, scaled_effects = FALSE) {
