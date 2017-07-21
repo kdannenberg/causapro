@@ -27,12 +27,6 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
   
   cat("\n")
   for (dir in direction) {
-    cat("CAUSAL EFFECTS ")
-    cat(toupper(dir))
-    cat(" POSITION ")
-    cat(perturbated_position)
-    cat("\n")
-    
     if (dir == "of" || dir == "by" || dir == "from") {
       effects <- idaFast(which(as.character(colnames(data)) == perturbated_position), 1:dim(data)[2], cov(data), results$pc@graph)
     } else if (dir == "on") {
@@ -41,8 +35,8 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
       }
       effects_list <- lapply(1:dim(data)[2], ida_rev)
       # vllt lieber relativ zu dem durchsnittlichen effekt von Position pos 
-      effects_min <- sapply(effects_list, function(list) return(min(list)))
       effects_max <- sapply(effects_list, function(list) return(max(list)))
+      effects_min <- sapply(effects_list, function(list) return(min(list)))
       effects <- cbind(effects_max, effects_min)
       colnames(effects) <- c("max", "min")
       if (grepl("mean", weight_effects_on_by)) { # (weight_effects_on_by == "mean_abs_effect") {
@@ -63,7 +57,11 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
     rownames(effects) <- colnames(data)
     
     # print(effects)
-    
+    cat("CAUSAL EFFECTS ")
+    cat(toupper(dir))
+    cat(" POSITION ")
+    cat(perturbated_position)
+    cat("\n")
     
     int_pos <- interesting_positions(protein = protein, coloring = "")   # nicht "coloring" übergeben, da das "all" enhalten kann, wodurch auch die negtiven int_pos hier bei den positiven dabei wären
     
@@ -158,7 +156,7 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
     
     # print(cbind(effects, current_scaled_effects, colors_by_effect))
   }
-  title(caption, outer = TRUE )
+  title(caption, outer = TRUE)
   return(results)
 }
 
@@ -172,7 +170,7 @@ statistics_of_influenced_positions <- function(effects, percentile, interesting_
     most_influenced_positions <- (names(effects)[which(effects > threshold)])
   }
   if (print) {
-    print(paste(length(most_influenced_positions), "positions over the threshold", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
+    print(paste0(length(most_influenced_positions), " positions over the threshold ", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
   }
   # int_pos <- interesting_positions("PDZ", "crystal")
   int_pos_strongly_influenced <- intersect(interesting_positions, most_influenced_positions)

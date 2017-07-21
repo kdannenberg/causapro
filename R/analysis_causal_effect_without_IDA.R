@@ -2,9 +2,29 @@ library("pcalg")
 library("plyr")   # für alply (apply to array and return list)
 library("ggm")    # for pcor  (partial correlation)
 library("RBGL")   # for tsort (top. sorting)
+library("dagitty") # for adjustmentSets
 
-set.seed(17)
-p <- 10
+source("configuration_code.R")
+
+# source("functions_causal_effects.R")
+# source("functions_ci_tests.R")
+# source("functions_compute_DAG_categorical.R")
+# source("functions_compute_DAG_numerical.R")
+source("functions_conversions.R")
+# source("functions_evaluate_DAG.R")
+# source("functions_general.R")
+# source("functions_i_o.R")
+# source("functions_linkcommunities.R")
+# source("functions_pymol.R")
+# source("functions_tools.R")
+
+set.seed(14)
+# pseudo_ida_by_causalEffect(x = 8, y = 12, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!   für p = 10
+
+# set.seed(7)
+# pseudo_ida_by_causalEffect(x = 1, y = 10, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!   für p = 10
+
+p <- 7
 
 n <- 10000
 myDAG <- pcalg::randomDAG(p, prob = 0.07) ## true DAG; default: prob = 0.2
@@ -63,15 +83,15 @@ pseudo_ida_by_causalEffect <- function(x, y, mcov, graphEst, method = "", y.notp
     
     # dann neue nodenames sortieren 
     wgt_mat <- wgtMatrix(DAG_as_wgt)
-    wgt_mat <- wgt_mat[order(rownames(wgt_mat)), order(colnames(wgt_mat))] 
+    wgt_mat <- wgt_mat[order(as.numeric(rownames(wgt_mat))), order(as.numeric(colnames(wgt_mat)))] 
     
     DAG_as_wgt <-  as(t(wgt_mat), "graphNEL")
     
-    plot(DAG_as_wgt, col = "green")
+    plot(DAG_as_wgt, nodeAttrs = list(fontcolor = setNames(rep("red", p), as.character(1:p))))
     
     causal_effect <- causalEffect(DAG_as_wgt, x = x_caus_eff, y = y_caus_eff)
     
-    cat(paste("hier:", causal_effect, "\n"))
+    cat(paste0("hier: ", causal_effect, " (", x_caus_eff, " on ", y_caus_eff, ") ", "\n"))
     # #maybe better: ftM2graphNEL???
     # source: https://support.bioconductor.org/p/90421/
     # DAG_ftM2 <- ftM2graphNEL()
@@ -122,8 +142,8 @@ set_edge_weights_for_graph <- function(graph, cov) {
 }
 
 
-set_of_DAGs <- function(pdag) {
-  allDAGS_m <- pdag2allDags(wgtMatrix(pdag))$dags
+set_of_DAGs <- function(pDAG) {
+  allDAGS_m <- pdag2allDags(wgtMatrix(pDAG))$dags
   m <- function (line) {
     return(matrix(line, nrow = p, ncol = p, byrow = TRUE))
   }
@@ -141,9 +161,9 @@ set_of_DAGs <- function(pdag) {
 # pseudo_ida_by_causalEffect(x = 2, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!
 # pseudo_ida_by_causalEffect(x = 5, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!
 
-pseudo_ida_by_causalEffect(x = 8, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!   für p = 10
+pseudo_ida_by_causalEffect(x = 3, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!   für p = 10
 
-
+# never used?
 ida_for_set_of_DAGs <- function(x, y, mcov, graphEst, method = "", y.notparent = FALSE, verbose = FALSE, all.dags = NA) {
   allDAGs <- set_of_DAGs(graphEst) 
   ida_DAG <- function(graphEst) {

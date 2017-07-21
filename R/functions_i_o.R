@@ -305,6 +305,6 @@ outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr,
   }
   out_file <- paste0(out_file, ".pml")
   
-  print(out_file)
+  # print(out_file)
   return(out_file)
 }
