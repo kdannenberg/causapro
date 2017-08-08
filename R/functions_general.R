@@ -2,6 +2,64 @@ library(graph)
 library(dagitty)
 library(pcalg)
 
+## I assume that the adjmatrix is given where conflict edges have weight 2
+## this corresponds to the wgtMatrix function of the pcalg package
+## I enumerate the graphs as true adjacency matrices with a 1 indicating an edge a 0 no edge and there is no other value
+enumerate_graphs_rec <- function(am, n, i = 1, j = 1) {
+    cat(i,j)
+    cat("\n")
+    print(Cstack_info())
+    if (i == n+1) {
+        if (j == n) {
+            ## do stuff with graph
+            print(am)
+            return()
+        } else {
+            i = 1
+            j = j+1
+        }
+    }
+    ## I assume if am[i,j] = 2 then also am[j,i] = 2, but that should hold, right?
+    if(am[i,j] == 2) {
+        am[i,j] = 1
+        am[j,i] = 0
+        enumerate_graphs_rec(am, n, i+1, j)
+        am[i,j] = 0
+        am[j,i] = 1
+        enumerate_graphs_rec(am, n, i+1, j)
+        am[i,j] = 2
+        am[j,i] = 2
+    } else {
+        enumerate_graphs_rec(am, n, i+1, j)
+    }
+}
+
+enumerate_graphs <- function(am, n) {
+    pos <- c()
+    for(i in 1:n) {
+        for(j in (i+1):n) {
+            if(j > n) next
+            if(am[i,j] == 2) {
+                pos <- c(pos, i*n+j)
+            }
+        }
+    }
+    for(i in 0:(2^length(pos)-1)) {
+        for(j in 1:length(pos)) {
+            k = pos[j]
+            x = k %/% n
+            y = k %% n
+            if(bitwAnd(2^(j-1), i) > 0) {
+                am[x,y] = 1
+                am[y,x] = 0
+            } else {
+                am[y,x] = 1
+                am[x,y] = 0
+            }
+        }
+        print(am)
+    }
+}
 
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
                                  parameters_for_info_file, alpha, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule,
