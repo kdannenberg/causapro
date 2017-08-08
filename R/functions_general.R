@@ -34,21 +34,47 @@ enumerate_graphs_rec <- function(am, n, i = 1, j = 1) {
     }
 }
 
+dfs <- function(am, n, i, color) {
+    color[i] = 1
+    res = TRUE
+    for(j in 1:n) {
+        if(am[i,j] == 1) {
+            if(color[j] == 0) {
+                res = res && dfs(am, n, j, color)
+            } else if(color[j] == 1) {
+                res = FALSE
+            }
+        }
+    }
+    return(res)
+}
+
+dag_check <- function(am, n) {
+    color <- vector(mode="double", length=n)
+    res = TRUE
+    for(i in 1:n) {
+        if(color[i] == 0) {
+            res = res && dfs(am, n, i, color)
+        }
+    }
+    return(res)
+}
+
 enumerate_graphs <- function(am, n) {
     pos <- c()
     for(i in 1:n) {
         for(j in (i+1):n) {
             if(j > n) next
             if(am[i,j] == 2) {
-                pos <- c(pos, i*n+j)
+                pos <- c(pos, (i-1)*n+(j-1))
             }
         }
     }
     for(i in 0:(2^length(pos)-1)) {
         for(j in 1:length(pos)) {
             k = pos[j]
-            x = k %/% n
-            y = k %% n
+            x = k %/% n + 1
+            y = k %% n + 1
             if(bitwAnd(2^(j-1), i) > 0) {
                 am[x,y] = 1
                 am[y,x] = 0
@@ -57,6 +83,8 @@ enumerate_graphs <- function(am, n) {
                 am[x,y] = 0
             }
         }
+        ## do stuff with graph
+        print(dag_check(am, n))
         print(am)
     }
 }
