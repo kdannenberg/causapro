@@ -2,6 +2,42 @@ library(graph)
 library(dagitty)
 library(pcalg)
 
+## this function gets a graph and returns graph which includes only non-isolated nodes
+## it also prints a list of the isolated nodes
+kernelize_graph <- function(graph) {
+    n = numNodes(graph)
+    vis = logical(n)
+    ln = character()
+    for(u in nodes(graph)) {
+        if(degree(graph, u)$inDegree == 0 && degree(graph, u)$outDegree == 0) {
+            print(u)
+        } else {
+            ln <- c(ln, u)
+        }
+    }
+    eList <- list()
+    for(i in ln) {
+        if(i %in% ln) {
+            vc <- c()
+            for(j in edgeL(graph)[[i]][[1]]) {
+                if(length(j) == 0) next
+                if(nodes(pc@graph)[j] %in% ln) {
+                    vc <- c(vc, nodes(pc@graph)[j])
+                }
+            }
+        }
+        if(length(vc) > 0) {
+            eList[[i]] <- vc
+        } else {
+            eList[[i]] <- character(0)
+        }
+    }
+    g <- graphNEL(nodes = ln, edgeL = eList, edgemode = "directed")
+    ## do something with the graph
+    ## plot(g)
+    return(g)
+}
+
 ## I assume that the adjmatrix is given where conflict edges have weight 2
 ## this corresponds to the wgtMatrix function of the pcalg package
 ## I enumerate the graphs as true adjacency matrices with a 1 indicating an edge a 0 no edge and there is no other value
@@ -49,7 +85,9 @@ dfs <- function(am, n, i, color) {
     return(res)
 }
 
-dag_check <- function(am, n) {
+## I realised now that this is pretty useless
+dag_check <- function(am) {
+    n = dim(am)[1]
     color <- vector(mode="double", length=n)
     res = TRUE
     for(i in 1:n) {
@@ -60,7 +98,8 @@ dag_check <- function(am, n) {
     return(res)
 }
 
-enumerate_graphs <- function(am, n) {
+enumerate_graphs <- function(am) {
+    n = dim(am)[1]
     pos <- c()
     for(i in 1:n) {
         for(j in (i+1):n) {
