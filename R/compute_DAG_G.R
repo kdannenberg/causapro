@@ -142,7 +142,7 @@ protein_causality_G <- function(
   
   directories <- strsplit(outpath, file_separator)
   filename <- directories[[1]][length(directories[[1]])]
-  output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = "/", sep = "/")
+  output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_seperator, sep = file_seperator)
   
   # output_dir = paste("../Outputs/", type_of_data, sep = "")
   # if (!dir.exists(output_dir)) {
@@ -163,7 +163,7 @@ protein_causality_G <- function(
   caption <- get_caption(protein = protein, data = data_description, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = 45) #TODO rem_gaps_threshold hinzufügen
   # TODO Marcel: add all the new ones
   parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, 
-                                                       only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = "/"))  
+                                                       only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = file_separator))  
   
   
   graph_computation <- graph_computation || evaluation || analysis
