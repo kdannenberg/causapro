@@ -22,6 +22,8 @@ source("functions_tools.R")
 # setwd("/Volumes/Causality/Viren/R/")
 source("configuration_data.R")
 
+## idea for protein -> use list
+## protein = list(name = "PDZ", position_numbering = "crystal",...)
 
 protein_causality_G <- function(
   # Data parameters
