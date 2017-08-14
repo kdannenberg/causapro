@@ -8,10 +8,13 @@ kernelize_graph <- function(graph) {
     n = numNodes(graph)
     vis = logical(n)
     ln = character()
+    isolated_nodes <- list()
+    cnt = 1
     for(u in nodes(graph)) {
         if(graph::degree(graph, u)$inDegree == 0 && graph::degree(graph, u)$outDegree == 0) {
             ## create list
-            print(u)
+            isolated_nodes[[cnt]] = u
+            cnt = cnt + 1
         } else {
             ln <- c(ln, u)
         }
@@ -33,10 +36,12 @@ kernelize_graph <- function(graph) {
             eList[[i]] <- character(0)
         }
     }
-    g <- graphNEL(nodes = ln, edgeL = eList, edgemode = "directed")
+    l <- list()
+    l[["graph"]] <- graphNEL(nodes = ln, edgeL = eList, edgemode = "directed")
+    l[["isolated_nodes"]] <- isolated_nodes
     ## do something with the graph
     ## plot(g)
-    return(g)
+    return(l)
 }
 
 ## I assume that the adjmatrix is given where conflict edges have weight 2
