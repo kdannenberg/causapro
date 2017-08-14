@@ -193,7 +193,7 @@ ancestorgraph_of_interesting_positions <- function(graph_dagitty, positions = NU
 
 # for_coloring -> output hierarchical (list with different sorts of interesting positions as vectors), otherwise one vector
 # std-Reihenfolge: grün-gelb-rot-blau
-interesting_positions <- function(protein, position_numbering, allpositions, for_coloring = FALSE, coloring = "auto", colors = "", counts) {
+interesting_positions <- function(protein, position_numbering = "crystal", for_coloring = FALSE, coloring = "auto", colors = "", counts) {
   if (is.null(coloring) || coloring == "none") {
     list <- list()
   } else {
@@ -222,8 +222,7 @@ interesting_positions <- function(protein, position_numbering, allpositions, for
           }
           names(list) <- c("#69A019", "#FFD700", "#CC0000", "#FF9933")[1:length(list)]
         }
-      }
-      if (position_numbering == "alignment") {
+      } else if (position_numbering == "alignment") {
         # numbering alignment
         main = c(98)
         high = c(24, 28, 32, 33, 65, 72, 81, 102, 106, 119) # interesting ones
