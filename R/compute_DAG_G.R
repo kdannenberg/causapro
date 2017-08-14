@@ -142,7 +142,7 @@ protein_causality_G <- function(
   
   directories <- strsplit(outpath, file_separator)
   filename <- directories[[1]][length(directories[[1]])]
-  output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_seperator, sep = file_seperator)
+  output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_separator, sep = file_separator)
   
   # output_dir = paste("../Outputs/", type_of_data, sep = "")
   # if (!dir.exists(output_dir)) {

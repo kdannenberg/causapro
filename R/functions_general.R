@@ -10,6 +10,7 @@ kernelize_graph <- function(graph) {
     ln = character()
     for(u in nodes(graph)) {
         if(degree(graph, u)$inDegree == 0 && degree(graph, u)$outDegree == 0) {
+            ## create list
             print(u)
         } else {
             ln <- c(ln, u)
@@ -21,8 +22,8 @@ kernelize_graph <- function(graph) {
             vc <- c()
             for(j in edgeL(graph)[[i]][[1]]) {
                 if(length(j) == 0) next
-                if(nodes(pc@graph)[j] %in% ln) {
-                    vc <- c(vc, nodes(pc@graph)[j])
+                if(nodes(graph)[j] %in% ln) {
+                    vc <- c(vc, nodes(graph)[j])
                 }
             }
         }
@@ -123,7 +124,7 @@ enumerate_graphs <- function(am) {
             }
         }
         ## do stuff with graph
-        print(dag_check(am, n))
+        ## print(dag_check(am, n))
         print(am)
     }
 }
