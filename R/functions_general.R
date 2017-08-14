@@ -9,7 +9,7 @@ kernelize_graph <- function(graph) {
     vis = logical(n)
     ln = character()
     for(u in nodes(graph)) {
-        if(degree(graph, u)$inDegree == 0 && degree(graph, u)$outDegree == 0) {
+        if(graph::degree(graph, u)$inDegree == 0 && graph::degree(graph, u)$outDegree == 0) {
             ## create list
             print(u)
         } else {
@@ -110,6 +110,9 @@ enumerate_graphs <- function(am) {
             }
         }
     }
+    
+    graphs <- vector("list", 2^length(pos))
+    
     for(i in 0:(2^length(pos)-1)) {
         for(j in 1:length(pos)) {
             k = pos[j]
@@ -124,9 +127,10 @@ enumerate_graphs <- function(am) {
             }
         }
         ## do stuff with graph
-        ## print(dag_check(am, n))
-        print(am)
+        graphs[[i+1]] <- as(t(am), "graphNEL")
+        # print(am)
     }
+    return(graphs)
 }
 
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
