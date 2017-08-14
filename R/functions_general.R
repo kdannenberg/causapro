@@ -9,7 +9,7 @@ kernelize_graph <- function(graph) {
     vis = logical(n)
     ln = character()
     for(u in nodes(graph)) {
-        if(degree(graph, u)$inDegree == 0 && degree(graph, u)$outDegree == 0) {
+        if(graph::degree(graph, u)$inDegree == 0 && graph::degree(graph, u)$outDegree == 0) {
             ## create list
             print(u)
         } else {
@@ -110,6 +110,9 @@ enumerate_graphs <- function(am) {
             }
         }
     }
+    
+    graphs <- vector("list", 2^length(pos))
+    
     for(i in 0:(2^length(pos)-1)) {
         for(j in 1:length(pos)) {
             k = pos[j]
@@ -124,9 +127,10 @@ enumerate_graphs <- function(am) {
             }
         }
         ## do stuff with graph
-        ## print(dag_check(am, n))
-        print(am)
+        graphs[[i+1]] <- as(t(am), "graphNEL")
+        # print(am)
     }
+    return(graphs)
 }
 
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
@@ -194,7 +198,7 @@ ancestorgraph_of_interesting_positions <- function(graph_dagitty, positions = NU
 
 # for_coloring -> output hierarchical (list with different sorts of interesting positions as vectors), otherwise one vector
 # std-Reihenfolge: grün-gelb-rot-blau
-interesting_positions <- function(protein, position_numbering, allpositions, for_coloring = FALSE, coloring = "auto", colors = "", counts) {
+interesting_positions <- function(protein, position_numbering = "crystal", for_coloring = FALSE, coloring = "auto", colors = "", counts) {
   if (is.null(coloring) || coloring == "none") {
     list <- list()
   } else {
@@ -223,8 +227,7 @@ interesting_positions <- function(protein, position_numbering, allpositions, for
           }
           names(list) <- c("#69A019", "#FFD700", "#CC0000", "#FF9933")[1:length(list)]
         }
-      }
-      if (position_numbering == "alignment") {
+      } else if (position_numbering == "alignment") {
         # numbering alignment
         main = c(98)
         high = c(24, 28, 32, 33, 65, 72, 81, 102, 106, 119) # interesting ones
