@@ -1,4 +1,4 @@
-source("~/ProteinCausalPaths/R/configuration_code.R")
+source("~/.configuration_code.R")
 
 source("functions_causal_effects.R")
 source("functions_ci_tests.R")
@@ -21,7 +21,12 @@ source("configuration_data.R")
 
 protein_causality_S <- function(
                                 numerical = TRUE,
-                                protein = "PDZ"
+                                protein = "PDZ",
+                                type_of_data = "DDDG",
+                                subtype_of_data = "",
+                                data_set = "",
+                                position_numbering = "crystal",
+                                min_pos_var = 0,
                                 )
 
 numerical = TRUE
