@@ -171,7 +171,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file)
   
   # garbage <- graphics.off()
-  plot_graph(graph = pc@graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, 
+  plot_graph(graph = kernelize_graph(pc@graph), caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, 
              coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
              plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats)
   
