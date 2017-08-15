@@ -4,7 +4,7 @@ library(pcalg)
 
 ## this function gets a graph and returns graph which includes only non-isolated nodes
 ## it also prints a list of the isolated nodes
-kernelize_graph <- function(graph) {
+kernelize_graph <- function(graph, ret_list = FALSE) {
     n = numNodes(graph)
     vis = logical(n)
     ln = character()
@@ -12,9 +12,11 @@ kernelize_graph <- function(graph) {
     cnt = 1
     for(u in nodes(graph)) {
         if(graph::degree(graph, u)$inDegree == 0 && graph::degree(graph, u)$outDegree == 0) {
-            ## create list
+          ## create list
+          if(ret_list) {
             isolated_nodes[[cnt]] = u
             cnt = cnt + 1
+          }
         } else {
             ln <- c(ln, u)
         }
@@ -41,7 +43,11 @@ kernelize_graph <- function(graph) {
     l[["isolated_nodes"]] <- isolated_nodes
     ## do something with the graph
     ## plot(g)
-    return(l)
+    if(ret_list) {
+      return(l)
+    } else {
+      return(l[["graph"]])
+    }
 }
 
 ## I assume that the adjmatrix is given where conflict edges have weight 2

@@ -1,4 +1,4 @@
-source("configuration_code.R")
+source("~/ProteinCausalPaths/R/configuration_code.R")
 
 source("functions_causal_effects.R")
 source("functions_ci_tests.R")
@@ -18,6 +18,11 @@ source("configuration_data.R")
 
 ## available data:
 ## TODO
+
+protein_causality_S <- function(
+                                numerical = TRUE,
+                                protein = "PDZ"
+                                )
 
 numerical = TRUE
 protein = "PDZ"
