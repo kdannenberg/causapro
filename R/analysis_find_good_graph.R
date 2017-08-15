@@ -1,11 +1,10 @@
-source("configuration_code.R")
+source("~/.configuration_code.R")
 
 source("functions_causal_effects.R")
 source("functions_general.R")
 source("functions_conversions.R")
 
 source("compute_DAG_G.R")
-
 # source("configuration_data.R")
 
 protein = "PDZ"
@@ -43,9 +42,9 @@ weight_effects_on_by = "median"  # sieht (in der Summe) am besten aus
 
 # which part of the analysis should be plotted?
 # IDA für alle s Graphen berechen und summieren (besser wäre vllt: mitteln, also nochmal durch s teilen. Kannst du gerne machen, Marcel.)
-# plot = "sum over all graphs"
+plot = "sum over all graphs"
 # IDA für alle s Graphen brechenen und denjenigen bestimmen, der am besten mit den gewünschten Ergebnissen übereinstimmt
-plot = "best graph"
+# plot = "best graph"
 # für alle Graphen mit Nummern in <plot> die Abweichung von der Summe (dem zukünftigen Mittelwert) über alle Graphen bestimmen, 
 # also gewissermaßen wie repräsentativ der Graph jeweils für die Menge ist
 # plot = 1:25     ## if (is.numeric(plot) && length(plot) > 1) --> deviation from mean for graph(s) nr. <plot>
