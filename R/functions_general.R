@@ -110,38 +110,39 @@ dag_check <- function(am) {
     return(res)
 }
 
-enumerate_graphs <- function(am) {
-    n = dim(am)[1]
-    pos <- c()
-    for(i in 1:n) {
-        for(j in (i+1):n) {
-            if(j > n) next
-            if(am[i,j] == 2) {
-                pos <- c(pos, (i-1)*n+(j-1))
-            }
-        }
+enumerate_graphs <- function(graph) {
+  am = wgtMatrix(graph)
+  n = dim(am)[1]
+  pos <- c()
+  for(i in 1:n) {
+    for(j in (i+1):n) {
+      if(j > n) next
+      if(am[i,j] == 2) {
+        pos <- c(pos, (i-1)*n+(j-1))
+      }
     }
-    
-    graphs <- vector("list", 2^length(pos))
-    
-    for(i in 0:(2^length(pos)-1)) {
-        for(j in 1:length(pos)) {
-            k = pos[j]
-            x = k %/% n + 1
-            y = k %% n + 1
-            if(bitwAnd(2^(j-1), i) > 0) {
-                am[x,y] = 1
-                am[y,x] = 0
-            } else {
-                am[y,x] = 1
-                am[x,y] = 0
-            }
-        }
-        ## do stuff with graph
-        graphs[[i+1]] <- as(t(am), "graphNEL")
-        # print(am)
+  }
+  
+  graphs <- vector("list", 2^length(pos))
+  
+  for(i in 0:(2^length(pos)-1)) {
+    for(j in 1:length(pos)) {
+      k = pos[j]
+      x = k %/% n + 1
+      y = k %% n + 1
+      if(bitwAnd(2^(j-1), i) > 0) {
+        am[x,y] = 1
+        am[y,x] = 0
+      } else {
+        am[y,x] = 1
+        am[x,y] = 0
+      }
     }
-    return(graphs)
+    ## do stuff with graph
+    graphs[[i+1]] <- as(t(am), "graphNEL")
+    # print(am)
+  }
+  return(graphs)
 }
 
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
