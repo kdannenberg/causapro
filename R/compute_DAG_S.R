@@ -20,82 +20,72 @@ source("configuration_data.R")
 ## TODO
 
 protein_causality_S <- function(
+                                # data parameters
                                 numerical = TRUE,
                                 protein = "PDZ",
-                                type_of_data = "DDDG",
+                                type_of_data = "DDS",
                                 subtype_of_data = "",
                                 data_set = "",
                                 position_numbering = "crystal",
+                                # analysis parameters
                                 min_pos_var = 0,
-                                )
+                                only_cols = NULL,
+                                only_cols_label = "",
+                                alpha = 0.01,
+                                ranked = FALSE,
+                                pc_solve_conflicts = TRUE,
+                                pc_u2pd = "relaxed",
+                                pc_conservative = FALSE,
+                                pc_maj_rule = FALSE,
+                                weight_effects_on_by = "median", # "var", "mean", ""
+                                # graphical parameters
+                                graph_output_formats = "ps",
+                                graph_layout = "dot", # "circo", "fdp", "neato", "osage", "twopi"
+                                coloring = "es", # "auto", "auto-all", "all"
+                                colors = NULL,
+                                plot_as_subgraphs = FALSE,
+                                plot_only_subgraphs = NULL, # 1 is another option
+                                combined_plot = FALSE,
+                                other = "", # "cov"
+                                # technical parameters
+                                graph_computation = TRUE,
+                                evaluation = FALSE,
+                                analysis = FALSE, # !pc_solve_conflicts
+                                stages = c("orig"), # c("orig", "sub"), "sub"
+                                print_analysis = FALSE,
+                                plot_analysis = TRUE,
+                                plot_types = c("localTests", "graph"),
+                                compute_pc_anew = FALSE,
+                                compute_localTests_anew = FALSE,
+                                unnabbrev_r_to_info = FALSE,
+                                print_r_to_console = TRUE,
+                                lines_in_abbr_of_r = 10,
+                                data_in_results = FALSE,
+                                output_parameters_in_results = FALSE,
+                                ida_percentile = "11",
+                                file_separator = "/"
+                                ) {
+  graphics.off()
+  data_description <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data <- subtype_of_data, data_set = data_set)
+  data <- read_data(data_description, only_cols = only_cols)
+  data <- adjust_data(data = data, rank = ranked, min_var = min_pos_var)
+  type_of_data <- type_of_data_after_adjustment(type_of_data = type_of_data, rank = ranked, min_var = min_pos_var)
+  if(!is.numeric(ida_percentile)) {
+    ida_percentile <- 1 - (as.numeric(ida_percentile) / dim(data)[2])
+  }
+  outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
+                         alpha = alpha, min_pos_var = min_pos_var, only_cols_label = only_cols_label, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, 
+                         pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule, file_separator = file_separator)
+  directories <- strsplit(outpath, file_separator)
+  filename <- directories[[1]][length(directories[[1]])]
+  output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_separator, sep = file_separator)
+  caption <- get_caption(protein = protein, data = data_description, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = 45)
+  parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, 
+                                                       only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = file_separator))  
+ 
+}
 
-numerical = TRUE
-protein = "PDZ"
-type_of_data = "DDS"
-source_of_data = "DDS_pdz"
-# source_of_data = "DDS_pdz_SVD"
-subtype_of_data = ""
-position_numbering = "crystal"
 
-## Analysis parameters
-## TODO: explain purpose of only_cols
-only_cols = NULL
-only_cols_label = ""
-alpha = 0.125
-
-## TODO: explain stages
-stages <- c("orig", "anc") # "sub"
-plot_types <- c("localTests", "graphs")
-
-## Graphical parameters
-## choose one of the layouts offered by Rgraphviz
-graph_layout <- "dot" # "dot", "circo", "fdp", "neato", "osage", "twopi"
-## TODO: explain auto-all and auto color
-coloring = "auto" # "auto", "auto-all" or "all"
-colors <- NULL
-
-## plot with clustering if set TRUE
-plot_as_subgraphs = FALSE
-## only plots cluster - shouldn't this be stored in a different file?
-plot_only_subgraphs = 1 #1 NULL
-
-## Technical parameters (print, plot, save, analysis)
-## those options are either set to FALSE or to TRUE (unused/used option)
-## analyse DAG using dagitty
-analysis = FALSE
-## do not print the dagitty analysis, but save it somewhere?
-print_analysis = TRUE
-## plot the dagitty analysis
-plot_analysis = FALSE
-## compute new dag/analysis (TRUE) or use precomputed one (FALSE)
-compute_pc_anew <- FALSE
-compute_localTests_anew <- FALSE
-## if (compute_everything_anew) {
-##   compute_pc_anew <- TRUE
-## }
-## what is this doing, more information to info file?
-unabbrev_r_to_info <- FALSE
-## and this?
-print_r_to_console <- FALSE
-lines_in_abbr_of_r <- 20
-
-# graphics.off()
-# par(mfrow = c(3,2))
-
-filename <- paste("../Data/", source_of_data, ".csv", sep = "")
-
-data <- read_data(filename, transpose = FALSE)
-# colnames(data) <- paste("X", colnames(data), sep = "")
-
-# outpath = paste("../Outputs/", type_of_data, "/", only_cols_label, source_of_data, "-alpha=", alpha, sep = "") 
-
-filename <- paste(only_cols_label, source_of_data, "-alpha=", alpha, sep = "")
-output_dir <- paste("~/Viren/R/Outputs/", protein, "/", type_of_data, "/", filename, sep = "")
-
-# outpath = paste("../Outputs/", type_of_data, "/", only_cols_label, source_of_data, "-alpha=", alpha, sep="") 
-data_descr <- source_of_data
-
-caption <- caption(protein = protein, data = data_descr, alpha = alpha, chars_per_line = 45) #TODO rem_gaps_threshold hinzufügen
 parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = "/"))  
 
 results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 

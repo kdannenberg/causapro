@@ -22,24 +22,34 @@ kernelize_graph <- function(graph, ret_list = FALSE) {
         }
     }
     eList <- list()
+    # for(i in ln) {
+    #     if(i %in% ln) {
+    #         vc <- c()
+    #         for(j in edgeL(graph)[[i]][[1]]) {
+    #             if(length(j) == 0) next
+    #             if(nodes(graph)[j] %in% ln) {
+    #                 vc <- c(vc, nodes(graph)[j])
+    #             }
+    #         }
+    #     }
+    #     if(length(vc) > 0) {
+    #         eList[[i]] <- vc
+    #     } else {
+    #         eList[[i]] <- character(0)
+    #     }
+    # }
+    lam = wgtMatrix(graph)
+    am = matrix(0, length(ln), length(ln))
+    rownames(am) <- ln
+    colnames(am) <- ln
     for(i in ln) {
-        if(i %in% ln) {
-            vc <- c()
-            for(j in edgeL(graph)[[i]][[1]]) {
-                if(length(j) == 0) next
-                if(nodes(graph)[j] %in% ln) {
-                    vc <- c(vc, nodes(graph)[j])
-                }
-            }
-        }
-        if(length(vc) > 0) {
-            eList[[i]] <- vc
-        } else {
-            eList[[i]] <- character(0)
-        }
+      for(j in ln) {
+        am[i,j] = lam[i,j]
+      }
     }
     l <- list()
-    l[["graph"]] <- graphNEL(nodes = ln, edgeL = eList, edgemode = "directed")
+    # l[["graph"]] <- graphNEL(nodes = ln, edgeL = eList, edgemode = "directed")
+    l[["graph"]] <- as(t(am), "graphNEL")
     l[["isolated_nodes"]] <- isolated_nodes
     ## do something with the graph
     ## plot(g)
