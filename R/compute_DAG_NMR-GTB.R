@@ -1,4 +1,4 @@
-source("configuration_code.R")
+source("~/.configuration_code.R")
 
 source("functions_causal_effects.R")
 source("functions_ci_tests.R")
@@ -14,187 +14,140 @@ source("functions_tools.R")
 ## set working directory from configuration.R
 source("configuration_data.R")
 
-sink.reset()
-
-## Data parameters
-
-## available data
-## TODO
-
-numerical = TRUE
-protein = "GTB"
-type_of_data = "NMR-2"
-
-## state of the protein
-# state = "allstates"
-# state = "all"
-# state = "acc"
-state = "don+acc"
-# state = "all"
-nuclei = "all" # "all" "1H", "13C"
-position_numbering = ""
-
-if (grepl("NMR", type_of_data)) {
-  transpose = TRUE
-} else {
-  transpose = FALSE
-}
-
-## Analysis parameters
-# TODO:
-# remove_cols <- c(210) 
-only_cols = NULL
-only_cols_label = ""
-## alpha is the level of significance
-alpha = 0.2
-## ## if rank is TRUE instead of the numerical NMR data simply the ranking of the positions will be used
-ranked = TRUE
-
-## TODO: explain stages
-stages <- c("orig") # "sub"
-plot_types <- c("localTests", "graphs")
-
-
-## Graphical parameters
-## choose one of the graph layouts Rgraphviz offers
-graph_layout <- "dot" # "dot", "circo", "fdp", "neato", "osage", "twopi"
-## what are the options here?
-coloring = "auto"
-colors = "auto"
-
-## plot with clusters
-plot_as_subgraphs = FALSE
-## plot only cluster
-plot_only_subgraphs = NULL
-
-
-## Technical parameters
-## those options are either set to FALSE or to TRUE (unused/used option)
-## analyse DAG using dagitty
-analysis = FALSE
-## do not print the dagitty analysis, but save it somewhere?
-print_analysis = FALSE
-## plot the dagitty analysis
-plot_analysis = FALSE
-## compute new dag/analysis (TRUE) or use precomputed one (FALSE)
-compute_pc_anew <- TRUE
-compute_localTests_anew <- FALSE
-## what is this doing, more information to info file?
-unabbrev_r_to_info <- FALSE
-## and this?
-print_r_to_console <- FALSE
-lines_in_abbr_of_r <- 20
-
-
-# rem_apo <- c(84, 104, 120, 134, 173, 207, 224, 225, 232, 254, 256, 280, 319, 336, 339)
-# rem <- c(rem_apo, rem_other)
-if (type_of_data == "NMR") {
-  rem_don_acc <- c(143, 175, 184, 189, 266, 329)
-  rem_don <- c(210)
-  if (state == "all") {
-    rem <- c(rem_don_acc, rem_don)
-  } else if (state == "don+acc") {
-    rem <- rem_don_acc
-  } else if (state == "don") {
-    rem <- rem_don
-  } else if (state == "acc") {
-    rem <- c()
-  }
-} else if (type_of_data == "NMR-2") {
-  rem_acc <- c(288, 329)
-  rem_don <- c(210)
-  rem_don_acc <- c(143, 175, 184, 189, 210, 266, 329)
-  if (state == "all") {
-    rem <- c(rem_don_acc, rem_don, rem_acc)
-  } else if (state == "don+acc") {
-    rem <- rem_don_acc
-  } else if (state == "don") {
-    rem <- rem_don
-  } else if (state == "acc") {
-    rem <- rem_acc
-  }
-}
-
-# bind_donor <- c(121, 123, 126, 213, 346, 352)
-# bind_acceptor <- c(233, 245, 303, 326, 348)
-# intersect(bind_donor, colnames(data))
-## [1] "123"
-# intersect(bind_acceptor, colnames(data))
-## character(0)
-
-# Computation of Output-Location and Output Infos
-# if (state == "allstates") {
-#   data_list <- list()
-#   for (state in c("don", "acc", "don+acc")) {
-#     source_of_data = paste(protein, type_of_data, state, sep = "-")
-#     filename <- paste("../Data/", source_of_data, ".csv", sep = "")
-#     var <- read_data(filename, transpose = transpose)
-#     rownames(var) <- paste(rownames(var), state, sep = "-")
-#     data_list[state][[1]] <- var
-#   }
-#   data <- do.call(rbind, data_list)
-# } else {
-
-source_of_data = paste(protein, type_of_data, state, sep = "-")
-filename <- paste("../Data/", source_of_data, ".csv", sep = "")
-data <- read_data(filename, transpose = transpose)
-# }
-colnames(data) <- sapply(strsplit(colnames(data), " "), function(x) x[1])
-
-data <- rem_cols_by_colname(data, rem)
-
-if (!is.null(nuclei) && !(nuclei == "all") && !(nuclei == "")) {
-  # if (only_H) {
-  #   data <- data[grepl("1H", rownames(data)), ]
+protein_causality_NMRGTB <- function(
+  # Data parameters
+  # 
+  # available data:
+  # PDZ_DG
+  # PDZ_DDG-all
+  # PDZ_DDDG-5     # best results so far
+  # PDZ_DDDG-10
+  # PDZ_DDDG-all_372
+  # PDZ_DDDG-all
+  # PDZ_DDDG-all_SVD
+  numerical = TRUE,
+  protein = "GTB",
+  # 
+  # type_of_data = "DG",
+  # type_of_data = "DDG",
+  type_of_data = "NMR",
+  # 
+  # subtype_of_data = "all",
+  subtype_of_data = "2",
+  # subtype_of_data = "10",
+  # 
+  data_set = "don+acc",
+  # data_set = "SVD",
+  # data_set = "372",
+  # 
+  position_numbering = "crystal",
+  # 
+  # Analysis parameters
+  # remove_positions_with_low_variance = TRUE,
+  min_pos_var = 0,
+  only_cols = NULL,
+  only_cols_label = "",
+  # 
+  alpha = 0.01,
+  ranked = FALSE,
+  # 
+  # pc_solve_conflicts = FALSE,
+  # pc_u2pd = "retry",
+  pc_solve_conflicts = TRUE,
+  pc_u2pd = "relaxed",
+  pc_conservative = FALSE,
+  pc_maj_rule = FALSE,
+  # 
+  # weight_effects_on_by = "",
+  # weight_effects_on_by = "var",
+  # weight_effects_on_by = "mean",
+  weight_effects_on_by = "median",
+  # 
+  # 
+  # 
+  # Graphical parameters
+  graph_output_formats = "ps",
+  graph_layout = "dot", # "dot", "circo", "fdp", "neato", "osage", "twopi"
+  coloring = "auto", #"es",#"auto",  # "auto-all" or "all"
+  colors = NULL,
+  # 
+  plot_as_subgraphs = FALSE,
+  plot_only_subgraphs = NULL, # 1 oder NULL
+  # TODO Marcel: dafür sorgen dass, wenn diese Option aktiv ist, kein graphics.off() o.ä. ausgeführt wird (und nur der graph geplottet wird)
+  combined_plot = FALSE,
+  # 
+  # description of other settings that should be appended to output-filename
+  other = "", # cov", 
+  # 
+  # 
+  # Technical parameters (print, plot, save, analysis)
+  # steps = c("evaluation", "analysis"),
+  graph_computation = TRUE,
+  evaluation = FALSE,
+  analysis = FALSE,#!pc_solve_conflicts,
+  stages = c("orig"), #c("orig", "sub"), # "sub"
+  print_analysis = FALSE,
+  plot_analysis = TRUE,
+  plot_types = c("localTests", "graphs"),
+  # 
+  compute_pc_anew = FALSE,
+  compute_localTests_anew = FALSE,
+  # if (compute_everything_anew) {
+  #   compute_pc_anew <- TRUE
   # }
-  # if (only_C) {
-  #   data <- data[grepl("13C", rownames(data)), ]
-  # }
-  data <- data[grepl(nuclei, rownames(data)), ]
-  if (dim(data)[1] == 0) {
-    stop("No data for these nuclei!")
-  }
-  state <- paste(state, nuclei, sep = "-")
-  source_of_data <- paste(source_of_data, nuclei, sep = "-")
-  # source_of_data <- paste(protein, type_of_data, state, sep = "-")  # sollte das gleiche liefern
+  unabbrev_r_to_info = FALSE,
+  print_r_to_console = TRUE,
+  lines_in_abbr_of_r = 10,
+  data_in_results = FALSE,
+  output_parameters_in_results = FALSE,
+  # 
+  ida_percentile = "11", # top 11
+  # ida_percentile = 0.75, # top 75%
+  #
+  file_separator = "/"
+) {
+  return(protein_causality(numerical = numerical,
+                           protein = protein,
+                           type_of_data = type_of_data,
+                           subtype_of_data = subtype_of_data,
+                           data_set = data_set,
+                           position_numbering = position_numbering,
+                           min_pos_var = min_pos_var,
+                           only_cols = only_cols,
+                           only_cols_label = only_cols_label,
+                           alpha = alpha,
+                           ranked = ranked,
+                           pc_solve_conflicts = pc_solve_conflicts,
+                           pc_u2pd = pc_u2pd,
+                           pc_conservative = pc_conservative,
+                           pc_maj_rule = pc_maj_rule,
+                           weight_effects_on_by = weight_effects_on_by,
+                           graph_output_formats = graph_output_formats,
+                           graph_layout = graph_layout,
+                           coloring = coloring,
+                           colors = colors,
+                           plot_as_subgraphs = plot_as_subgraphs,
+                           plot_only_subgraphs = plot_only_subgraphs,
+                           combined_plot = combined_plot,
+                           other = other,
+                           graph_computation = graph_computation,
+                           evaluation = evaluation,
+                           analysis = analysis,
+                           stages = stages,
+                           print_analysis = print_analysis,
+                           plot_analysis = plot_analysis,
+                           plot_types = plot_types,
+                           compute_pc_anew = compute_pc_anew,
+                           compute_localTests_anew = compute_localTests_anew,
+                           unabbrev_r_to_info = unabbrev_r_to_info,
+                           print_r_to_console = print_r_to_console,
+                           lines_in_abbr_of_r = lines_in_abbr_of_r,
+                           data_in_results = data_in_results,
+                           output_parameters_in_results = output_parameters_in_results,
+                           ida_percentile = ida_percentile,
+                           file_separator = file_separator
+                           )
+         )
 }
 
-## TODO Marcel: test!
-data <- adjust_data(data = data, rank = ranked, remove_low_variance = FALSE)
-type_of_data <- type_of_data_after_adjustment(type_of_data = type_of_data, rank = ranked, remove_low_variance = FALSE)
-# if (ranked) {
-#   # if (rank) {
-#   # data <- cbind(apply(data, 2, rank))
-#   data <- t(apply(data, 1, rank))
-#   # }
-#   # if (state == "all") {
-#   #   stop("Data not available (ranked).")
-#   # } else {
-#   type_of_data <- paste(type_of_data, "ranked", sep = "-")
-#   # }
-# } 
-
-filename <- paste(only_cols_label, source_of_data, "-alpha=", alpha, sep = "")
-output_dir <- paste("../Outputs/", protein, "/", type_of_data, "/", filename, sep = "")
-# print(paste("Output will be written to ", getwd(), "/", substring(outpath, 0, nchar(outpath)), "...", sep = ""))
-if (!dir.exists(output_dir)) {
-  dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
-  print("Directory created.")
-}
-outpath <- paste(output_dir, filename, sep = "/")
- 
-caption <- caption(protein = protein, data = paste(state, " (", type_of_data, ")", sep = ""), alpha = alpha, chars_per_line = 45)
-parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = "/")) 
-
-results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
-                                output_dir = output_dir, filename = filename, parameters_for_info_file = parameters_for_info_file,
-                                alpha = alpha, caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
-                                graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-                                unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
-                                compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew, 
-                                print_analysis = print_analysis, plot_analysis = plot_analysis)
-
-plot_connected_components_in_pymol(protein = protein, graph = results$orig$graph$NEL, outpath = outpath, no_colors = FALSE, only_dist = FALSE)
-
-paths <- paths_between_nodes(graph = results$orig$graph$NEL, from = c(123, 310), to = c(207, 336), all_paths = FALSE)
-plot_paths_in_pymol(protein = protein, graph = results$orig$graph$NEL, outpath = outpath, paths = paths, no_colors = FALSE, label = TRUE, show_positions = FALSE)
+results_NMRGTB <- protein_causality_NMRGTB(pc_conservative = FALSE, pc_maj_rule = FALSE, pc_u2pd = "relaxed", pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.01)

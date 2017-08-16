@@ -73,7 +73,6 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
       }
     }
   }
-  
   # TODO: statistical test for zero variance
   if (typeof(min_var) == "closure") {
     # remove_low_var_cols <-  nearZeroVar(data, freqCut = 15, saveMetrics = FALSE)
@@ -81,7 +80,7 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   } else {
     drop <- which(apply(data, 2, var) <= min_var)
   }
-  colors <- rep("#FFFFFF", 92)
+  colors <- rep("#FFFFFF", dim(data)[[1]])
   colors[drop] <- "#000000"
   barplot(apply(data, 2, var), col = colors)
   # var unter min_var wegschmeißen

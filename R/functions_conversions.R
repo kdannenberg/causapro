@@ -113,9 +113,9 @@ conv_to_r <- function(g, type_of_graph = "pdag", nodename_prefix = "") {
   ## work with graph class
   # g <- pc @ graph
   ## list of nodes
-  ln <- names(nodeData(g))
+  ln <- names(graph::nodeData(g))
   ## list of edges in format "a|b"
-  le <- names(edgeData(g))
+  le <- names(graph::edgeData(g))
   ## construct adjacency matrix
   n <- length(ln)
   am <- matrix(0, nrow = n, ncol = n)

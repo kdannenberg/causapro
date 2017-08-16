@@ -41,7 +41,7 @@ protein_causality_S <- function(
                                 # graphical parameters
                                 graph_output_formats = "ps",
                                 graph_layout = "dot", # "circo", "fdp", "neato", "osage", "twopi"
-                                coloring = "es", # "auto", "auto-all", "all"
+                                coloring = "auto", # "auto", "auto-all", "all"
                                 colors = NULL,
                                 plot_as_subgraphs = FALSE,
                                 plot_only_subgraphs = NULL, # 1 is another option
@@ -65,42 +65,53 @@ protein_causality_S <- function(
                                 ida_percentile = "11",
                                 file_separator = "/"
                                 ) {
-  graphics.off()
-  data_description <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data <- subtype_of_data, data_set = data_set)
-  data <- read_data(data_description, only_cols = only_cols)
-  data <- adjust_data(data = data, rank = ranked, min_var = min_pos_var)
-  type_of_data <- type_of_data_after_adjustment(type_of_data = type_of_data, rank = ranked, min_var = min_pos_var)
-  if(!is.numeric(ida_percentile)) {
-    ida_percentile <- 1 - (as.numeric(ida_percentile) / dim(data)[2])
-  }
-  outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
-                         alpha = alpha, min_pos_var = min_pos_var, only_cols_label = only_cols_label, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, 
-                         pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule, file_separator = file_separator)
-  directories <- strsplit(outpath, file_separator)
-  filename <- directories[[1]][length(directories[[1]])]
-  output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_separator, sep = file_separator)
-  caption <- get_caption(protein = protein, data = data_description, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = 45)
-  parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, 
-                                                       only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = file_separator))  
+  return(protein_causality(numerical = numerical,
+                           protein = protein,
+                           type_of_data = type_of_data,
+                           subtype_of_data = subtype_of_data,
+                           data_set = data_set,
+                           position_numbering = position_numbering,
+                           min_pos_var = min_pos_var,
+                           only_cols = only_cols,
+                           only_cols_label = only_cols_label,
+                           alpha = alpha,
+                           ranked = ranked,
+                           pc_solve_conflicts = pc_solve_conflicts,
+                           pc_u2pd = pc_u2pd,
+                           pc_conservative = pc_conservative,
+                           pc_maj_rule = pc_maj_rule,
+                           weight_effects_on_by = weight_effects_on_by,
+                           graph_output_formats = graph_output_formats,
+                           graph_layout = graph_layout,
+                           coloring = coloring,
+                           colors = colors,
+                           plot_as_subgraphs = plot_as_subgraphs,
+                           plot_only_subgraphs = plot_only_subgraphs,
+                           combined_plot = combined_plot,
+                           other = other,
+                           graph_computation = graph_computation,
+                           evaluation = evaluation,
+                           analysis = analysis,
+                           stages = stages,
+                           print_analysis = print_analysis,
+                           plot_analysis = plot_analysis,
+                           plot_types = plot_types,
+                           compute_pc_anew = compute_pc_anew,
+                           compute_localTests_anew = compute_localTests_anew,
+                           unabbrev_r_to_info = unabbrev_r_to_info,
+                           print_r_to_console = print_r_to_console,
+                           lines_in_abbr_of_r = lines_in_abbr_of_r,
+                           data_in_results = data_in_results,
+                           output_parameters_in_results = output_parameters_in_results,
+                           ida_percentile = ida_percentile,
+                           file_separator = file_separator
+                           )
+         )
  
 }
 
 
-parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = "/"))  
-
-results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
-                                output_dir = output_dir, filename = filename, parameters_for_info_file = parameters_for_info_file,
-                                alpha = alpha, caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
-                                graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-                                unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
-                                compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew, 
-                                print_analysis = print_analysis, plot_analysis = plot_analysis)
-graph <- results$orig$graph$NEL
-cat(paste("Number of edges", number_of_edges(graph), "\n"))
-dg = dagitty(conv_to_r(graph))
-cat(dconnected(dg, "372", "330"))
-
-plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = results$orig$graph$NEL, 
-                                   outpath = paste(output_dir, filename, sep = "/"), only_int_pos = TRUE, color_int_pos = FALSE, 
-                                   coloring_for_int_pos = "auto")
+results_S <- protein_causality_S(pc_conservative = FALSE, pc_maj_rule = FALSE, pc_u2pd = "relaxed", pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.01)
+sink()
+print(conflict_edges(results_S$pc@graph))
 
