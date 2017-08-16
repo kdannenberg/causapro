@@ -1,3 +1,5 @@
+# DEPRECATED, use analysis_find_good_graph, with type_of_graph_set = "conflict"
+
 source("~/.configuration_code.R")
 
 source("functions_causal_effects.R")
