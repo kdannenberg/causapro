@@ -163,10 +163,10 @@ protein_causality_G <- function(
 
 # TODO: warum geht das nur für effects of pos. 372
                                         # results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "retry", pc_solve_confl = TRUE, analysis = TRUE)
-results_G <- protein_causality_G(pc_conservative = FALSE, pc_maj_rule = TRUE, pc_u2pd = "relaxed", pc_solve_confl = TRUE, 
-                                 analysis = FALSE, weight_effects_on_by = "mean", min_pos_var = 0, alpha = 0.01)
-sink()
-print(conflict_edges(results_G$pc@graph))
+## results_G <- protein_causality_G(pc_conservative = FALSE, pc_maj_rule = TRUE, pc_u2pd = "relaxed", pc_solve_confl = TRUE, 
+##                                  analysis = FALSE, weight_effects_on_by = "mean", min_pos_var = 0, alpha = 0.01)
+## sink()
+## print(conflict_edges(results_G$pc@graph))
 
 
 # results_G <- protein_causality_G(min_pos_var = 0.05)

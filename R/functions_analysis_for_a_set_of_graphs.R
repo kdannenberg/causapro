@@ -51,7 +51,9 @@ determine_set_of_graphs <- function(type_of_graph_set, s, new, save, outpath,
       if (edges$conflict > 15) {
         stop("More than 15 conflict edges.")
       }
+      cat("Enumerating DAGs...")
       all_graphs <- enumerate_graphs(results$pc@graph) # in Zeile 1 berechnet
+      cat(" Done. \n")
       # all_results <- pblapply(all_graphs, graph_to_results, ida_function = ida_function)   ## schneller (?) # library("pbapply")
       all_results <- list()
       for (i in 1:length(all_graphs)) {
