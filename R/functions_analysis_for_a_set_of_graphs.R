@@ -296,6 +296,9 @@ deviation_from_mean <- function(all_results, dir, weight_effects_on_by, plot_gra
 
 graph_to_results <- function(graph, ida_function) {
   results <- list()
+  # if (is.null(graph)) {
+  #   
+  # }
   pc <- new("pcAlgo", graph = graph)
   results$pc <- pc
   # results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
