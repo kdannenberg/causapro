@@ -360,7 +360,11 @@ enumerate_graphs <- function(graph) {
     }
   }
   
-  graphs <- vector("list", 2^length(pos))
+  if (length(pos) < 27) {
+    graphs <- vector("list", 2^length(pos))
+  } else {
+    stop("Not all graphs enumerable (for all combinations of directions for the conflict edges)") # 2^27 * 8 Byte = 1GB
+  }
   
   for(i in 0:(2^length(pos)-1)) {
     for(j in 1:length(pos)) {
