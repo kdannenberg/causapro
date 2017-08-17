@@ -337,6 +337,16 @@ dag_check <- function(am) {
     return(res)
 }
 
+solve_conflicts <- function(am, pos) {
+  directed_egdges <- c()
+  for(i in 1:length(pos)) {
+    k = pos[i]
+    x = k %/% n + 1
+    y = k %% n + 1
+    
+  }
+}
+
 enumerate_graphs <- function(graph) {
   am = wgtMatrix(graph)
   n = dim(am)[1]
@@ -593,7 +603,7 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
       } else { # different coloring for p38g # Figure S3 automatically mixed
         # return(list())
         if (missing(counts)) {
-          counts <- read.csv2("../Data/FigS3.csv", row.names = 1, check.names=FALSE, skip = 1)
+          counts <- read.csv2("Data/FigS3.csv", row.names = 1, check.names=FALSE, skip = 1)
           counts <- as.matrix(counts, ncol = 4)
   
           if (!is.na(as.numeric(colors))) {
