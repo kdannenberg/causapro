@@ -338,7 +338,6 @@ dag_check <- function(am) {
 }
 
 solve_conflicts <- function(am, pos) {
-  print("------")
   directed_edges <- c()
   poss = TRUE
   n = dim(am)[1]
@@ -352,14 +351,7 @@ solve_conflicts <- function(am, pos) {
       b = tmp
     }
     for(a in 1:n) {
-      if(a == 27 && b == 8 && c == 21) {
-        print(paste0("am[", colnames(am)[b], ",", colnames(am)[a], "]:", am[b,a], ";", 
-                    "am[", colnames(am)[a], ",", colnames(am)[b], "]:", am[a,b], ";", 
-                    "am[", colnames(am)[a], ",", colnames(am)[c], "]:", am[a,c], ";", 
-                    "am[", colnames(am)[c], ",", colnames(am)[a], "]:", am[c,a]))
-      }
       if(am[b,a] == 1 && am[a,b] == 1 && !(am[c,a] == 1 || am[a,c] == 1)) {
-        print(paste("a:", colnames(am)[a], "b:", colnames(am)[b], "c:", colnames(am)[c]))
         if(((a-1)*n + (b-1)) %in% directed_edges) {
           poss = FALSE
         } else {
@@ -368,7 +360,6 @@ solve_conflicts <- function(am, pos) {
       }
     }
   }
-  print(length(directed_edges))
   for(i in directed_edges) {
     b = i %/% n + 1
     a = i %% n + 1
@@ -378,8 +369,18 @@ solve_conflicts <- function(am, pos) {
   if(poss) {
     return(am)
   } else {
-    return(matrix(0, n, n))
+    return(NULL)
+    # return(matrix(0, n, n))
   }
+}
+
+remove_dummies <- function(graphs) {
+  remove <- which(sapply(graphs, is.null))
+  if (length(remove > 0)) {
+    # TODO Marcel: nicht-quadratsich
+    graphs <- graphs[-remove]
+  }
+  return(graphs)
 }
 
 enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE) {
@@ -396,7 +397,7 @@ enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE) {
   }
   
   if (length(pos) < 27) {
-    graphs <- vector("list", 2^length(pos))
+    graphs <- vector("list", 2^length(pos))  # fixed length; non-quadratic running time
   } else {
     stop("Not all graphs enumerable (for all combinations of directions for the conflict edges)") # 2^27 * 8 Byte = 1GB
   }
@@ -428,12 +429,13 @@ enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE) {
     if(direct_adjacent_undirected_edges) {
       m <- solve_conflicts(m, pos)
     }
-    graphs[[i+1]] <- as(m, "graphNEL")
-    print(graphs[[i+1]])
-    # print(am)
+    if (is.null(m)) {
+      graphs[[i+1]] <- NULL              # macht das die Laufzeit wieder quadratisch?
+    } else {
+      graphs[[i+1]] <- as(m, "graphNEL")
+    }
   }
-  print(graphs[[1]])
-  plot(graphs[[1]])
+  graphs <- remove_dummies(graphs)
   return(graphs)
 }
 
