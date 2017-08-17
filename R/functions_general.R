@@ -383,7 +383,7 @@ solve_conflicts <- function(am, pos) {
 }
 
 enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE) {
-  am = wgtMatrix(graph)
+  am = t(wgtMatrix(graph))
   n = dim(am)[1]
   pos <- c()
   for(i in 1:n) {
@@ -428,7 +428,7 @@ enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE) {
     if(direct_adjacent_undirected_edges) {
       m <- solve_conflicts(m, pos)
     }
-    graphs[[i+1]] <- as(t(m), "graphNEL")
+    graphs[[i+1]] <- as(m, "graphNEL")
     print(graphs[[i+1]])
     # print(am)
   }
