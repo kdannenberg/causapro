@@ -360,11 +360,8 @@ solve_conflicts <- function(am, pos) {
       }
       if(am[b,a] == 1 && am[a,b] == 1 && !(am[c,a] == 1 || am[a,c] == 1)) {
         print(paste("a:", colnames(am)[a], "b:", colnames(am)[b], "c:", colnames(am)[c]))
-        am[a,b] = 0
-        am[b,a] = 1
         if(((b-1)*n + (a-1)) %in% directed_edges || ((a-1)*n + (b-1)) %in% directed_edges) {
           poss = FALSE
-          print("hallo")
         } else {
           directed_edges <- c(directed_edges, (b-1)*n + (a-1))
         }
@@ -372,6 +369,12 @@ solve_conflicts <- function(am, pos) {
     }
   }
   print(length(directed_edges))
+  for(i in directed_edges) {
+    b = i %/% n + 1
+    a = i %% n + 1
+    am[a,b] = 0
+    am[b,a] = 1
+  }
   if(poss) {
     return(am)
   } else {
@@ -412,11 +415,16 @@ enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE) {
       }
     }
     ## do stuff with graph
-    if(direct_adjacent_undirected_edges) {
-      print(paste(am[27, 8], am[27, 8]))
-      am <- solve_conflicts(am, pos)
+    m <- matrix(0, n, n)
+    for(i in 1:n) {
+      for(j in 1:n) {
+        m[i,j] = am[i,j]
+      }
     }
-    graphs[[i+1]] <- as(t(am), "graphNEL")
+    if(direct_adjacent_undirected_edges) {
+      m <- solve_conflicts(m, pos)
+    }
+    graphs[[i+1]] <- as(t(m), "graphNEL")
     # print(am)
   }
   return(graphs)
