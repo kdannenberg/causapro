@@ -355,6 +355,10 @@ solve_conflicts <- function(am, pos) {
         am[a,b] = 0
         am[b,a] = 1
         if(((b-1)*n + (a-1)) %in% directed_edges) {
+          print(a)
+          print(b)
+          print(c)
+          print("---")
           poss = FALSE
         } else {
           directed_edges <- c(directed_edges, (b-1)*n + (a-1))
