@@ -338,16 +338,38 @@ dag_check <- function(am) {
 }
 
 solve_conflicts <- function(am, pos) {
-  directed_egdges <- c()
+  directed_edges <- c()
+  poss = TRUE
+  n = dim(am)[1]
   for(i in 1:length(pos)) {
     k = pos[i]
-    x = k %/% n + 1
-    y = k %% n + 1
-    
+    c = k %/% n + 1
+    b = k %% n + 1
+    if(am[b,c] == 1) {
+      tmp = c
+      c = b
+      b = tmp
+    }
+    for(a in 1:n) {
+      if(am[b,a] == 1 && am[a,b] == 1 && !(am[c,a] || am[a,c])) {
+        am[a,b] = 0
+        am[b,a] = 1
+        if(((b-1)*n + (a-1)) %in% directed_edges) {
+          poss = FALSE
+        } else {
+          directed_edges <- c(directed_edges, (b-1)*n + (a-1))
+        }
+      }
+    }
+  }
+  if(poss) {
+    return(am)
+  } else {
+    return(matrix(0, n, n))
   }
 }
 
-enumerate_graphs <- function(graph) {
+enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE) {
   am = wgtMatrix(graph)
   n = dim(am)[1]
   pos <- c()
@@ -380,6 +402,9 @@ enumerate_graphs <- function(graph) {
       }
     }
     ## do stuff with graph
+    if(direct_adjacent_undirected_edges) {
+      am <- solve_conflicts(am, pos)
+    }
     graphs[[i+1]] <- as(t(am), "graphNEL")
     # print(am)
   }
