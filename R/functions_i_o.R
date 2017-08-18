@@ -86,7 +86,9 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   # var unter min_var wegschmeißen
   # data <- data[,-drop]
   # data <- subset(data, select = -drop)
-  print(paste("Removed columns:", paste(colnames(data)[drop], collapse = ", ")))
+  if (length(drop) > 0) {
+    print(paste("Removed columns:", paste(colnames(data)[drop], collapse = ", ")))
+  }
   data <- data[, !names(data) %in% names(drop)]
   return(data)
 }
