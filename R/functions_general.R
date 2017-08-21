@@ -438,7 +438,7 @@ remove_dummies <- function(graphs) {
   return(graphs)
 }
 
-enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE, direct_unambig_undirected_edges = TRUE) {
+enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE, direct_unambig_undirected_edges = FALSE) {
   am = t(wgtMatrix(graph))
   n = dim(am)[1]
   pos <- c()
