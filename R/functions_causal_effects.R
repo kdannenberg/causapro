@@ -245,7 +245,7 @@ edge_information <- function(adj_m, print = FALSE) {
     print(paste("----> : ", n_unidirected_edges))
   }
 
-  return(list(conflict = n_conflic_edges, directed = n_unidirected_edges, bidirected = n_bidirected_edges))
+  return(list(conflict = n_conflic_edges, directed = n_unidirected_edges, undirected = n_bidirected_edges))
 }
 
 remove_zero_rows_or_columns <- function(matrix, rows_or_columns) {

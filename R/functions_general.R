@@ -404,14 +404,14 @@ solve_conflicts <- function(am, pos) {
 
 remove_dummies <- function(graphs) {
   remove <- which(sapply(graphs, is.null))
-  if (length(remove > 0)) {
+  if (length(remove) > 0) {
     # TODO Marcel: nicht-quadratsich
     graphs <- graphs[-remove]
   }
   return(graphs)
 }
 
-enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE) {
+enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE, direct_unambig_undirected_edges = TRUE) {
   am = t(wgtMatrix(graph))
   n = dim(am)[1]
   pos <- c()
@@ -457,7 +457,7 @@ enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE) {
     if(direct_adjacent_undirected_edges) {
       m <- solve_conflicts(m, pos)
     }
-    if(direct_unambig_undirected_edges) {
+    if(direct_unambig_undirected_edges && !is.null(m)) {
       m <- direct_unambigous_undirected_edges(m)
     }
     if (is.null(m)) {
