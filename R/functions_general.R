@@ -392,41 +392,58 @@ direct_unambigous_undirected_edges <- function(am) {
   return(am)
 }
 
-solve_conflicts <- function(am) {
-  directed_edges <- c()
-  poss = TRUE
-  n = dim(am)[1]
-  for(i in 1:length(pos)) {
-    k = pos[i]
-    c = k %/% n + 1
-    b = k %% n + 1
-    if(am[b,c] == 1) {
-      tmp = c
-      c = b
-      b = tmp
-    }
-    for(a in 1:n) {
-      if(am[b,a] == 1 && am[a,b] == 1 && !(am[c,a] == 1 || am[a,c] == 1)) {
-        if(((a-1)*n + (b-1)) %in% directed_edges) {
-          poss = FALSE
-        } else {
-          directed_edges <- c(directed_edges, (b-1)*n + (a-1))
-        }
+solve_conflicts <- function(pdag) {
+  # directed_edges <- c()
+  # poss = TRUE
+  # n = dim(am)[1]
+  # for(i in 1:length(pos)) {
+  #   k = pos[i]
+  #   c = k %/% n + 1
+  #   b = k %% n + 1
+  #   if(am[b,c] == 1) {
+  #     tmp = c
+  #     c = b
+  #     b = tmp
+  #   }
+  #   for(a in 1:n) {
+  #     if(am[b,a] == 1 && am[a,b] == 1 && !(am[c,a] == 1 || am[a,c] == 1)) {
+  #       if(((a-1)*n + (b-1)) %in% directed_edges) {
+  #         poss = FALSE
+  #       } else {
+  #         directed_edges <- c(directed_edges, (b-1)*n + (a-1))
+  #       }
+  #     }
+  #   }
+  # }
+  # for(i in directed_edges) {
+  #   b = i %/% n + 1
+  #   a = i %% n + 1
+  #   am[a,b] = 0
+  #   am[b,a] = 1
+  # }
+  # if(poss) {
+  #   return(am)
+  # } else {
+  #   return(NULL)
+  #   # return(matrix(0, n, n))
+  # }
+  n = dim(pdag)[1]
+  old_pdag <- matrix(0, n, n)
+  while (!all(old_pdag == pdag)) {
+    old_pdag <- pdag
+    ind <- which((pdag == 1 & t(pdag) == 0), arr.ind = TRUE)
+    for (i in seq_len(nrow(ind))) {
+      a <- ind[i, 1]
+      b <- ind[i, 2]
+      indC <- which((pdag[b, ] == 1 & pdag[, b] == 
+                     1) & (pdag[a, ] == 0 & pdag[, a] == 0))
+      if (length(indC) > 0) {
+        pdag[b, indC] <- 1
+        pdag[indC, b] <- 0
       }
     }
   }
-  for(i in directed_edges) {
-    b = i %/% n + 1
-    a = i %% n + 1
-    am[a,b] = 0
-    am[b,a] = 1
-  }
-  if(poss) {
-    return(am)
-  } else {
-    return(NULL)
-    # return(matrix(0, n, n))
-  }
+  return(pdag)
 }
 
 remove_dummies <- function(graphs) {
@@ -471,29 +488,37 @@ enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE, dir
       }
     }
     ## do stuff with graph
+    #   m <- matrix(0, n, n)
+    #   for(index in 1:n) {
+    #     for(index2 in 1:n) {
+    #       m[index,index2] = am[index,index2]
+    #     }
+    #   }
+    
+    #   if(direct_adjacent_undirected_edges) {
+    #     m <- solve_conflicts(m, pos)
+    #   }
+    #   if(direct_unambig_undirected_edges && !is.null(m)) {
+    #     m <- direct_unambigous_undirected_edges(m)
+    #   }
+    #   if (is.null(m)) {
+    #     graphs[[i+1]] <- NULL              # macht das die Laufzeit wieder quadratisch?
+    #   } else {
+    #     graphs[[i+1]] <- as(m, "graphNEL")
+    #   }
+    # }
+    # graphs <- remove_dummies(graphs)
     m <- matrix(0, n, n)
     for(index in 1:n) {
       for(index2 in 1:n) {
         m[index,index2] = am[index,index2]
       }
     }
-    
+        
     colnames(m) <- colnames(am)
     rownames(m) <- rownames(am)
-    
-    if(direct_adjacent_undirected_edges) {
-      m <- solve_conflicts(m, pos)
-    }
-    if(direct_unambig_undirected_edges && !is.null(m)) {
-      m <- direct_unambigous_undirected_edges(m)
-    }
-    if (is.null(m)) {
-      graphs[[i+1]] <- NULL              # macht das die Laufzeit wieder quadratisch?
-    } else {
-      graphs[[i+1]] <- as(m, "graphNEL")
-    }
+    graphs[[i+1]] <- as(solve_conflicts(m), "graphNEL")
   }
-  graphs <- remove_dummies(graphs)
   return(graphs)
 }
 
