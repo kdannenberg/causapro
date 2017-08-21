@@ -393,6 +393,7 @@ direct_unambigous_undirected_edges <- function(am) {
 }
 
 solve_conflicts <- function(am) {
+  
   directed_edges <- c()
   poss = TRUE
   n = dim(am)[1]
