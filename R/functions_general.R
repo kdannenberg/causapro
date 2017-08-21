@@ -337,6 +337,34 @@ dag_check <- function(am) {
     return(res)
 }
 
+direct_unambigous_undirected_edges <- function(am) {
+  n = dim(am)[1]
+  for(i in 1:n) {
+    for(j in (i+1):n) {
+      if(j > n) next
+      if(am[i,j] == 1 && am[j,i] == 1) {
+        case = 3 # 3 = both ways possible, 2 = i -> j possible, 1 = j -> i possible, 0 no direction possible
+        for(a in 1:n) {
+          if(am[a,i] == 1) {
+            case = bitwAnd(case, 2)
+          }
+          if(am[a,j] == 1) {
+            case = bitwAnd(case, 1)
+          }
+        }
+        if(case == 0) {
+          return(NULL)
+        } else if(case == 1) {
+          am[i,j] = 0
+        } else if(case == 2) {
+          am[j,i] = 0
+        }
+      }
+    }
+  }
+  return(am)
+}
+
 solve_conflicts <- function(am, pos) {
   directed_edges <- c()
   poss = TRUE
@@ -428,6 +456,9 @@ enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE) {
     
     if(direct_adjacent_undirected_edges) {
       m <- solve_conflicts(m, pos)
+    }
+    if(direct_unambig_undirected_edges) {
+      m <- direct_unambigous_undirected_edges(m)
     }
     if (is.null(m)) {
       graphs[[i+1]] <- NULL              # macht das die Laufzeit wieder quadratisch?
