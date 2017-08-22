@@ -5,7 +5,7 @@ library(seqinr)
 library(bnlearn)
 
 # setwd("~/Documents/Uni/Viren/R/Code")
-source("configuration_code.R")
+source("~/.configuration_code.R")
 
 source("functions_causal_effects.R")
 source("functions_ci_tests.R")

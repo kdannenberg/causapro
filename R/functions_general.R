@@ -746,7 +746,7 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
           counts <- read.csv2("Data/FigS3.csv", row.names = 1, check.names=FALSE, skip = 1)
           counts <- as.matrix(counts, ncol = 4)
   
-          if (!is.na(as.numeric(colors))) {
+          if (!is.na(as.numeric(colors)) && !is.null(colors)) {
             round_categories <- as.numeric(colors)
           } else {
             round_categories <- 1

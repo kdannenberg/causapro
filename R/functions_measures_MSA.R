@@ -1,6 +1,6 @@
 library(seqinr)
 
-setwd("~/Documents/Uni/Viren/R/Code")
+## setwd("~/Documents/Uni/Viren/R/Code")
 
 source_of_data <- "al_pdz"
 
