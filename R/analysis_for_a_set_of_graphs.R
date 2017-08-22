@@ -12,6 +12,8 @@ source("functions_analysis_for_a_set_of_graphs.R")
 source("tests_analysis_for_a_set_of_graphs.R")
 
 source("compute_DAG_G.R")
+source("~/.configuration_code.R")
+source("compute_DAG_S.R")
 # source("configuration_data.R")
 
 type_of_graph_set = "conflict" # "retry" or "conflict"
@@ -25,8 +27,9 @@ if (type_of_graph_set == "conflict") {
 protein = "PDZ"
 int_pos <- interesting_positions(protein = protein, coloring = "")
 
-alpha = 0.05
-min_pos_var = 0.01 # TODO: does not work for 0.01 (alpha = 0.01) (idafast for determination of median (effects on))
+measure = "S"
+alpha = 0.01
+min_pos_var = 0.001 # TODO: does not work for 0.01 (alpha = 0.01) (idafast for determination of median (effects on))
 # TODO MARCEL: Warum bekomme ich für alpha = 0.01, min_pos_var = 0.01 einen Graphen mit 6 conflict-Kanten, aber VOR remove_dummies 62 (!) Graphen?!
 
 new = FALSE  
@@ -40,13 +43,21 @@ pc_solve_conflicts = FALSE
 pc_maj_rule_conflict = TRUE
 pc_conservative_conflict = FALSE
 
-use_scaled_effects_for_sum = FALSE   # otherwise scaling is done in the end, for the sum
+use_scaled_effects_for_sum = TRUE   # otherwise scaling is done in the end, for the sum
 
-#TODO
-results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
-                          pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, 
-                          graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
-                          data_in_results = TRUE, output_parameters_in_results = TRUE)
+
+protein_causality_function <- get(paste0("protein_causality_", measure))
+
+
+
+# results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
+#                           pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
+#                           graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
+#                           data_in_results = TRUE, output_parameters_in_results = TRUE)
+results <- protein_causality_function(min_pos_var = min_pos_var, alpha = alpha,
+                               pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
+                               graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
+                               data_in_results = TRUE, output_parameters_in_results = TRUE)
 data <- results$data
 caption <- results$caption
 outpath <- results$outpath
@@ -73,8 +84,14 @@ plot = "sum over all graphs"
 
 
 
+# pc_function <- function(pc_solve_conflicts, pc_u2pd, pc_maj_rule, pc_conservative, evaluation, analysis) {
+#   protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
+#                       pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_maj_rule = pc_maj_rule, pc_conservative = pc_conservative,
+#                       evaluation = evaluation, analysis = analysis)
+# }
+
 pc_function <- function(pc_solve_conflicts, pc_u2pd, pc_maj_rule, pc_conservative, evaluation, analysis) {
-  protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
+  protein_causality_function(min_pos_var = min_pos_var, alpha = alpha,
                       pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_maj_rule = pc_maj_rule, pc_conservative = pc_conservative,
                       evaluation = evaluation, analysis = analysis)
 }

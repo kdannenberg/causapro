@@ -228,6 +228,7 @@ kernelize_graph <- function(graph, ret_list = FALSE) {
     isolated_nodes <- list()
     cnt = 1
     for(u in nodes(graph)) {
+      # TODO Marcel : the following line fails when the graph has only undirected edges:
         if(graph::degree(graph, u)$inDegree == 0 && graph::degree(graph, u)$outDegree == 0) {
           ## create list
           if(ret_list) {

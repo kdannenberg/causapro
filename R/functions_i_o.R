@@ -194,7 +194,8 @@ readAlignment <- function(filename) {
   } else {
     filename_fasta <- paste(filename, ".fasta", sep = "")
     print(paste("Loading alignment from ", filename_fasta, ".", sep = ""))
-    MSA <- readAlignment(filename_fasta)
+    # MSA <- readAlignment(filename_fasta)
+    MSA <- readAlignment_fasta(filename_fasta)
     colnames(MSA) <- seq(1:dim(MSA)[2])
     save(MSA, file = paste(filename, ".RData", sep = ""))
     print("Loading done; Object saved for later.")

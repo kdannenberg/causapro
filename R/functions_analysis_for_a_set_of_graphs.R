@@ -48,6 +48,7 @@ determine_set_of_graphs <- function(type_of_graph_set, s, new, save, outpath,
       #                                             evaluation = FALSE, analysis = FALSE)
       edges <- conflict_edges(results$pc@graph)
       print(edges)
+      
       if (edges$conflict > 15) {
         stop("More than 15 conflict edges.")
       }
@@ -196,18 +197,20 @@ sum_all_effects <- function(all_results, weight_effects_on_by, use_scaled_effect
     par(mfrow = c(2,1))
     scaled_effects_for_coloring_of <- scale_effects(as.matrix(sum_effect_of), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
     colors_by_effect <- color_by_effect(scaled_effects_for_coloring_of, int_pos, mode = "#FFFFFF")
-    if (use_scaled_effects_for_sum) {
-      barplot(sum_effect_of, main = "sum of effects of position 372", col = colors_by_effect)
+    if (!use_scaled_effects_for_sum) {
+      barplot(sum_effect_of, main = "sum of effects of position 372", col = colors_by_effect, las = 2)
     } else {
-      barplot(as.vector(scaled_effects_for_coloring_of), main = "sum of effects of position 372", col = colors_by_effect)
+      barplot(as.vector(scaled_effects_for_coloring_of), main = "sum of effects of position 372", col = colors_by_effect, las = 2, 
+              names.arg = rownames(scaled_effects_for_coloring_of))
     }
     
     scaled_effects_for_coloring_on <- scale_effects(as.matrix(sum_effect_on), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
     colors_by_effect <- color_by_effect(scaled_effects_for_coloring_on, int_pos, mode = "#FFFFFF")
-    if (use_scaled_effects_for_sum) {
-      barplot(sum_effect_on, main = paste("sum of effects", on, "position 372"), col = colors_by_effect)
+    if (!use_scaled_effects_for_sum) {
+      barplot(sum_effect_on, main = paste("sum of effects", on, "position 372"), col = colors_by_effect, las = 2)
     } else {
-      barplot(as.vector(scaled_effects_for_coloring_on), main = paste("sum of effects", on, "position 372"), col = colors_by_effect)
+      barplot(as.vector(scaled_effects_for_coloring_on), main = paste("sum of effects", on, "position 372"), col = colors_by_effect, las = 2, 
+              names.arg = rownames(scaled_effects_for_coloring_on))
     }
   }
   # if (plot == "of") {
