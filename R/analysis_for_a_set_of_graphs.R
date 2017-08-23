@@ -27,9 +27,9 @@ if (type_of_graph_set == "conflict") {
 protein = "PDZ"
 int_pos <- interesting_positions(protein = protein, coloring = "")
 
-measure = "S"
-alpha = 0.01
-min_pos_var = 0.001 # TODO: does not work for 0.01 (alpha = 0.01) (idafast for determination of median (effects on))
+measure = "G"
+alpha = 0.1
+min_pos_var = 0.01 # TODO: does not work for 0.01 (alpha = 0.01) (idafast for determination of median (effects on))
 # TODO MARCEL: Warum bekomme ich für alpha = 0.01, min_pos_var = 0.01 einen Graphen mit 6 conflict-Kanten, aber VOR remove_dummies 62 (!) Graphen?!
 
 new = FALSE  
