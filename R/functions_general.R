@@ -768,8 +768,10 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
           list <- classify_nodes(counts, round_categories = round_categories, mix = TRUE, base_colors = colnames(counts))
         }
       }
+    } else {
+      ## NoV enters this branch
+      list <- list()
     }
-    
     if (!is.null(interesting_pos)) {  # !is.null(list) ?!
       warning("No interesting positions known")
       list <- list()
@@ -921,6 +923,7 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         #                     plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
         ## can not use missing here because those are not the parameters of this function
         node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
+        print(node_clustering)
         if (missing(subgraphs)) {
           if (plot_as_subgraphs_i || !is.null(plot_only_subgraphs)) {
             subgraphs <- subgraphs_from_node_clusters(node_clustering, graph, protein = protein)
