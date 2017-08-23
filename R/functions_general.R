@@ -229,6 +229,17 @@ kernelize_graph <- function(graph, ret_list = FALSE) {
     cnt = 1
     for(u in nodes(graph)) {
       # TODO Marcel : the following line fails when the graph has only undirected edges:
+      if(is.atomic(graph::degree(graph, u))) {
+        if(graph::degree(graph, u) == 0) {
+          ## create list
+          if(ret_list) {
+            isolated_nodes[[cnt]] = u
+            cnt = cnt + 1
+          }
+        } else {
+          ln <- c(ln, u)
+        }
+      } else {
         if(graph::degree(graph, u)$inDegree == 0 && graph::degree(graph, u)$outDegree == 0) {
           ## create list
           if(ret_list) {
@@ -236,8 +247,9 @@ kernelize_graph <- function(graph, ret_list = FALSE) {
             cnt = cnt + 1
           }
         } else {
-            ln <- c(ln, u)
+          ln <- c(ln, u)
         }
+      }
     }
     eList <- list()
     # for(i in ln) {
