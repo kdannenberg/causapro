@@ -74,7 +74,7 @@ determine_set_of_graphs <- function(type_of_graph_set, s, new, save, outpath,
   return(list(graphs = all_graphs, results = all_results))
 }
 
-find_graphs_with_highest_int_pos <- function(all_results, obj_fct = list) {
+find_graphs_with_highest_int_pos <- function(all_results, obj_fct = list, dir = c("on", "of")) {
   
   quality_measure <- function(distribution, percentile) {
     statistics_of_influenced_positions(effects = distribution, percentile = percentile, interesting_positions = int_pos, print = FALSE)
@@ -94,15 +94,26 @@ find_graphs_with_highest_int_pos <- function(all_results, obj_fct = list) {
   
   # int_pos_in_percentile_75 <- lapply(all_results, compute_quality_measure_for_results)
   int_pos_in_percentile_75 <- lapply(all_results, function(x) return(compute_quality_measure_for_results(x, percentile = 0.75)))
+  int_pos_in_percentile_85 <- lapply(all_results, function(x) return(compute_quality_measure_for_results(x, percentile = 0.85)))
+  int_pos_in_percentile_95 <- lapply(all_results, function(x) return(compute_quality_measure_for_results(x, percentile = 0.95)))
+  
+  if (dir == "on") {
+    int_pos_in_percentile_75 <- lapply(int_pos_in_percentile_75, function(x) return(list(on_max = x$on_max, on_min = x$on_min)))
+    int_pos_in_percentile_85 <- lapply(int_pos_in_percentile_85, function(x) return(list(on_max = x$on_max, on_min = x$on_min)))
+    int_pos_in_percentile_95 <- lapply(int_pos_in_percentile_95, function(x) return(list(on_max = x$on_max, on_min = x$on_min)))
+  } else if (dir == "of") {
+    int_pos_in_percentile_75 <- lapply(int_pos_in_percentile_75, function(x) return(list(of_max = x$of_max, of_min = x$of_min)))
+    int_pos_in_percentile_85 <- lapply(int_pos_in_percentile_85, function(x) return(list(of_max = x$of_max, of_min = x$of_min)))
+    int_pos_in_percentile_95 <- lapply(int_pos_in_percentile_95, function(x) return(list(of_max = x$of_max, of_min = x$of_min)))
+  }
+  
   total_number_of_int_pos_in_percetile_75 <- sapply(int_pos_in_percentile_75, function(x) length(unlist(x)))
   total_number_of_diff_int_pos_in_percetile_75 <- sapply(int_pos_in_percentile_75, function(x) length(unique(unlist(x)))) # fast immer 11! sonst 10!!
   
-  int_pos_in_percentile_85 <- lapply(all_results, function(x) return(compute_quality_measure_for_results(x, percentile = 0.85)))
   total_number_of_int_pos_in_percetile_85 <- sapply(int_pos_in_percentile_85, function(x) length(unlist(x)))
   total_number_of_diff_int_pos_in_percetile_85 <- sapply(int_pos_in_percentile_85, function(x) length(unique(unlist(x)))) # oft 11, tw. bis zu 6
   
   # int_pos_in_percentile_95 <- lapply(all_results, compute_quality_measure_for_results)
-  int_pos_in_percentile_95 <- lapply(all_results, function(x) return(compute_quality_measure_for_results(x, percentile = 0.95)))
   total_number_of_int_pos_in_percetile_95 <- sapply(int_pos_in_percentile_95, function(x) length(unlist(x)))
   total_number_of_diff_int_pos_in_percetile_95 <- sapply(int_pos_in_percentile_95, function(x) length(unique(unlist(x)))) # 5-8
   
@@ -151,7 +162,8 @@ element_in_most_of_the_6_sets <- function(max_pos_75, max_pos_85, max_pos_95,
 
 
 # select for a results object the mean results on and of position 372, respectively and return both as a list
-mean_effects <- function(results, weight_effects_on_by, scaled_effects = FALSE) {
+# mean of min and max?
+mean_effects_min_max <- function(results, weight_effects_on_by, scaled_effects = FALSE) {
   on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
   
   if (scaled_effects) {
@@ -178,10 +190,12 @@ mean_effects <- function(results, weight_effects_on_by, scaled_effects = FALSE) 
 
 # sum all effects:
 # should rather be devided by 100, thus mean
-sum_all_effects <- function(all_results, weight_effects_on_by, use_scaled_effects_for_sum = FALSE, print = TRUE) {
-  all_mean_effects <- lapply(all_results, mean_effects, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum)
-  all_mean_effects_of <- do.call(cbind, (lapply(all_mean_effects, function(list) return(list$of))))
-  sum_effect_of <- apply(all_mean_effects_of, 1, sum)
+compute_over_all_graphs <- function(all_results, weight_effects_on_by, use_scaled_effects_for_sum = FALSE, scale_in_the_end = FALSE, 
+                                     function_over_all_graphs = "mean", direction = c("on", "of"), scale_effects_on, print = TRUE) {
+  
+  min_max_mean_effects_on_of <- lapply(all_results, mean_effects_min_max, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum)
+  min_max_mean_effects_of <- do.call(cbind, (lapply(min_max_mean_effects_on_of, function(list) return(list$of))))
+  effect_over_all_graphs_of <- apply(min_max_mean_effects_of, 1, function_over_all_graphs)
   on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
   # if (grepl("mean", weight_effects_on_by)) { # (weight_effects_on_by == "mean_abs_effect") {
   #   on <- "on-rel-to-mean"
@@ -190,32 +204,74 @@ sum_all_effects <- function(all_results, weight_effects_on_by, use_scaled_effect
   # } else if (weight_effects_on_by == "var" || weight_effects_on_by == "vars") {
   #   on <- "on-rel-to-var"
   # }
-  all_mean_effects_on <- do.call(cbind, (lapply(all_mean_effects, function(list) return(list[[on]]))))
-  sum_effect_on <- apply(all_mean_effects_on, 1, sum)   
+  min_max_mean_effects_on <- do.call(cbind, (lapply(min_max_mean_effects_on_of, function(list) return(list[[on]]))))
+  effect_over_all_graphs_on <- apply(min_max_mean_effects_on, 1, function_over_all_graphs) 
+  if (scale_effects_on) {
+    effect_over_all_graphs_on <- effect_over_all_graphs_on / effect_over_all_graphs_on["372"]
+  }
+  
   
   if (print) {
-    par(mfrow = c(2,1))
-    scaled_effects_for_coloring_of <- scale_effects(as.matrix(sum_effect_of), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
-    colors_by_effect <- color_by_effect(scaled_effects_for_coloring_of, int_pos, mode = "#FFFFFF")
-    if (!use_scaled_effects_for_sum) {
-      barplot(sum_effect_of, main = "sum of effects of position 372", col = colors_by_effect, las = 2)
-    } else {
-      barplot(as.vector(scaled_effects_for_coloring_of), main = "sum of effects of position 372", col = colors_by_effect, las = 2, 
-              names.arg = rownames(scaled_effects_for_coloring_of))
+    if (direction ==  c("on", "of")) {
+      par(mfrow = c(2,1))
     }
     
-    scaled_effects_for_coloring_on <- scale_effects(as.matrix(sum_effect_on), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
-    colors_by_effect <- color_by_effect(scaled_effects_for_coloring_on, int_pos, mode = "#FFFFFF")
-    if (!use_scaled_effects_for_sum) {
-      barplot(sum_effect_on, main = paste("sum of effects", on, "position 372"), col = colors_by_effect, las = 2)
-    } else {
-      barplot(as.vector(scaled_effects_for_coloring_on), main = paste("sum of effects", on, "position 372"), col = colors_by_effect, las = 2, 
-              names.arg = rownames(scaled_effects_for_coloring_on))
+    if ("of" %in% direction) {
+      scaled_effects_for_coloring_of <- scale_effects(as.matrix(effect_over_all_graphs_of), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
+      colors_by_effect <- color_by_effect(scaled_effects_for_coloring_of, int_pos, mode = "#FFFFFF")
+      if (!scale_in_the_end) {
+        barplot(effect_over_all_graphs_of, 
+                main = paste0(function_over_all_graphs, " over all graphs of effects of position 372"), 
+                col = colors_by_effect, las = 2)
+      } else {
+        barplot(as.vector(scaled_effects_for_coloring_of), 
+                main = paste0(function_over_all_graphs, " over all graphs of effects of position 372"), 
+                col = colors_by_effect, las = 2, 
+                names.arg = rownames(scaled_effects_for_coloring_of))
+      }
+    }
+    if ("on" %in% direction) {
+      scaled_effects_for_coloring_on <- scale_effects(as.matrix(effect_over_all_graphs_on), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
+      colors_by_effect <- color_by_effect(scaled_effects_for_coloring_on, int_pos, mode = "#FFFFFF")
+      if (!scale_in_the_end) {
+        barplot(effect_over_all_graphs_on, 
+                main = paste0(function_over_all_graphs, " over all graphs of effects ", on, " position 372"), 
+                col = colors_by_effect, las = 2)
+      } else {
+        barplot(as.vector(scaled_effects_for_coloring_on), 
+                main = paste0(function_over_all_graphs, " over all graphs of effects ", on, " position 372"),
+                col = colors_by_effect, las = 2, 
+                names.arg = rownames(scaled_effects_for_coloring_on))
+      }
+    }
+    
+    effects_over_all_graphs_on_of <- list(overAllGraphs_of = effect_over_all_graphs_of, overAllGraphs_of_on = effect_over_all_graphs_on)
+    
+    if (! (("on" %in% direction) ||  ("of" %in% direction))) {
+      effects_matrix <- rbind(effect_over_all_graphs_of, effect_over_all_graphs_on)
+      on_of_mean_effects <- apply(effects_matrix, 2, get(direction))
+      # print("SUM EFFECTS MEAN(ON, OF):")
+      # effects_matrix <- do.call(rbind, effects_over_all_graphs_on_of)
+      # on_of_mean_effects <- apply(effects_matrix, 2, get(direction))
+      # stat_sum_of <- statistics_of_influenced_positions(on_of_mean_effects, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
+      scaled_effects_for_coloring_on_of_mean <- scale_effects(as.matrix(on_of_mean_effects), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
+      colors_by_effect <- color_by_effect(scaled_effects_for_coloring_on_of_mean, int_pos, mode = "#FFFFFF")
+      if (!scale_in_the_end) {
+        barplot(on_of_mean_effects, 
+                main = paste0(function_over_all_graphs, " over all graphs of effects (", direction, " of: ", on, " and of) position 372"), 
+                col = colors_by_effect, las = 2)
+      } else {
+        barplot(as.vector(scaled_effects_for_coloring_on_of_mean), 
+                main = paste0(function_over_all_graphs, " over all graphs of effects (", direction, " of: ", on, " and of) position 372"), 
+                col = colors_by_effect, las = 2, 
+                names.arg = rownames(scaled_effects_for_coloring_on_of_mean))
+      }
+      effects_over_all_graphs_on_of[[paste0("overAllGraphs_", direction, "_on_of")]] <- on_of_mean_effects
     }
   }
   # if (plot == "of") {
   
-  return(list(sum_of = sum_effect_of, sum_on = sum_effect_on))#, all_mean = all_mean_effects))
+  return(effects_over_all_graphs_on_of) #, all_mean = all_mean_effects))
 }
 
 deviation_from_mean <- function(all_results, dir, weight_effects_on_by, plot_graphs) {
@@ -227,7 +283,7 @@ deviation_from_mean <- function(all_results, dir, weight_effects_on_by, plot_gra
     dir <- pastes("on", weight_effects_on_by, sep = "-rel-to-")  
   }
   
-  all_mean_effects_all <- lapply(all_results, mean_effects, weight_effects_on_by = weight_effects_on_by)
+  all_mean_effects_all <- lapply(all_results, mean_effects_min_max, weight_effects_on_by = weight_effects_on_by)
   all_mean_effects <- do.call(cbind, (lapply(all_mean_effects_all, function(list) return(list[[dir]]))))
   mean_effect <- apply(all_mean_effects, 1, sum) / length(all_results)
   

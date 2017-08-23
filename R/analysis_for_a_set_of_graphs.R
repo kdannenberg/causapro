@@ -43,8 +43,8 @@ pc_solve_conflicts = FALSE
 pc_maj_rule_conflict = TRUE
 pc_conservative_conflict = FALSE
 
-use_scaled_effects_for_sum = TRUE   # otherwise scaling is done in the end, for the sum
-
+use_scaled_effects_for_each_graph = FALSE
+scale_in_the_end = FALSE
 
 protein_causality_function <- get(paste0("protein_causality_", measure))
 
@@ -69,11 +69,28 @@ ida_percentile <- top_11_percentile
 # weight_effects_on_by = "var"
 # weight_effects_on_by = "mean"
 weight_effects_on_by = "median"  # sieht (in der Summe) am besten aus
+scale_effects_on_so_372_equals_1 = TRUE
 
+# if dir == "on": only effects on
+# if dir == "of": only effects of
+# if dir == c("on", "of") or  dir == "both": both speparately
+# if dir == "mean" : mean of effects on and of (first effects on are scaeld such that 372 has value 1)
+# for best graphs, dir = "both" and dir = "mean" yield the same
+direction <- "mean"
+# direction <- "both"
+if (direction == "both") {
+  direction <- c("on", "of")
+}
+
+if (!(("on" %in% direction) ||  ("of" %in% direction)) && !scale_effects_on_so_372_equals_1) {
+  warning(paste("Effects on are not scaled. Effects on and of might not be comparably high. Computing the", direction, "might not be meaningful."))
+}
+Sys.sleep(2)
 
 # which part of the analysis should be plotted?
 # IDA für alle s Graphen berechen und summieren (besser wäre vllt: mitteln, also nochmal durch s teilen. Kannst du gerne machen, Marcel.)
-plot = "sum over all graphs"
+plot = "over_all_graphs"
+function_over_all_graphs = "mean"
 # IDA für alle s Graphen brechenen und denjenigen bestimmen, der am besten mit den gewünschten Ergebnissen übereinstimmt
 # plot = "best graph"
 # für alle Graphen mit Nummern in <plot> die Abweichung von der Summe (dem zukünftigen Mittelwert) über alle Graphen bestimmen, 
@@ -135,41 +152,44 @@ print("Different types of edges in the different graphs (columns)")
 print(conflicts_sorted)
 
 
-if (plot == "best graph") {
-cat("\n")
-best_graphs <- find_graphs_with_highest_int_pos(all_results = all_results, obj_fct = element_in_most_of_the_6_sets)
-
-# i <- 76 # ist in max_pos_85 und _95 und in max_diff_pos_75 und _95
-# i <- 98 # für min_var = 0.001
-
-# # plotten:
-  # plot_graph(graph = all_results[[28]]$pc@graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout,
-  #                       coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs,
-  #                       plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats)
-
-cat("\n")
-for (i in best_graphs) {
-# i= 28
-  cat(paste0("BEST GRAPH #", which(best_graphs == i), ": ", i))
-  causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
-                    protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
-                    amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
-                    pymol_bg_color = "grey", barplot = TRUE,
-                    caption = c(paste("Graph", i), caption), show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = ida_percentile)
-
+if (plot == "best_graph") {
+  cat("\n")
+  best_graphs <- find_graphs_with_highest_int_pos(all_results = all_results, obj_fct = element_in_most_of_the_6_sets, dir = direction)
+  cat("\n")
+  
+  for (i in best_graphs) {
+  # i= 28
+    cat(paste0("BEST GRAPH #", which(best_graphs == i), ": ", i))
+    causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+                      protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
+                      amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
+                      pymol_bg_color = "grey", barplot = TRUE,
+                      caption = c(paste("Graph", i), caption), show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = ida_percentile)
+  
   }
-} else if (plot == "sum over all graphs") {
+} else if (plot == "over_all_graphs") {
   oma <- c( 0, 0, length(caption) + 1, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
   # par(mfrow=c(lines, columns), oma = oma) 
   par(oma = oma)
   
   cat("\n")
-  sum_effect <- sum_all_effects(all_results, weight_effects_on_by = weight_effects_on_by, use_scaled_effects_for_sum = use_scaled_effects_for_sum)
-  print("SUM EFFECTS OF:")
-  stat_sum_on <- statistics_of_influenced_positions(sum_effect$sum_of, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
-  print("SUM EFFECTS ON:")
-  stat_sum_of <- statistics_of_influenced_positions(sum_effect$sum_on, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
-  
+  effects_over_all_graphs_on_of <- compute_over_all_graphs(all_results, weight_effects_on_by = weight_effects_on_by, 
+                                use_scaled_effects_for_sum = use_scaled_effects_for_each_graph, scale_in_the_end = scale_in_the_end,                               , 
+                                function_over_all_graphs = function_over_all_graphs, direction = direction, scale_effects_on = scale_effects_on_so_372_equals_1)
+  if ("of" %in% direction) {
+    print("SUM EFFECTS OF:")
+    stat_sum_on <- statistics_of_influenced_positions(effects_over_all_graphs_on_of$sum_of, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
+  }
+  if ("on" %in% direction) {
+    print("SUM EFFECTS ON:")
+    stat_sum_of <- statistics_of_influenced_positions(effects_over_all_graphs_on_of$sum_on, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
+  }
+  if (! (("on" %in% direction) ||  ("of" %in% direction))) {
+    print("SUM EFFECTS MEAN(ON, OF):")
+    # effects_matrix <- do.call(rbind, effects_over_all_graphs_on_of)
+    # on_of_mean_effects <- apply(effects_matrix, 2, get(direction))
+    stat_sum_of <- statistics_of_influenced_positions(effects_over_all_graphs_on_of[[paste0("overAllGraphs_", direction, "_on_of")]], percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
+  }
   title(caption, outer = TRUE)
 } else if (is.numeric(plot) && length(plot) > 1) {
   deviation_from_mean(all_results = all_results, dir = "of", weight_effects_on_by = weight_effects_on_by, plot_graphs = plot)
