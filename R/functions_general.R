@@ -62,7 +62,10 @@ protein_causality <- function(
   plot_as_subgraphs = FALSE,
   plot_only_subgraphs = NULL, # 1 oder NULL
   # TODO Marcel: dafür sorgen dass, wenn diese Option aktiv ist, kein graphics.off() o.ä. ausgeführt wird (und nur der graph geplottet wird)
-  combined_plot = FALSE,
+  # nur Graphen plotten
+  for_combined_plot = FALSE,
+  # gar ncihts plotten
+  mute_all_plots = FALSE,
   # 
   # description of other settings that should be appended to output-filename
   other = "", # cov", 
@@ -95,13 +98,15 @@ protein_causality <- function(
   file_separator = "/"
 ) {
   # INIT
-  graphics.off()
+  if (!mute_all_plots) {
+    graphics.off()
+  }
   
   data_description <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set)
   
   # filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
   data <- read_data(data_description, only_cols = only_cols)
-  data <- adjust_data(data = data, rank = ranked, min_var = min_pos_var)
+  data <- adjust_data(data = data, rank = ranked, min_var = min_pos_var) #mute = combined_plot)
   type_of_data <- type_of_data_after_adjustment(type_of_data = type_of_data, rank = ranked, min_var = min_pos_var)
   
   if (!is.numeric(ida_percentile)) {
@@ -156,7 +161,7 @@ protein_causality <- function(
                          graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                          unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
                          compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew, 
-                         graph_output_formats = graph_output_formats, numerical = numerical)
+                         graph_output_formats = graph_output_formats, numerical = numerical, mute_all_plots = mute_all_plots)
   }
   
   # Evaluation
@@ -541,7 +546,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
                                  graph_layout = "dot", plot_as_subgraphs = plot_as_subgraphs, 
                                  plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console, 
                                  lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, graph_output_formats,
-                                 numerical) {
+                                 numerical, mute_all_plots = FALSE) {
   print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
@@ -561,9 +566,11 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file)
   
   # garbage <- graphics.off()
+  if (!mute_all_plots) {
   plot_graph(graph = kernelize_graph(pc@graph), caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, 
              coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
              plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats)
+  }
   
   results <- list()
   results$pc <- pc

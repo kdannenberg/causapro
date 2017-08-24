@@ -1,4 +1,4 @@
-determine_set_of_graphs <- function(type_of_graph_set, s, new, save, outpath,
+determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function, s, new, save, outpath,
                                     pc_maj_rule_conflict, pc_conservative_conflict) {
   if (type_of_graph_set == "retry") {
     if (new || !file.exists(file = paste0(outpath, "-pc-retry_results.RData")) || !file.exists(file = paste0(outpath, "-pc-retry_graphs.RData"))) {
@@ -8,7 +8,9 @@ determine_set_of_graphs <- function(type_of_graph_set, s, new, save, outpath,
       for (i in 1:s) {
         print(paste("DURCHLAUF", i))
         # source('~/Documents/Uni/Viren/ProteinCausalPaths/R/compute_DAG_G.R')
-        results <- pc_function(pc_solve_conflicts = FALSE, pc_u2pd = "retry", pc_maj_rule = FALSE, pc_conservative = FALSE, evaluation = FALSE, analysis = FALSE)
+        results <- pc_function(pc_solve_conflicts = FALSE, pc_u2pd = "retry", pc_maj_rule = FALSE, 
+                               pc_conservative = FALSE, evaluation = FALSE, analysis = FALSE, 
+                               mute_all_plots = mute_all_plots)
           # protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
                                        # pc_solve_conflicts = FALSE, pc_u2pd = "retry",
                                        # evaluation = FALSE, analysis = FALSE)
@@ -190,8 +192,9 @@ mean_effects_min_max <- function(results, weight_effects_on_by, scaled_effects =
 
 # sum all effects:
 # should rather be devided by 100, thus mean
-compute_over_all_graphs <- function(all_results, weight_effects_on_by, use_scaled_effects_for_sum = FALSE, scale_in_the_end = FALSE, 
-                                     function_over_all_graphs = "mean", direction = c("on", "of"), scale_effects_on, print = TRUE) {
+compute_over_all_graphs <- function(all_results, int_pos, weight_effects_on_by, use_scaled_effects_for_sum = FALSE, scale_in_the_end = FALSE, 
+                                    function_over_all_graphs = "mean", direction = c("on", "of"), 
+                                    scale_effects_on = "372" %in% rownames(all_results[[1]]$ida$`372`$of$effects), print = TRUE) {
   
   min_max_mean_effects_on_of <- lapply(all_results, mean_effects_min_max, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum)
   min_max_mean_effects_of <- do.call(cbind, (lapply(min_max_mean_effects_on_of, function(list) return(list$of))))
@@ -210,9 +213,10 @@ compute_over_all_graphs <- function(all_results, weight_effects_on_by, use_scale
     effect_over_all_graphs_on <- effect_over_all_graphs_on / effect_over_all_graphs_on["372"]
   }
   
+  effects_over_all_graphs_on_of <- list(overAllGraphs_of = effect_over_all_graphs_of, overAllGraphs_on = effect_over_all_graphs_on)
   
   if (print) {
-    if (direction ==  c("on", "of")) {
+    if ("on" %in% direction && "of" %in% direction) {
       par(mfrow = c(2,1))
     }
     
@@ -244,8 +248,6 @@ compute_over_all_graphs <- function(all_results, weight_effects_on_by, use_scale
                 names.arg = rownames(scaled_effects_for_coloring_on))
       }
     }
-    
-    effects_over_all_graphs_on_of <- list(overAllGraphs_of = effect_over_all_graphs_of, overAllGraphs_of_on = effect_over_all_graphs_on)
     
     if (! (("on" %in% direction) ||  ("of" %in% direction))) {
       effects_matrix <- rbind(effect_over_all_graphs_of, effect_over_all_graphs_on)

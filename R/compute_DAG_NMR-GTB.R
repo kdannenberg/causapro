@@ -74,7 +74,8 @@ protein_causality_NMRGTB <- function(
   plot_as_subgraphs = FALSE,
   plot_only_subgraphs = NULL, # 1 oder NULL
   # TODO Marcel: dafür sorgen dass, wenn diese Option aktiv ist, kein graphics.off() o.ä. ausgeführt wird (und nur der graph geplottet wird)
-  combined_plot = FALSE,
+  for_combined_plot = FALSE,
+  mute_plot = FALSE,
   # 
   # description of other settings that should be appended to output-filename
   other = "", # cov", 
@@ -128,7 +129,8 @@ protein_causality_NMRGTB <- function(
                            colors = colors,
                            plot_as_subgraphs = plot_as_subgraphs,
                            plot_only_subgraphs = plot_only_subgraphs,
-                           combined_plot = combined_plot,
+                           for_combined_plot = FALSE,
+                           mute_plot = FALSE,
                            other = other,
                            graph_computation = graph_computation,
                            evaluation = evaluation,

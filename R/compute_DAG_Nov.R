@@ -52,7 +52,8 @@ protein_causality_NoV <- function(
                                   colors = NULL,
                                   plot_as_subgraphs = FALSE,
                                   plot_only_subgraphs = NULL, # 1 is another option
-                                  combined_plot = FALSE,
+                                  for_combined_plot = FALSE,
+                                  mute_plot = FALSE,
                                   other = "", # "cov"
                                   # technical parameters
                                   graph_computation = TRUE,
@@ -94,7 +95,8 @@ protein_causality_NoV <- function(
                            colors = colors,
                            plot_as_subgraphs = plot_as_subgraphs,
                            plot_only_subgraphs = plot_only_subgraphs,
-                           combined_plot = combined_plot,
+                           for_combined_plot = FALSE,
+                           mute_plot = FALSE,
                            other = other,
                            graph_computation = graph_computation,
                            evaluation = evaluation,

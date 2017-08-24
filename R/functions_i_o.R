@@ -54,7 +54,7 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
 # rank_obs_per_pos: should the ranking be done the other way round? 
 #   That is, per position, over all observations?
 adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, remove_low_variance = FALSE,
-                        zero_var_fct, min_var = 0.01) {
+                        zero_var_fct, min_var = 0.01, mute_plot = TRUE) {
   if (rank) {
     if (!rank_obs_per_pos) {
       if (!missing(data)) {
@@ -82,7 +82,9 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   }
   colors <- rep("#FFFFFF", dim(data)[[1]])
   colors[drop] <- "#000000"
-  barplot(apply(data, 2, var), col = colors)
+  if (!mute_plot) {
+    barplot(apply(data, 2, var), col = colors)
+  }
   # var unter min_var wegschmeißen
   # data <- data[,-drop]
   # data <- subset(data, select = -drop)

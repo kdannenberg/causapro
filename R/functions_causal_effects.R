@@ -5,11 +5,12 @@
 
 library(colorspace)  # for mixcolor, hex
 
+# parameter barplot = TRUE remove, use mute_allplots = FALSE instead
 causal_effects_ida <- function(data, perturbated_position, direction = "both", weight_effects_on_by = "mean_abs_effect",
                 results = results, protein, coloring = "all", outpath, 
                 amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, 
-                effect_to_color_mode = "#FFFFFF", pymol_bg_color = "black", barplot = TRUE, caption, no_colors, 
-                show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75) {
+                effect_to_color_mode = "#FFFFFF", pymol_bg_color = "black", caption, no_colors, 
+                show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75, mute_all_plots = FALSE) {
   
   lines <- 1 # lines in plot_space
   
@@ -112,7 +113,8 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
                                   # amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, ranked = opacity_ranked, 
                                   # index = i, no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = current_effects)
     
-      if (barplot) {
+      # if (barplot) {
+      if (!mute_all_plots) {
         # graphics.off()
         # par(mfrow=c(m,n))
         # plot.new()

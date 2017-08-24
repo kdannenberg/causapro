@@ -45,7 +45,8 @@ protein_causality_S <- function(
                                 colors = NULL,
                                 plot_as_subgraphs = FALSE,
                                 plot_only_subgraphs = NULL, # 1 is another option
-                                combined_plot = FALSE,
+                                for_combined_plot = FALSE,
+                                mute_all_plots = FALSE,
                                 other = "", # "cov"
                                 # technical parameters
                                 graph_computation = TRUE,
@@ -87,7 +88,8 @@ protein_causality_S <- function(
                            colors = colors,
                            plot_as_subgraphs = plot_as_subgraphs,
                            plot_only_subgraphs = plot_only_subgraphs,
-                           combined_plot = combined_plot,
+                           for_combined_plot = for_combined_plot,
+                           mute_all_plots = mute_all_plots,
                            other = other,
                            graph_computation = graph_computation,
                            evaluation = evaluation,
@@ -111,7 +113,7 @@ protein_causality_S <- function(
 }
 
 
-results_S <- protein_causality_S(pc_conservative = FALSE, pc_maj_rule = FALSE, pc_u2pd = "relaxed", pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.01)
-sink()
-print(conflict_edges(results_S$pc@graph))
+# results_S <- protein_causality_S(pc_conservative = FALSE, pc_maj_rule = FALSE, pc_u2pd = "relaxed", pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.01)
+# sink()
+# print(conflict_edges(results_S$pc@graph))
 
