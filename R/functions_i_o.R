@@ -241,7 +241,8 @@ rem_cols_by_colname <- function(data, remove) {
 
 ## previously: "caption"
 get_caption <- function(protein, data, alpha, min_pos_var, chars_per_line = 50) {
-  par_string = paste("protein: ", protein, ", data: ", data, ", alpha: ", alpha, ", var_cutoff: ", min_pos_var, sep = "")
+  # par_string = paste("protein: ", protein, ", data: ", data, ", alpha: ", alpha, ", var_cutoff: ", min_pos_var, sep = "")
+  par_string = paste(data, " - alpha: ", alpha, ", var_cutoff: ", min_pos_var, sep = "")
   caption = strwrap(par_string, width = chars_per_line)
   return(caption)
 }
@@ -310,5 +311,7 @@ outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr,
   out_file <- paste0(out_file, ".pml")
   
   # print(out_file)
-  return(out_file)
+  # if (!mute_all_plots) {    ### HÄÄÄÄ???
+    return(out_file)
+  # }
 }

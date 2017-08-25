@@ -16,7 +16,8 @@ test_sum_all_effects <- function() {
                                               on = list(effects = scaled_results_2_on))))
   fake_results <- list(fake_result_1, fake_result_2)
   
-  return(compute_over_all_graphs(fake_results, function_over_all_graphs = "sum", weight_effects_on_by = "", use_scaled_effects_for_sum = FALSE, print = FALSE))
+  return(compute_over_all_graphs(fake_results, function_over_all_graphs = "sum", weight_effects_on_by = "", 
+                                 use_scaled_effects_for_sum = FALSE))
 }
 
 desired_sum_of <- c(2.5,4,1.75)

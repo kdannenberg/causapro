@@ -19,13 +19,15 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
     lines <- 2
   }
   
-  graphics.off()
-  # lines <- 6 # 1/2 für of, 2 für on (min, max)
-  columns <- 2
-  oma <- c( 0, 0, length(caption) + 1, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
-  # par(mfrow=c(lines, columns), oma = oma) 
-  par(oma = oma)
-  
+  if (!mute_all_plots) {
+    graphics.off()
+    # lines <- 6 # 1/2 für of, 2 für on (min, max)
+    columns <- 2
+    oma <- c( 0, 0, length(caption) + 1, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
+    # par(mfrow=c(lines, columns), oma = oma) 
+    par(oma = oma)
+  }
+
   cat("\n")
   for (dir in direction) {
     if (dir == "of" || dir == "by" || dir == "from") {
@@ -77,7 +79,7 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
       lines <- 2
     } 
     
-    if (!(grepl("on", dir) && ("of" %in% direction))) {
+    if (!(grepl("on", dir) && ("of" %in% direction)) && !mute_all_plots) {
       par(mfrow=c(lines, columns))
     }
       
@@ -158,7 +160,9 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
     
     # print(cbind(effects, current_scaled_effects, colors_by_effect))
   }
-  title(caption, outer = TRUE)
+  if (!mute_all_plots) {
+    title(caption, outer = TRUE)
+  }
   return(results)
 }
 
