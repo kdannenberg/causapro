@@ -21,6 +21,8 @@ analyse_set_of_graphs <- function(
   protein = "PDZ",
   int_pos = interesting_positions(protein = protein, coloring = ""),
   measure = "G",
+  type_of_data = "DDDG",
+  subtype_of_data = "5",
   # use_DDG = FALSE,  # einfach den default im Skript umstellen
   protein_causality_function = get(paste0("protein_causality_", measure)),
   alpha = 0.1,
@@ -90,7 +92,8 @@ analyse_set_of_graphs <- function(
     pc_u2pd = "retry"
   }
   
-  results <- protein_causality_function(min_pos_var = min_pos_var, alpha = alpha,
+  results <- protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+                                        min_pos_var = min_pos_var, alpha = alpha,
                                         pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
                                         graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
                                         data_in_results = TRUE, output_parameters_in_results = TRUE, mute_all_plots = TRUE)
@@ -185,11 +188,11 @@ analyse_set_of_graphs <- function(
 
 # TODO: sicherstellen, dass oma nur gesetzt wird, wenn auch eine main_caption (title) geprintet wird
 
-# analyse_set_of_graphs(direction = "mean", measure = measure, alpha = alpha, min_pos_var = min_pos_var)
+# analyse_set_of_graphs(direction = "mean", measure = "G", alpha = 0.05, min_pos_var = 0.0001)
 
 measure = "G"
 type_of_data = "DDG"
-subtype_of_data = 10
+subtype_of_data = "10"
 
 protein_causality_function = get(paste0("protein_causality_", measure))
 # TODO: DAS FUNKTIONIERT NICHT!! DIE PARAMETER, DIE NCIHT ÜBERGEBEN WERDEN, WERDEN NCIHT JETZT SCHON BELEGT!
@@ -201,7 +204,7 @@ pc_function = function(pc_solve_conflicts, pc_u2pd, pc_maj_rule, pc_conservative
 }
 
 graphics.off()
-oma <- c( 0, 0, 2, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
+oma <- c( 2, 0, 2, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
 # par(mfrow=c(lines, columns), oma = oma)
 par(mfrow = c(5,3), oma = oma)
 # par(mfrow = c(2,3))
@@ -211,40 +214,51 @@ for (alpha in c(0.001, 0.005, 0.01, 0.05, 0.1)) {
     # for (measure in c("G", "S")) {
       if (
           (
-            (type_of_data == "DDDG" && subtype_of_data == 5) &&
-            ((alpha == 0.05 && min_pos_var == 0.001) ||
-            (alpha == 0.1 && min_pos_var == 0.001) ||
-            (alpha == 0.05 && min_pos_var == 0.0001) ||
-            (alpha == 0.1 && min_pos_var == 0.0001) ||
-            (alpha == 0.05 && min_pos_var == 0.01)  # as long as not received by morphy
+            (type_of_data == "DDDG" && subtype_of_data == "5") &&
+            ((alpha == 0.05 && min_pos_var == 0.001) #||  # More than 15 conflict edges. (22)
+            || (alpha == 0.1 && min_pos_var == 0.001)  # More than 15 conflict edges.
+            # # (alpha == 0.05 && min_pos_var == 0.0001) ||
+            || (alpha == 0.1 && min_pos_var == 0.0001) # More than 15 conflict edges.
             )
+           # ) || (
+           #   (type_of_data == "DDDG" && subtype_of_data == "10") &&
+           #   (
+           #   (alpha == 0.005 && min_pos_var == 0.001) ##  "Fehler in wgt.unique[x, ] : Indizierung außerhalb der Grenzen"
+           #   # || (alpha == 0.05 && min_pos_var == 0.0001)
+           #   # || (alpha == 0.1 && min_pos_var == 0.0001)
+           #   )
            ) || (
-             (type_of_data == "DDDG" && subtype_of_data == 10) &&
-             (   
-              (alpha == 0.005 && min_pos_var == 0.001) ##  "Fehler in wgt.unique[x, ] : Indizierung außerhalb der Grenzen"
-             # || (alpha == 0.05 && min_pos_var == 0.0001) 
-             # || (alpha == 0.1 && min_pos_var == 0.0001)
-             )
-           ) || (
-             (type_of_data == "DDG" && subtype_of_data == 10) &&
-             (   
+             (type_of_data == "DDG" && subtype_of_data == "10") &&
+             (
                (alpha == 0.1 && min_pos_var == 0.0001) ##  15 conflict edges
                || (alpha == 0.1 && min_pos_var == 0.001) ##  13 conflict edges
-               # || (alpha == 0.1 && min_pos_var == 0.0001)
              )
            ) || (
              (measure == "S") &&
              (alpha == 0.1 && min_pos_var == 0.0001)
+           ) || (
+             (type_of_data == "DDG" && subtype_of_data == "5") &&
+             (
+               (alpha == 0.05 && min_pos_var == 0.0001) #  More than 15 conflict edges. (20)
+            || (alpha == 0.05 && min_pos_var == 0.001) #  More than 15 conflict edges. (20)
+            || (alpha == 0.05 && min_pos_var == 0.01) #  More than 15 conflict edges. (18)
+            || (alpha == 0.1 && min_pos_var == 0.0001) #  More than 15 conflict edges. (20)
+            || (alpha == 0.1 && min_pos_var == 0.001) #  More than 15 conflict edges. (20)
+            || (alpha == 0.1 && min_pos_var == 0.01) #  More than 15 conflict edges. (21)
+             )
            )
           ) {
         plot.new()
       } else {
-        analyse_set_of_graphs(direction = "mean", measure = measure, pc_function = pc_function, alpha = alpha, min_pos_var = min_pos_var,
-                              for_combined_plot = TRUE, scale_in_the_end = TRUE)
+        analyse_set_of_graphs(type_of_data = type_of_data, subtype_of_data = subtype_of_data, direction = "mean", measure = measure, pc_function = pc_function, alpha = alpha, min_pos_var = min_pos_var,
+                              for_combined_plot = TRUE, scale_in_the_end = FALSE, new = TRUE)
 
       }
       # }
   }
 }
 
-title("Mean causal effects over all conflict graphs and effects on anf of position 372", outer = TRUE)
+# title(main = paste0(type_of_data, "-", subtype_of_data),
+#       sub = "Mean causal effects over all conflict graphs and over the effects on and of position 372", outer = TRUE)
+title(main = paste0("Mean causal effects over all conflict graphs and over the effects on and of position 372",
+                    "\n", type_of_data, "-", subtype_of_data), outer = TRUE)
