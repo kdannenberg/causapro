@@ -410,3 +410,16 @@ graph_to_results <- function(graph, ida_function) {
   results <- ida_function(results)
 }
 
+# neg_effects: abs -> absolut value, discard -> drop
+quality_of_effects_distibution <- function(effects, int_pos, neg_effects = "drop", function_over_effects = mean, perturbed_position = "372") {
+  if (neg_effects == "abs") {
+    effects <- abs(effects)
+  } else if (neg_effects == "discard") {
+    effects <- effects[!effects < 0]
+  }
+  effects <- effects[!names(effects) %in% perturbed_position]
+  mean_effect_int <- function_over_effects(effects[names(effects) %in% int_pos])
+  mean_effect_other <- function_over_effects(effects[!names(effects) %in% int_pos])
+  
+  return(mean_effect_int / mean_effect_other)
+}

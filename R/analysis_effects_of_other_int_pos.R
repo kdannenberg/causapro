@@ -1,4 +1,4 @@
-source("configuration_code.R")
+source("~/.configuration_code.R")
 source("functions_general.R")
 
 # data besorgen

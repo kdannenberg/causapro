@@ -139,12 +139,14 @@ analyse_set_of_graphs <- function(
   colnames(conflicts_sorted) <- as.character(1:dim(conflicts_sorted)[2]) # Graph number
   conflicts_sorted <- conflicts_sorted[, order(conflicts_sorted["bidirected",])]
   
-  print("Different types of edges in the different graphs (columns)")
-  print(conflicts_sorted)
+  # print("Different types of edges in the different graphs (columns)")
+  # print(conflicts_sorted)
   
+  cat("\n")
+  cat(paste0("alpha = ", alpha, ", min_pos_var = ", min_pos_var, "\n"))
   
   if (plot == "best_graph") {
-    cat("\n")
+    # cat("\n")
     best_graphs <- find_graphs_with_highest_int_pos(all_results = all_results, obj_fct = element_in_most_of_the_6_sets, dir = direction)
     cat("\n")
     
@@ -159,8 +161,7 @@ analyse_set_of_graphs <- function(
     
     }
   } else if (plot == "over_all_graphs") {
-    cat("\n")
-    # TODO: das printen nach draußen verlegen
+    # cat("\n")
     effects_over_all_graphs_on_of <- compute_over_all_graphs(all_results = all_results, weight_effects_on_by = weight_effects_on_by, 
                                   use_scaled_effects_for_sum = use_scaled_effects_for_each_graph,   
                                   function_over_all_graphs = function_over_all_graphs, direction = direction, 
@@ -181,6 +182,10 @@ analyse_set_of_graphs <- function(
                                                      ida_percentile = ida_percentile, caption = caption, main_caption = NULL,
                                                      print = TRUE, plot = TRUE, for_combined_plot = for_combined_plot)
     
+    print(paste("Quality of the effects:", quality_of_effects_distibution(effects = effects_over_all_graphs_on_of$overAllGraphs_mean_on_of, int_pos = int_pos)))
+    
+    # return(effects_over_all_graphs_on_of)
+    
   } else if (is.numeric(plot) && length(plot) > 1) {
     deviation_from_mean(all_results = all_results, dir = "of", weight_effects_on_by = weight_effects_on_by, plot_graphs = plot)
   }
@@ -188,11 +193,11 @@ analyse_set_of_graphs <- function(
 
 # TODO: sicherstellen, dass oma nur gesetzt wird, wenn auch eine main_caption (title) geprintet wird
 
-# analyse_set_of_graphs(direction = "mean", measure = "G", alpha = 0.05, min_pos_var = 0.0001)
+# effects <- analyse_set_of_graphs(direction = "mean", measure = "G", alpha = 0.001, min_pos_var = 0.0001, new = FALSE)
 
 measure = "G"
-type_of_data = "DDG"
-subtype_of_data = "10"
+type_of_data = "DDDG"
+subtype_of_data = "5"
 
 protein_causality_function = get(paste0("protein_causality_", measure))
 # TODO: DAS FUNKTIONIERT NICHT!! DIE PARAMETER, DIE NCIHT ÜBERGEBEN WERDEN, WERDEN NCIHT JETZT SCHON BELEGT!
@@ -217,7 +222,7 @@ for (alpha in c(0.001, 0.005, 0.01, 0.05, 0.1)) {
             (type_of_data == "DDDG" && subtype_of_data == "5") &&
             ((alpha == 0.05 && min_pos_var == 0.001) #||  # More than 15 conflict edges. (22)
             || (alpha == 0.1 && min_pos_var == 0.001)  # More than 15 conflict edges.
-            # # (alpha == 0.05 && min_pos_var == 0.0001) ||
+            || (alpha == 0.05 && min_pos_var == 0.0001) # More than 15 conflict edges.
             || (alpha == 0.1 && min_pos_var == 0.0001) # More than 15 conflict edges.
             )
            # ) || (
@@ -251,7 +256,7 @@ for (alpha in c(0.001, 0.005, 0.01, 0.05, 0.1)) {
         plot.new()
       } else {
         analyse_set_of_graphs(type_of_data = type_of_data, subtype_of_data = subtype_of_data, direction = "mean", measure = measure, pc_function = pc_function, alpha = alpha, min_pos_var = min_pos_var,
-                              for_combined_plot = TRUE, scale_in_the_end = FALSE, new = TRUE)
+                              for_combined_plot = TRUE, scale_in_the_end = FALSE, new = TRUE, save = TRUE)
 
       }
       # }

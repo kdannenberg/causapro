@@ -38,7 +38,7 @@ protein_causality_G <- function(
   # 
   # type_of_data = "DG",
   # type_of_data = "DDG",
-  type_of_data = "DDG",
+  type_of_data = "DDDG",
   # 
   # subtype_of_data = "all",
   subtype_of_data = "5",

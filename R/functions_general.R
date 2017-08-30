@@ -1116,7 +1116,7 @@ get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info) {
 }
 
 
-scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, neg_effects = "pos") {
+scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, neg_effects = "pos") {  neg_effects = "abs"
   
   amplify_with_factor <- function(effects, element_that_should_be_scaled_to = 2, 
                                   value_the_element_should_be_scaled_to = 0.9, cut_values_at = 1) {
