@@ -257,9 +257,16 @@ determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function
         return(NULL)
         # stop("More than 15 conflict edges.")
       }
-      cat("Enumerating DAGs...")
-      all_graphs <- enumerate_graphs(results$pc@graph) # in Zeile 1 berechnet
-      cat(" Done. \n")
+      if (new || !file.exists(file = paste0(outpath, "-all_confl_comb_graphs.RData"))) {
+        cat("Enumerating DAGs...")
+        all_graphs <- enumerate_graphs(results$pc@graph) # in Zeile 1 berechnet
+        cat(" Done. \n")
+        if (save) {
+          save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+        }
+      } else {
+        load(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+      }
       # all_results <- pblapply(all_graphs, graph_to_results, ida_function = ida_function)   ## schneller (?) # library("pbapply")
       all_results <- list()
       for (i in 1:length(all_graphs)) {
@@ -267,7 +274,6 @@ determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function
         all_results[[i]] <- graph_to_results(all_graphs[[i]], ida_function = ida_function)
       }
       if (save) {
-        save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
         save(all_results, file = paste0(outpath, "-all_confl_comb_results.RData"))
       }
     } else {
