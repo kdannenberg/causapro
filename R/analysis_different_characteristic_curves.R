@@ -25,7 +25,7 @@ alphas_vector <- c(1e-20, 1e-15, 1e-10, 1e-5, 1e-4, 1e-3, 1e-2, 0.05, 1e-1, 0.2)
 
 s <- 5 # relaxed leifert sowieso immer den gleichen Graphen
 
-new = TRUE
+new = FALSE
 save = TRUE
 
 min_pos_var = 0

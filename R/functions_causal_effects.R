@@ -166,6 +166,10 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
   return(results)
 }
 
+f_causal_effects_ida_results <- function(...) {
+  return(function(results) {causal_effects_ida(results = results, ...)})
+}
+
 statistics_of_influenced_positions <- function(effects, percentile, interesting_positions, print = FALSE) {
   threshold = quantile(effects, probs = percentile, na.rm = TRUE)
   if (!is.null(dim(effects))) {

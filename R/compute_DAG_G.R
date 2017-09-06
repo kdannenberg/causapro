@@ -37,12 +37,12 @@ protein_causality_G <- function(
   protein = "PDZ",
   # 
   # type_of_data = "DG",
-  # type_of_data = "DDG",
-  type_of_data = "DDDG",
+  type_of_data = "DDG",
+  # type_of_data = "DDDG",
   # 
   # subtype_of_data = "all",
-  subtype_of_data = "5",
-  # subtype_of_data = "10",
+  # subtype_of_data = "5",
+  subtype_of_data = "10",
   # 
   data_set = "",
   # data_set = "SVD",
@@ -52,11 +52,11 @@ protein_causality_G <- function(
   # 
   # Analysis parameters
   # remove_positions_with_low_variance = TRUE,
-  min_pos_var = 0,
+  min_pos_var = 0.01,
   only_cols = NULL,
   only_cols_label = "",
   # 
-  alpha = 0.01,
+  alpha = 0.03,
   ranked = FALSE,
   # 
   # pc_solve_conflicts = FALSE,
@@ -162,7 +162,7 @@ protein_causality_G <- function(
 
 # protein_causality_G(pc_maj_rule = TRUE)
 
-# results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "retry", pc_solve_confl = FALSE, analysis = TRUE)
+# results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "relaxed", pc_maj_rule = TRUE, pc_solve_confl = TRUE, analysis = FALSE)
 
 # TODO: warum geht das nur für effects of pos. 372
                                         # results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "retry", pc_solve_confl = TRUE, analysis = TRUE)

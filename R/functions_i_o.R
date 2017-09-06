@@ -78,7 +78,7 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
     # remove_low_var_cols <-  nearZeroVar(data, freqCut = 15, saveMetrics = FALSE)
     drop <-  min_var(data)
   } else {
-    drop <- which(apply(data, 2, var) <= min_var)
+    drop <- which(apply(data, 2, var) <= as.numeric(min_var))
   }
   colors <- rep("#FFFFFF", dim(data)[[1]])
   colors[drop] <- "#000000"

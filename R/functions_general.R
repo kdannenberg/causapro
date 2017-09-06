@@ -2,6 +2,11 @@ library(graph)
 library(dagitty)
 library(pcalg)
 
+function_set_parameters <- function(FUN, parameters) {
+  # return(function(...) return(do.call(FUN, parameters, ...)))
+  return(function(...) {return(do.call(FUN, c(parameters, list(...))))})
+}
+
 protein_causality <- function(
   # Data parameters
   # 
@@ -204,7 +209,7 @@ protein_causality <- function(
                    protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
                    amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
                    pymol_bg_color = "grey",
-                   barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = ida_percentile)
+                   mute_all_plots = FALSE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = ida_percentile)
   }
   
   if (data_in_results) {
@@ -563,7 +568,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
                                             solve_conflicts = pc_solve_conflicts, u2pd = pc_u2pd, 
                                             conservative = pc_conservative, maj_rule = pc_maj_rule))
   }
-  pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file)
+  pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file, data = data)
   
   # garbage <- graphics.off()
   if (!mute_all_plots) {
@@ -1087,31 +1092,34 @@ get_eAttrs <- function(graph) {
 }
 
 # Compute pc if necessary
-get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info) {
+get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info, data) {
   parameters_to_info_file(parameters_for_info, outpath)
   if ((file.exists(paste(outpath, "-pc.RData", sep = ""))) && !(compute_pc_anew)) {
     filename <- paste(outpath, "-pc.RData", sep = "")
     load(filename)
     if (!exists("pc")) {
-      print("The file did not contain an object of name 'pc'!")
+      warning("The file did not contain an object of name 'pc'!")
+    } else if (length(pc@graph@nodes) != dim(data)[2]) {
+      warning("The pc-object in the file did not correspond to the data!")
     } else {
       print(paste("pcAlgo-object loaded from ", filename, ".", sep = ""))
       print_pc_results_to_info_file(paste(outpath, sep = ""), pc)
+      return(pc)
     }
     # file.copy(paste(outpath, "-info-pc.txt", sep = ""), paste(outpath, "-info.txt", sep = ""), overwrite = TRUE)
-  } else {
-    directories <- strsplit(outpath, "/")
-    output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = "/", sep = "/")
-    if (!dir.exists(output_dir)) {
-      dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
-      print("Directory created.")
-    }
-    
-    pc <- pc_fun(outpath)
-    
-    save(pc, file = paste(outpath, "-pc.RData", sep = ""))
-    print_pc_results_to_info_file(paste(outpath, sep = ""), pc)
+  } # else {
+  directories <- strsplit(outpath, "/")
+  output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = "/", sep = "/")
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
+    print("Directory created.")
   }
+  
+  pc <- pc_fun(outpath)
+  
+  save(pc, file = paste(outpath, "-pc.RData", sep = ""))
+  print_pc_results_to_info_file(paste(outpath, sep = ""), pc)
+  # }
   return(pc)
 }
 
