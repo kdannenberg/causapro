@@ -20,6 +20,7 @@ analyse_set_of_graphs <- function(
   pc_conservative_conflict = FALSE,
   use_scaled_effects_for_each_graph = FALSE,
   scale_in_the_end = FALSE,
+  plot_effect_quality = TRUE,
   # results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
   #                           pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
   #                           graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
@@ -187,7 +188,8 @@ analyse_set_of_graphs <- function(
                                                      weight_effects_on_by = weight_effects_on_by, 
                                                      function_over_all_graphs = function_over_all_graphs,
                                                      ida_percentile = ida_percentile, caption = caption, main_caption = NULL,
-                                                     print = TRUE, plot = TRUE, for_combined_plot = for_combined_plot)
+                                                     print = TRUE, plot = TRUE, plot_effect_quality = plot_effect_quality, 
+                                                     for_combined_plot = for_combined_plot)
     
     print(paste("Quality of the effects:", quality_of_effects_distibution(effects = effects_over_all_graphs_on_of$overAllGraphs_mean_on_of, int_pos = int_pos)))
     
@@ -429,7 +431,7 @@ compute_over_all_graphs <- function(all_results, weight_effects_on_by, use_scale
 
 display_effects <- function(effects_on_of, direction, int_pos, scale_in_the_end, weight_effects_on_by, 
                             function_over_all_graphs, ida_percentile = ida_percentile, caption, main_caption,
-                            print = TRUE, plot = TRUE, for_combined_plot = FALSE) {
+                            print = TRUE, plot = TRUE, for_combined_plot = FALSE, plot_effect_quality = TRUE) {
   
   if (plot) {
     if (!for_combined_plot && !is.null(main_caption) && !missing(main_caption)) {
@@ -446,15 +448,15 @@ display_effects <- function(effects_on_of, direction, int_pos, scale_in_the_end,
       if (missing(caption) || is.null(caption)) {
         caption <- paste0(function_over_all_graphs, " over all graphs of effects of position 372")
       }
-      plot_effects(effects_on_of$overAllGraphs_of, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption)
+      effects_to_plot <- effects_on_of$overAllGraphs_of
     }
     if ("on" %in% direction) {
       on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
       if (missing(caption) || is.null(caption)) {
         caption <- paste0(function_over_all_graphs, " over all graphs of effects ", on, " position 372")
       }
-      
-      plot_effects(effects_on_of$overAllGraphs_on, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption)
+      effects_to_plot <- effects_on_of$overAllGraphs_on
+      # plot_effects(effects_on_of$overAllGraphs_on, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption)
     }
     
     if (! (("on" %in% direction) ||  ("of" %in% direction))) {
@@ -465,8 +467,8 @@ display_effects <- function(effects_on_of, direction, int_pos, scale_in_the_end,
       if (missing(caption) || is.null(caption)) {
         caption <- paste0(function_over_all_graphs, " over all graphs of effects (", direction, " of: ", on, " and of) position 372")
       }
-      
-      plot_effects(on_of_mean_effects, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption)
+      effects_to_plot <- on_of_mean_effects
+      # plot_effects(on_of_mean_effects, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption)
       
       # scaled_effects_for_coloring_on_of_mean <- scale_effects(as.matrix(on_of_mean_effects), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
       # colors_by_effect <- color_by_effect(scaled_effects_for_coloring_on_of_mean, int_pos, mode = "#FFFFFF")
@@ -483,6 +485,10 @@ display_effects <- function(effects_on_of, direction, int_pos, scale_in_the_end,
       
       effects_on_of[[paste0("overAllGraphs_", direction, "_on_of")]] <- on_of_mean_effects
     }
+    
+    plot_effects(effects_to_plot, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption, 
+                 plot_effect_quality = plot_effect_quality)
+    
     if (!for_combined_plot && !missing(main_caption) && !is.null(main_caption)) {
       title(main_caption, outer = TRUE)
     }
@@ -508,7 +514,7 @@ display_effects <- function(effects_on_of, direction, int_pos, scale_in_the_end,
   return(effects_on_of)
 }
 
-plot_effects <- function(effects, int_pos, scale_in_the_end, caption) {
+plot_effects <- function(effects, int_pos, scale_in_the_end, caption, plot_effect_quality = TRUE) {
   scaled_effects_for_coloring <- scale_effects(as.matrix(effects), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
   colors_by_effect <- color_by_effect(scaled_effects_for_coloring, int_pos, mode = "#FFFFFF")
   if (!scale_in_the_end) {
@@ -520,6 +526,9 @@ plot_effects <- function(effects, int_pos, scale_in_the_end, caption) {
             main = caption, 
             col = colors_by_effect, las = 2, 
             names.arg = rownames(scaled_effects_for_coloring))
+  }
+  if (plot_effect_quality) {
+    title(sub = paste("Quality of effects: ", round(quality_of_effects_distibution(effects = effects, int_pos = int_pos), digits = 2)))
   }
 }
 

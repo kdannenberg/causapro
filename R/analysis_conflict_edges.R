@@ -188,10 +188,10 @@ analyse_edge_types_by_alpha <- function(edge_types, plot_labels_as_rows_and_cols
 }
 
 
-# best_alphas_1 <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
-#                                              plot_logscale_alpha = FALSE, ylim_for_plots = c(0,200), # or NULL
-#                                              opt_alpha_double_weight_conflict = FALSE,
-#                                              print = TRUE, plot = TRUE)
+best_alphas_1 <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
+                                             plot_logscale_alpha = FALSE, ylim_for_plots = c(0,200), # or NULL
+                                             opt_alpha_double_weight_conflict = FALSE,
+                                             print = TRUE, plot = TRUE)
 # best_alphas_2 <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
 #                                              plot_logscale_alpha = FALSE, ylim_for_plots = c(0,200), # or NULL
 #                                              opt_alpha_double_weight_conflict = TRUE,
