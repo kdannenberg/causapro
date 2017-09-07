@@ -191,12 +191,14 @@ analyse_set_of_graphs <- function(
                                                      print = TRUE, plot = TRUE, plot_effect_quality = plot_effect_quality, 
                                                      for_combined_plot = for_combined_plot)
     
-    print(paste("Quality of the effects:", quality_of_effects_distibution(effects = effects_over_all_graphs_on_of$overAllGraphs_mean_on_of, int_pos = int_pos)))
+    print(paste("Quality of the effects:", 
+                quality_of_effects_distibution(effects = effects_over_all_graphs_on_of$overAllGraphs_mean_on_of, 
+                                               int_pos = int_pos)))
     
     return(effects_over_all_graphs_on_of)
     
   } else if (is.numeric(plot) && length(plot) > 1) {
-    deviatinson_from_mean(all_results = all_results, dir = "of", weight_effects_on_by = weight_effects_on_by, plot_graphs = plot)
+    deviation_from_mean(all_results = all_results, dir = "of", weight_effects_on_by = weight_effects_on_by, plot_graphs = plot)
   }
 }
 
@@ -627,11 +629,14 @@ graph_to_results <- function(graph, ida_function) {
 }
 
 # neg_effects: abs -> absolut value, discard -> drop
-quality_of_effects_distibution <- function(effects, int_pos, neg_effects = "drop", function_over_effects = mean, perturbed_position = "372") {
+# option "sep" fehlt hier gegenüber scale_effects
+quality_of_effects_distibution <- function(effects, int_pos, neg_effects = "abs", function_over_effects = mean, perturbed_position = "372") {
   if (neg_effects == "abs") {
     effects <- abs(effects)
-  } else if (neg_effects == "discard") {
+  } else if (neg_effects == "discard" || neg_effects == "drop") {
     effects <- effects[!effects < 0]
+  } else if (neg_effects != "") {
+    warning("Unkonown treatment of negative effects in quality_of_effects_distibution")
   }
   effects <- effects[!names(effects) %in% perturbed_position]
   mean_effect_int <- function_over_effects(effects[names(effects) %in% int_pos])

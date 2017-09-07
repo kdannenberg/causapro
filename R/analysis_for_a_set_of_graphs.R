@@ -7,7 +7,8 @@ source("functions_conversions.R")
 source("functions_tools.R")
 
 source("functions_analysis_for_a_set_of_graphs.R")
-source("functions_protein_causality.R")
+# source("functions_protein_causality.R")
+
 # tests
 source("tests_analysis_for_a_set_of_graphs.R")
 
@@ -108,14 +109,25 @@ analyse_graphs <- function(measure = "S", type_of_data = "DDS", subtype_of_data 
   return(effects)
 }
 
-all_effects <- list()
-for (measure_type_sub in c("DDS", "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")) {
-  measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
-  subtype_of_data = strsplit(measure_type_sub, "-")[[1]][2]
-  if (is.na(subtype_of_data)) {
-    subtype_of_data <- ""
-  }
-  all_effects[[measure_type_sub]] <- analyse_graphs(measure = measure, type_of_data = strsplit(measure_type_sub, "-")[[1]][1],
-                                                    subtype_of_data = subtype_of_data,
-                                                    alphas = c(0.001, 0.005, 0.01, 0.05, 0.1), min_pos_vars = c(0.0001, 0.001, 0.01))
+# all_effects <- list()
+# for (measure_type_sub in c("DDS", "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")) {
+#   measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
+#   subtype_of_data = strsplit(measure_type_sub, "-")[[1]][2]
+#   if (is.na(subtype_of_data)) {
+#     subtype_of_data <- ""
+#   }
+#   all_effects[[measure_type_sub]] <- analyse_graphs(measure = measure, type_of_data = strsplit(measure_type_sub, "-")[[1]][1],
+#                                                     subtype_of_data = subtype_of_data,
+#                                                     alphas = c(0.001, 0.005, 0.01, 0.05, 0.1), min_pos_vars = c(0.0001, 0.001, 0.01))
+# }
+
+measure_type_sub = "DDDG-all" # "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")) {
+measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
+subtype_of_data = strsplit(measure_type_sub, "-")[[1]][2]
+if (is.na(subtype_of_data)) {
+  subtype_of_data <- ""
 }
+eff <- analyse_graphs(measure = measure, type_of_data = strsplit(measure_type_sub, "-")[[1]][1],
+                                                  subtype_of_data = subtype_of_data,
+                                                  alphas = c(0.000001, 0.00001, 0.005, 0.01, 0.05), 
+                      min_pos_vars = c(0.0001, 0.001, 0.01))
