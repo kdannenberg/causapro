@@ -192,7 +192,8 @@ statistics_of_influenced_positions <- function(effects, percentile, interesting_
     
   }
   cat("\n")
-  return(int_pos_strongly_influenced)
+  #return(int_pos_strongly_influenced)
+  return(c(interesting_positions, most_influenced_positions))
 }
 
 # only to store code

@@ -434,7 +434,22 @@ compute_over_all_graphs <- function(all_results, weight_effects_on_by, use_scale
 display_effects <- function(effects_on_of, direction, int_pos, scale_in_the_end, weight_effects_on_by, 
                             function_over_all_graphs, ida_percentile = ida_percentile, caption, main_caption,
                             print = TRUE, plot = TRUE, for_combined_plot = FALSE, plot_effect_quality = TRUE) {
-  
+  if (print) {
+    if ("of" %in% direction) {
+      print("SUM EFFECTS OF:")
+      stat_sum_on <- statistics_of_influenced_positions(effects_on_of$sum_of, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
+    }
+    if ("on" %in% direction) {
+      print("SUM EFFECTS ON:")
+      stat_sum_of <- statistics_of_influenced_positions(effects_on_of$sum_on, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
+    }
+    if (! (("on" %in% direction) ||  ("of" %in% direction))) {
+      print("SUM EFFECTS MEAN(ON, OF):")
+      # effects_matrix <- do.call(rbind, effects_over_all_graphs_on_of)
+      # on_of_mean_effects <- apply(effects_matrix, 2, get(direction))
+      stat_sum_of <- statistics_of_influenced_positions(effects_on_of[[paste0("overAllGraphs_", direction, "_on_of")]], percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
+    }
+  }
   if (plot) {
     if (!for_combined_plot && !is.null(main_caption) && !missing(main_caption)) {
       oma <- c( 0, 0, length(main_caption) + 1, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
@@ -492,24 +507,18 @@ display_effects <- function(effects_on_of, direction, int_pos, scale_in_the_end,
                  plot_effect_quality = plot_effect_quality)
     
     if (!for_combined_plot && !missing(main_caption) && !is.null(main_caption)) {
-      title(main_caption, outer = TRUE)
-    }
-  }
-  
-  if (print) {
-    if ("of" %in% direction) {
-      print("SUM EFFECTS OF:")
-      stat_sum_on <- statistics_of_influenced_positions(effects_on_of$sum_of, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
-    }
-    if ("on" %in% direction) {
-      print("SUM EFFECTS ON:")
-      stat_sum_of <- statistics_of_influenced_positions(effects_on_of$sum_on, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
-    }
-    if (! (("on" %in% direction) ||  ("of" %in% direction))) {
-      print("SUM EFFECTS MEAN(ON, OF):")
-      # effects_matrix <- do.call(rbind, effects_over_all_graphs_on_of)
-      # on_of_mean_effects <- apply(effects_matrix, 2, get(direction))
-      stat_sum_of <- statistics_of_influenced_positions(effects_on_of[[paste0("overAllGraphs_", direction, "_on_of")]], percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
+      if(plot) {
+        interesting_positions = stat_sum_of[[1]]
+        most_influenced_positions = stat_sum_of[[2]]
+        int_pos_strongly_influenced <- intersect(interesting_positions, most_influenced_positions)
+        sub = "FP"
+        paste(sub, paste(setdiff(most_influenced_positions, int_pos_strongly_influenced), collapse = " "))
+        paste(sub, "|| FN")
+        paste(sub, paste(setdiff(interesting_positions, most_influenced_positions), collapse = " "))
+        title(main_caption, outer = TRUE, sub = sub)
+      } else {
+        title(main_caption, outer = TRUE)
+      }
     }
   }
   
