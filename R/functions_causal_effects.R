@@ -170,8 +170,7 @@ f_causal_effects_ida_results <- function(...) {
   return(function(results) {causal_effects_ida(results = results, ...)})
 }
 
-statistics_of_influenced_positions <- function(effects, percentile, interesting_positions, print = FALSE) {
-  threshold = quantile(effects, probs = percentile, na.rm = TRUE)
+get_most_influenced_positions <- function(effects, threshold, interesting_positions) {
   if (!is.null(dim(effects))) {
     # most_influenced_positions <- colnames(data[(rownames(effects)[which(effects > threshold)])])
     most_influenced_positions <- (rownames(effects)[which(effects > threshold)])
@@ -179,12 +178,19 @@ statistics_of_influenced_positions <- function(effects, percentile, interesting_
     # most_influenced_positions <- colnames(data[(names(effects)[which(effects > threshold)])])
     most_influenced_positions <- (names(effects)[which(effects > threshold)])
   }
-  if (print) {
-    print(paste0(length(most_influenced_positions), " positions over the threshold ", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
-  }
+  # int_pos <- interesting_positions("PDZ", "crystal")
+  return(most_influenced_positions)
+}
+
+statistics_of_influenced_positions <- function(effects, percentile, interesting_positions, print = FALSE, verbose = TRUE) {
+  threshold = quantile(effects, probs = percentile, na.rm = TRUE)
+  most_influenced_positions <- get_most_influenced_positions(effects = effects, threshold = threshold, interesting_positions = interesting_positions)
+ if (print) {
+   print(paste0(length(most_influenced_positions), " positions over the threshold ", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
+ }
   # int_pos <- interesting_positions("PDZ", "crystal")
   int_pos_strongly_influenced <- intersect(interesting_positions, most_influenced_positions)
-  if (print) {
+  if (print && verbose) {
     print(paste("Thereof",  length(int_pos_strongly_influenced), "out of the", length(interesting_positions
                                         ), "interesting positions:", paste(sort(int_pos_strongly_influenced), collapse = ", ")))
     print(paste("and also (FALSE POSITIVE): ", paste(setdiff(most_influenced_positions, int_pos_strongly_influenced), collapse = ", ")))
@@ -192,8 +198,12 @@ statistics_of_influenced_positions <- function(effects, percentile, interesting_
     
   }
   cat("\n")
-  #return(int_pos_strongly_influenced)
-  return(c(interesting_positions, most_influenced_positions))
+  fp = setdiff(most_influenced_positions, int_pos_strongly_influenced)
+  if(length(fp) == 0) fp = "-"
+  fn = setdiff(interesting_positions, most_influenced_positions)
+  if(length(fn) == 0) fn = "-"
+  sub = paste("FP:", paste(fp, collapse = " "), "|| FN:", paste(fn, collapse = " "))
+  return(sub)
 }
 
 # only to store code

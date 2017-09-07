@@ -435,17 +435,17 @@ display_effects <- function(effects_on_of, direction, int_pos, scale_in_the_end,
   if (print) {
     if ("of" %in% direction) {
       print("SUM EFFECTS OF:")
-      stat_sum_on <- statistics_of_influenced_positions(effects_on_of$sum_of, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
+      stat_sum_of<- statistics_of_influenced_positions(effects_on_of$sum_of, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
     }
     if ("on" %in% direction) {
       print("SUM EFFECTS ON:")
-      stat_sum_of <- statistics_of_influenced_positions(effects_on_of$sum_on, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
+      stat_sum_on <- statistics_of_influenced_positions(effects_on_of$sum_on, percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
     }
     if (! (("on" %in% direction) ||  ("of" %in% direction))) {
       print("SUM EFFECTS MEAN(ON, OF):")
       # effects_matrix <- do.call(rbind, effects_over_all_graphs_on_of)
       # on_of_mean_effects <- apply(effects_matrix, 2, get(direction))
-      stat_sum_of <- statistics_of_influenced_positions(effects_on_of[[paste0("overAllGraphs_", direction, "_on_of")]], percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
+      stat_sum_on_of <- statistics_of_influenced_positions(effects_on_of[[paste0("overAllGraphs_", direction, "_on_of")]], percentile = ida_percentile, interesting_positions = int_pos, print = TRUE)
     }
   }
   if (plot) {
@@ -463,15 +463,15 @@ display_effects <- function(effects_on_of, direction, int_pos, scale_in_the_end,
       if (missing(caption) || is.null(caption)) {
         caption <- paste0(function_over_all_graphs, " over all graphs of effects of position 372")
       }
-      effects_to_plot <- effects_on_of$overAllGraphs_of
+      plot_effects(effects_on_of$overAllGraphs_of, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption, plot_effect_quality = plot_effect_quality, stat = stat_sum_of)
     }
     if ("on" %in% direction) {
       on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
       if (missing(caption) || is.null(caption)) {
         caption <- paste0(function_over_all_graphs, " over all graphs of effects ", on, " position 372")
       }
-      effects_to_plot <- effects_on_of$overAllGraphs_on
-      # plot_effects(effects_on_of$overAllGraphs_on, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption)
+      # effects_to_plot <- effects_on_of$overAllGraphs_on
+      plot_effects(effects_on_of$overAllGraphs_on, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption, plot_effect_quality = plot_effect_quality, stat = stat_sum_on)
     }
     
     if (! (("on" %in% direction) ||  ("of" %in% direction))) {
@@ -482,8 +482,8 @@ display_effects <- function(effects_on_of, direction, int_pos, scale_in_the_end,
       if (missing(caption) || is.null(caption)) {
         caption <- paste0(function_over_all_graphs, " over all graphs of effects (", direction, " of: ", on, " and of) position 372")
       }
-      effects_to_plot <- on_of_mean_effects
-      # plot_effects(on_of_mean_effects, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption)
+      # effects_to_plot <- on_of_mean_effects
+      plot_effects(on_of_mean_effects, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption, plot_effect_quality = plot_effect_quality, stat = stat_sum_on_of)
       
       # scaled_effects_for_coloring_on_of_mean <- scale_effects(as.matrix(on_of_mean_effects), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
       # colors_by_effect <- color_by_effect(scaled_effects_for_coloring_on_of_mean, int_pos, mode = "#FFFFFF")
@@ -501,29 +501,16 @@ display_effects <- function(effects_on_of, direction, int_pos, scale_in_the_end,
       effects_on_of[[paste0("overAllGraphs_", direction, "_on_of")]] <- on_of_mean_effects
     }
     
-    plot_effects(effects_to_plot, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption, 
-                 plot_effect_quality = plot_effect_quality)
-    
+    # plot_effects(effects_to_plot, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption, plot_effect_quality = plot_effect_quality)
     if (!for_combined_plot && !missing(main_caption) && !is.null(main_caption)) {
-      if(plot) {
-        interesting_positions = stat_sum_of[[1]]
-        most_influenced_positions = stat_sum_of[[2]]
-        int_pos_strongly_influenced <- intersect(interesting_positions, most_influenced_positions)
-        sub = "FP"
-        paste(sub, paste(setdiff(most_influenced_positions, int_pos_strongly_influenced), collapse = " "))
-        paste(sub, "|| FN")
-        paste(sub, paste(setdiff(interesting_positions, most_influenced_positions), collapse = " "))
-        title(main_caption, outer = TRUE, sub = sub)
-      } else {
         title(main_caption, outer = TRUE)
-      }
     }
   }
   
   return(effects_on_of)
 }
 
-plot_effects <- function(effects, int_pos, scale_in_the_end, caption, plot_effect_quality = TRUE) {
+plot_effects <- function(effects, int_pos, scale_in_the_end, caption, plot_effect_quality = TRUE, stat) {
   scaled_effects_for_coloring <- scale_effects(as.matrix(effects), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
   colors_by_effect <- color_by_effect(scaled_effects_for_coloring, int_pos, mode = "#FFFFFF")
   if (!scale_in_the_end) {
@@ -535,6 +522,9 @@ plot_effects <- function(effects, int_pos, scale_in_the_end, caption, plot_effec
             main = caption, 
             col = colors_by_effect, las = 2, 
             names.arg = rownames(scaled_effects_for_coloring))
+  }
+  if(!missing(stat) && !is.null(stat)) {
+    title(sub = paste0(stat, "\n"))
   }
   if (plot_effect_quality) {
     title(sub = paste("Quality of effects: ", round(quality_of_effects_distibution(effects = effects, int_pos = int_pos), digits = 2)))
