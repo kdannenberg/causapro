@@ -5,8 +5,8 @@ source("~/.configuration_code.R")
 # source("functions_conversions.R")
 # source("functions_tools.R")
 
-# source("functions_analysis_for_a_set_of_graphs.R")
-
+# source("analysis_for_a_set_of_graphs.R")
+source("~/.configuration_code.R")
 source("functions_analysis_for_a_set_of_graphs.R")
 
 source("compute_DAG_G.R")
@@ -137,23 +137,11 @@ analyse_edge_types_by_alpha <- function(edge_types, plot_labels_as_rows_and_cols
       sum_of_edges <- apply(edge_types_by_alpha, 1, sum)
       edge_types_by_alpha <- cbind(edge_types_by_alpha, sum = sum_of_edges)
       if (opt_alpha_double_weight_conflict) {
-        quality_function <- function(v) {
-          if (v["conflict"] > 15) {
-            return(0)
-          } else {
-            return(v["directed"]/(v["undirected"] + 2 * v["conflict"]))
-          }
-        }
+        conflict_edge_weight <- 2
       } else {
-        quality_function <- function(v) {
-          if (v["conflict"] > 15) {
-            return(0)
-          } else {
-            return(v["directed"]/(v["undirected"] + v["conflict"]))
-          }
-        }
+        conflict_edge_weight <- 1
       }
-      quality <- apply(edge_types_by_alpha, 1, quality_function)
+      quality <- apply(edge_types_by_alpha, 1, quality_of_edge_distribution, weight_of_conflict_edges = conflict_edge_weight)
       best_alpha <- as.numeric(names(quality)[which(quality == max(quality))])
       best_alphas[[measure_type_sub]][[as.character(min_pos_var)]] <- best_alpha
       print(paste("Best alpha, according to quality:", best_alpha))
@@ -187,6 +175,13 @@ analyse_edge_types_by_alpha <- function(edge_types, plot_labels_as_rows_and_cols
   return(best_alphas)
 }
 
+quality_of_edge_distribution <- function(edge_types, weight_of_conflict_edges = 1) {
+  if (edge_types["conflict"] > 15) {
+    return(0)                 # infeasible
+  } else {
+    return(edge_types["directed"]/(edge_types["undirected"] + weight_of_conflict_edges * edge_types["conflict"]))
+  }
+}
 
 best_alphas_1 <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
                                              plot_logscale_alpha = FALSE, ylim_for_plots = c(0,200), # or NULL
@@ -292,14 +287,5 @@ for (measure_type_sub in names(best_alphas_1)) {
   }
 }
 
-# all_effects <- list()
-# for (measure_type_sub in c("DDS", "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")) {
-#   measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
-#   subtype_of_data = strsplit(measure_type_sub, "-")[[1]][2]
-#   if (is.na(subtype_of_data)) {
-#     subtype_of_data <- ""
-#   }
-#   all_effects[[measure_type_sub]] <- analyse_graphs(measure = measure, type_of_data = strsplit(measure_type_sub, "-")[[1]][1], 
-#                                                     subtype_of_data = subtype_of_data, 
-#                                                     alphas = c(0.001, 0.005, 0.01, 0.05, 0.1), min_pos_vars = c(0.0001, 0.001, 0.01))
-# }
+
+

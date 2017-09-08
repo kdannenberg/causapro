@@ -2,10 +2,13 @@ library(graph)
 library(dagitty)
 library(pcalg)
 
-function_set_parameters <- function(FUN, parameters) {
+
+set_parameters <- function(FUN, parameters) {
   # return(function(...) return(do.call(FUN, parameters, ...)))
   return(function(...) {return(do.call(FUN, c(parameters, list(...))))})
 }
+
+function_set_parameters <- set_parameters
 
 protein_causality <- function(
   # Data parameters
@@ -148,7 +151,11 @@ protein_causality <- function(
   
   # outpath = paste("/Outputs/", type_of_data, "/", only_cols_label, source_of_data, "-alpha=", alpha, sep="") 
   
-  caption <- get_caption(protein = protein, data = data_description, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = 45) #TODO rem_gaps_threshold hinzufügen
+  chars_per_line <- 45
+  if (for_combined_plot) {
+    chars_per_line <- 35
+  }
+  caption <- get_caption(protein = protein, data = data_description, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = chars_per_line) #TODO rem_gaps_threshold hinzufügen
   # TODO Marcel: add all the new ones
   parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, 
                                                        only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = file_separator))  
@@ -612,7 +619,7 @@ ancestorgraph_of_interesting_positions <- function(graph_dagitty, positions = NU
 
 # for_coloring -> output hierarchical (list with different sorts of interesting positions as vectors), otherwise one vector
 # std-Reihenfolge: grün-gelb-rot-blau
-interesting_positions <- function(protein, position_numbering = "crystal", for_coloring = FALSE, coloring = "auto", colors = "", counts) {
+interesting_positions <- function(protein, position_numbering = "crystal", for_coloring = FALSE, coloring = "", colors = "", counts) {
   if (is.null(coloring) || coloring == "none") {
     list <- list()
   } else {
@@ -622,11 +629,15 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
         position_numbering <- "crystal"
       }
       if (grepl("crystal", position_numbering)) {
-        if(coloring == "es") {
+        if (coloring == "es") {
           ligand = c(318, 322, 323, 324, 326, 327, 328, 330, 331, 332, 334, 337, 348, 352, 366, 373, 380)
           cluster = c(304, 305, 306, 309, 312, 354, 355, 357, 391, 395)
           list <- list(ligand = ligand, cluster = cluster)
           names(list) <- c("#3b73b1","#b0c7df")
+        } else if (tolower(coloring) == "dds" || tolower(coloring) == "s") {
+          high = c(322, 323, 325, 327, 329, 330, 336, 347, 351, 353, 359, 362, 363, 364, 372, 375, 376, 379, 386, 388)
+          list <- list(high = high)
+          names(list) <- c("#FFD700")
         } else {
           # numbering crystal structure
           main = c(372) 

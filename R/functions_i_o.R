@@ -89,6 +89,7 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   # data <- data[,-drop]
   # data <- subset(data, select = -drop)
   if (length(drop) > 0) {
+    # cat("\n")
     print(paste("Removed columns:", paste(colnames(data)[drop], collapse = ", ")))
   }
   data <- data[, !names(data) %in% names(drop)]
@@ -241,8 +242,8 @@ rem_cols_by_colname <- function(data, remove) {
 
 ## previously: "caption"
 get_caption <- function(protein, data, alpha, min_pos_var, chars_per_line = 50) {
-  # par_string = paste("protein: ", protein, ", data: ", data, ", alpha: ", alpha, ", var_cutoff: ", min_pos_var, sep = "")
-  par_string = paste(data, " - alpha: ", alpha, ", var_cutoff: ", min_pos_var, sep = "")
+  # par_string = paste("protein: ", protein, ", data: ", data, ", alpha: ", alpha, ", var !> ", min_pos_var, sep = "")
+  par_string = paste(data, " - alpha: ", alpha, ", var !> ", min_pos_var, sep = "")
   caption = strwrap(par_string, width = chars_per_line)
   return(caption)
 }

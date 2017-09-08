@@ -166,11 +166,13 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
   return(results)
 }
 
-f_causal_effects_ida_results <- function(...) {
-  return(function(results) {causal_effects_ida(results = results, ...)})
-}
-
-get_most_influenced_positions <- function(effects, threshold, interesting_positions) {
+get_most_influenced_positions <- function(effects, threshold, percentile) {
+  if (missing(threshold)) {
+    if (missing(percentile)) {
+      stop("Neither threshold nor quantile given in get_most_influenced_positions.")
+    }
+    threshold = quantile(effects, probs = percentile, na.rm = TRUE)
+  }
   if (!is.null(dim(effects))) {
     # most_influenced_positions <- colnames(data[(rownames(effects)[which(effects > threshold)])])
     most_influenced_positions <- (rownames(effects)[which(effects > threshold)])
@@ -182,27 +184,33 @@ get_most_influenced_positions <- function(effects, threshold, interesting_positi
   return(most_influenced_positions)
 }
 
-statistics_of_influenced_positions <- function(effects, percentile, interesting_positions, print = FALSE, verbose = TRUE) {
+statistics_of_influenced_positions <- function(effects, percentile, interesting_positions, print = FALSE, verbose = FALSE) {
   threshold = quantile(effects, probs = percentile, na.rm = TRUE)
-  most_influenced_positions <- get_most_influenced_positions(effects = effects, threshold = threshold, interesting_positions = interesting_positions)
- if (print) {
-   print(paste0(length(most_influenced_positions), " positions over the threshold ", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
+  most_influenced_positions <- get_most_influenced_positions(effects = effects, threshold = threshold)
+ if (print && verbose) {
+   writeLines(paste0(length(most_influenced_positions), " positions over the threshold ", threshold, ": ", 
+              paste(most_influenced_positions, collapse = ", ")))
  }
   # int_pos <- interesting_positions("PDZ", "crystal")
+  
   int_pos_strongly_influenced <- intersect(interesting_positions, most_influenced_positions)
-  if (print && verbose) {
-    print(paste("Thereof",  length(int_pos_strongly_influenced), "out of the", length(interesting_positions
-                                        ), "interesting positions:", paste(sort(int_pos_strongly_influenced), collapse = ", ")))
-    print(paste("and also (FALSE POSITIVE): ", paste(setdiff(most_influenced_positions, int_pos_strongly_influenced), collapse = ", ")))
-    print(paste("missing  (FALSE NEGATIVE): ", paste(setdiff(interesting_positions, most_influenced_positions), collapse = ", ")))
-    
-  }
-  cat("\n")
   fp = setdiff(most_influenced_positions, int_pos_strongly_influenced)
   if(length(fp) == 0) fp = "-"
   fn = setdiff(interesting_positions, most_influenced_positions)
   if(length(fn) == 0) fn = "-"
-  sub = paste("FP:", paste(fp, collapse = " "), "|| FN:", paste(fn, collapse = " "))
+  sub = paste0("FP: ", paste(fp, collapse = " "), "\nFN: ", paste(fn, collapse = " "))
+  
+  if (print && verbose) {
+    writeLines(paste("Thereof",  length(int_pos_strongly_influenced), "out of the", length(interesting_positions), 
+                "interesting positions:", paste(sort(int_pos_strongly_influenced), collapse = ", ")))
+    writeLines(paste("and also (FALSE POSITIVE): ", paste(setdiff(most_influenced_positions, int_pos_strongly_influenced), collapse = ", ")))
+    writeLines(paste("missing  (FALSE NEGATIVE): ", paste(setdiff(interesting_positions, most_influenced_positions), collapse = ", ")))
+    
+  } else {
+    writeLines(sub)
+  }
+  # cat("\n")
+  
   return(sub)
 }
 
