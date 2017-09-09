@@ -184,7 +184,8 @@ get_most_influenced_positions <- function(effects, threshold, percentile) {
   return(most_influenced_positions)
 }
 
-statistics_of_influenced_positions <- function(effects, percentile, interesting_positions, print = FALSE, verbose = FALSE) {
+statistics_of_influenced_positions <- function(effects, percentile, interesting_positions, print = FALSE, 
+                                               verbose = FALSE, return_list = TRUE) { #TODO: list = TRUE setzen
   threshold = quantile(effects, probs = percentile, na.rm = TRUE)
   most_influenced_positions <- get_most_influenced_positions(effects = effects, threshold = threshold)
  if (print && verbose) {
@@ -210,8 +211,11 @@ statistics_of_influenced_positions <- function(effects, percentile, interesting_
     writeLines(sub)
   }
   # cat("\n")
-  
-  return(sub)
+  if (return_list) {
+    return(list(fp = fp, fn = fn))
+  } else {
+    return(sub)
+  }
 }
 
 # only to store code

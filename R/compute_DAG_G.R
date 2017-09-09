@@ -82,7 +82,7 @@ protein_causality_G <- function(
   plot_as_subgraphs = FALSE,
   plot_only_subgraphs = NULL, # 1 oder NULL
   # TODO Marcel: dafür sorgen dass, wenn diese Option aktiv ist, kein graphics.off() o.ä. ausgeführt wird (und nur der graph geplottet wird)
-  combined_plot = FALSE,
+  for_combined_plot = FALSE,
   mute_all_plots = FALSE,
   # 
   # description of other settings that should be appended to output-filename
