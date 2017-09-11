@@ -83,7 +83,8 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   colors <- rep("#FFFFFF", dim(data)[[1]])
   colors[drop] <- "#000000"
   if (!mute_plot) {
-    barplot(apply(data, 2, var), col = colors)
+    barplot(apply(data, 2, var), col = colors, las = 2, 
+            names.arg = colnames(data))
   }
   # var unter min_var wegschmeißen
   # data <- data[,-drop]
@@ -315,4 +316,16 @@ outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr,
   # if (!mute_all_plots) {    ### HÄÄÄÄ???
     return(out_file)
   # }
+}
+
+get_conservation <- function(measure, protein) {
+  type_of_data <- paste0("D", measure)
+  data_description <- get_data_description(protein = protein, type_of_data = type_of_data)
+  data <- read_data(files = data_description)
+  
+  if (dim(data)[1] > 0) {
+    data <- apply(data, 2, sum)
+  }
+  
+  return(data)
 }

@@ -7,7 +7,7 @@ library(colorspace)  # for mixcolor, hex
 
 # parameter barplot = TRUE remove, use mute_allplots = FALSE instead
 causal_effects_ida <- function(data, perturbated_position, direction = "both", weight_effects_on_by = "mean_abs_effect",
-                results = results, protein, coloring = "all", outpath, 
+                results = results, protein, coloring = "all", effect_hue_by = "variance", outpath, 
                 amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, 
                 effect_to_color_mode = "#FFFFFF", pymol_bg_color = "black", caption, no_colors, 
                 show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75, mute_all_plots = FALSE) {
@@ -104,8 +104,12 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
       current_scaled_effects <- scale_effects(current_effects, rank = rank_effects, amplification_factor = amplification_factor, neg_effects = neg_effects)
       scaled_effects <- cbind(scaled_effects, current_scaled_effects)
       
-      colors_by_effect <- color_by_effect(current_scaled_effects, int_pos, mode = effect_to_color_mode)
-      
+      if (effect_hue_by == "effect") {
+        colors_by_effect <- color_by_effect(current_scaled_effects, int_pos, mode = effect_to_color_mode)
+      } else if (effect_hue_by == "variance" || effect_hue_by == "var") {
+        vars <- apply(data, 2, var)
+        colors_by_effect <- color_by_effect(vars, int_pos, mode = effect_to_color_mode)
+      }
       
       if (!show_neg_causation) {
         current_effects <- NULL

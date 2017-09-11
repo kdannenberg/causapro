@@ -113,7 +113,7 @@ protein_causality_S <- function(
 }
 
 
-# results_S <- protein_causality_S(pc_maj_rule = TRUE, pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.08, min_pos_var = 1e-4)
+results_S <- protein_causality_S(pc_maj_rule = TRUE, pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.08, min_pos_var = 0.001)
 # sink()
 # print(conflict_edges(results_S$pc@graph))
 

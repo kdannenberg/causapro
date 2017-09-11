@@ -15,7 +15,10 @@ source("compute_DAG_S.R")
 
 plot_labels_as_rows_and_cols = TRUE
 plot_logscale_alpha = FALSE
-ylim_for_plots = c(0,200) # or NULL
+# if scalar: height of the y-axis = max. possible number of edges (binom(n_nodes, 2)) / ylim_for_plots
+# if vector: = ylim_for_plots
+# if NULL: automatically set in each plot
+ylim_for_plots = 5 # c(0, 200) # or NULL
 opt_alpha_double_weight_conflict = FALSE
 compute_anew = FALSE
 
@@ -24,14 +27,14 @@ measures <- c("DDS",
 
 min_pos_vars <- c(0.0001, 0.001, 0.01)
 
+# alphas <- c(1e-10, 1e-5, 0.0001, 0.001, 0.002, 0.003, 0.004, 0.005, 0.01, 0.05, 0.1)
+alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
+# alphas <- c(0.01)
+
 load(file = "edge_types.RData")
 
 if (compute_anew || !exists("edge_types")) {
   edge_types <- list()
-
-  # alphas <- c(1e-10, 1e-5, 0.0001, 0.001, 0.002, 0.003, 0.004, 0.005, 0.01, 0.05, 0.1)
-  alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
-  
   # TODO: DDS hinzufügen
   # for (type_of_data in c("DDG", "DDDG")) {
   #   edge_types[[type_of_data]] <- list()
@@ -47,8 +50,15 @@ if (compute_anew || !exists("edge_types")) {
       subtype_of_data_list <- "-"
     }
     edge_types[[type_of_data]][[subtype_of_data_list]] <- list()
+    
+    protein_causality_function = get(paste0("protein_causality_", measure))
+    
     for (min_pos_var in min_pos_vars) {
       edge_types[[type_of_data]][[subtype_of_data_list]][[as.character(min_pos_var)]] <- list()
+      data <- protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
+                                                 min_pos_var = min_pos_var, graph_computation = FALSE, analysis = FALSE, 
+                                                 evaluation = FALSE, data_in_results = TRUE)$data
+      edge_types[[type_of_data]][[subtype_of_data_list]][[as.character(min_pos_var)]]$max_nodes <- dim(data)[2]
       for (alpha in alphas) {
         protein_causality_function <- get(paste0("protein_causality_", measure))
         results <- protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
@@ -64,6 +74,30 @@ if (compute_anew || !exists("edge_types")) {
   # }
 }
 
+
+if (compute_anew || !exists("numbers_of_nodes")) {
+  numbers_of_nodes <- list()
+  for (measure_type_sub in measures) {
+    measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
+    type_of_data = strsplit(measure_type_sub, "-")[[1]][1]
+    if (grepl("-", measure_type_sub)) {
+      subtype_of_data_list <- subtype_of_data <- strsplit(measure_type_sub, "-")[[1]][2]
+    } else {
+      subtype_of_data <- ""
+      subtype_of_data_list <- "-"
+    }
+    numbers_of_nodes[[type_of_data]][[subtype_of_data_list]] <- list()
+    
+    protein_causality_function = get(paste0("protein_causality_", measure))
+    
+    for (min_pos_var in min_pos_vars) {
+      data <- protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
+                                         min_pos_var = min_pos_var, graph_computation = FALSE, analysis = FALSE, 
+                                         evaluation = FALSE, data_in_results = TRUE)$data
+      numbers_of_nodes[[type_of_data]][[subtype_of_data_list]][[as.character(min_pos_var)]] <- dim(data)[2]
+    }
+  }
+}
 
 # edge_types_by_alpha <- matrix(unlist(edge_types$DDG$`5`$`1e-04`), ncol = 3, byrow = TRUE)
 # rownames(edge_types_by_alpha) <- names(edge_types$DDG$`5`$`1e-04`)
@@ -158,9 +192,18 @@ analyse_edge_types_by_alpha <- function(edge_types, plot_labels_as_rows_and_cols
           log <- ""
         }
         
+        n_nodes <- numbers_of_nodes[[type_of_data]][[subtype_of_data]][[as.character(min_pos_var)]]
+        n_edges <- 1/2 * n_nodes * (n_nodes - 1)
+        if (length(ylim_for_plots) == 1) {
+          current_ylim_for_plots <- c(0, n_edges / ylim_for_plots)
+        } else {
+          current_ylim_for_plots <- ylim_for_plots
+        }
+        
         matplot(edge_types_by_alpha, x = rownames(edge_types_by_alpha), xlab = "alpha", ylab = "# edges",
-                type = "l", lty = c(1,1,1,1), col = c('red','green','orange', 'black'), ylim = ylim_for_plots, log = log)
+                type = "l", lty = c(1,1,1,1), col = c('red','green','orange', 'black'), ylim = current_ylim_for_plots, log = log)
         abline(h = 15, col = "red", lty = 2)
+        # abline(h = n_edges, col = "black", lty = 1)
         abline(v = 0.01, col = "black", lty = 2)
         abline(v = best_alpha, col = "black", lty = 1)
         axis(1, at = best_alpha, labels = best_alpha, mgp = c(10, 2, 0))
@@ -184,11 +227,11 @@ quality_of_edge_distribution <- function(edge_types, weight_of_conflict_edges = 
 }
 
 best_alphas_1 <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
-                                             plot_logscale_alpha = FALSE, ylim_for_plots = c(0,200), # or NULL
+                                             plot_logscale_alpha = FALSE, ylim_for_plots = ylim_for_plots, # or NULL
                                              opt_alpha_double_weight_conflict = FALSE,
                                              print = TRUE, plot = TRUE)
 # best_alphas_2 <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
-#                                              plot_logscale_alpha = FALSE, ylim_for_plots = c(0,200), # or NULL
+#                                              plot_logscale_alpha = FALSE, ylim_for_plots = ylim_for_plots, # or NULL
 #                                              opt_alpha_double_weight_conflict = TRUE,
                                              # print = TRUE, plot = TRUE)
 

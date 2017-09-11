@@ -575,17 +575,16 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
                                             solve_conflicts = pc_solve_conflicts, u2pd = pc_u2pd, 
                                             conservative = pc_conservative, maj_rule = pc_maj_rule))
   }
-  pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file, data = data)
+  
+  results <- list()
+  results$pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file, data = data)
   
   # garbage <- graphics.off()
   if (!mute_all_plots) {
-  plot_graph(graph = kernelize_graph(pc@graph), caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, 
+  plot_graph(graph = kernelize_graph(results$pc@graph), caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, 
              coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
              plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats)
   }
-  
-  results <- list()
-  results$pc <- pc
   
   return(results)
 } 
@@ -1227,7 +1226,8 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
 
 # either ranked or ampl_factor (or exponent) possible
 # prviously: hue_by_effect
-color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874CD", mode = "mix") {
+# color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874CD", mode = "mix") {
+color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874CD", mode = "#FFFFFF") {
   base_color <- function(pos) {
     if (pos %in% int_pos) {
       return(names(int_pos)[which(int_pos == pos)])
@@ -1236,7 +1236,20 @@ color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874
       # return("#AAAAAA")
     }
   }
-  pos_with_colors <- sapply(rownames(effects), base_color)
+  
+  # TODO Marcel: Geht das auch eleganter, so dass effects Zeilen-, Spaltenmatrix oder Vektor sein kann?
+  pos <- rownames(effects)
+  if (is.null(pos)) {
+    if (is.vector(effects)) {
+      pos <- names(effects)
+    } else {
+      pos <- names(effects)
+    }
+    
+  }
+  
+  pos_with_colors <- sapply(pos, base_color)
+  # pos_with_colors <- sapply(rownames(effects), base_color)
   pos_with_colors <- cbind(pos_with_colors, effects)
   
   # pos_with_colors <- sapply(colnames(pos_with_colors)),  function(pos) {})

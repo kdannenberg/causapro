@@ -23,6 +23,9 @@ analyse_set_of_graphs <- function(
   plot_effect_quality = TRUE,
   plot_false_pos_neg = TRUE, 
   plot_effect_score = TRUE,
+  # effect_hue_by = "effects",  
+  effect_hue_by = get_conservation(measure = measure, protein = protein), # DG/DS
+  # effect_hue_by = apply(data, 2, var),
   # results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
   #                           pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
   #                           graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
@@ -99,6 +102,8 @@ analyse_set_of_graphs <- function(
                                         pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
                                         graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
                                         data_in_results = TRUE, output_parameters_in_results = TRUE, mute_all_plots = TRUE)
+  # TODO: besser, oder?
+  # data <- read_data(get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data))
   data <- results$data
   caption <- results$caption
   outpath <- results$outpath
@@ -186,9 +191,9 @@ analyse_set_of_graphs <- function(
       caption = NULL
     }
     
-    effects_over_all_graphs_on_of <- display_effects(effects_on_of = effects_over_all_graphs_on_of, direction = direction, 
-                                                     int_pos = int_pos, perturbed_position = as.numeric(perturbed_position), 
-                                                     scale_in_the_end = scale_in_the_end, 
+    effects_over_all_graphs_on_of <- display_effects(effects = effects_over_all_graphs_on_of, effect_hue_by = effect_hue_by, 
+                                                     direction = direction, int_pos = int_pos, 
+                                                     perturbed_position = as.numeric(perturbed_position), scale_in_the_end = scale_in_the_end, 
                                                      weight_effects_on_by = weight_effects_on_by, 
                                                      function_over_all_graphs = function_over_all_graphs,
                                                      ida_percentile = ida_percentile, caption = caption, main_caption = NULL,
@@ -260,6 +265,8 @@ determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function
       # Sys.sleep(2)
       
       if (edges$conflict >= 15) {
+        # all_graphs = NULL
+        # save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
         return(NULL)
         # stop("More than 15 conflict edges.")
       }
@@ -272,6 +279,9 @@ determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function
         }
       } else {
         load(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+        # if (is.null(all_graphs)) {
+        #   return(NULL)
+        # }
       }
       # all_results <- pblapply(all_graphs, graph_to_results, ida_function = ida_function)   ## schneller (?) # library("pbapply")
       all_results <- list()
@@ -433,7 +443,7 @@ compute_over_all_graphs <- function(all_results, weight_effects_on_by, use_scale
   return(effects_over_all_graphs_on_of) #, all_mean = all_mean_effects))
 }
 
-display_effects <- function(effects_on_of, direction, int_pos, perturbed_position, scale_in_the_end, weight_effects_on_by, 
+display_effects <- function(effects, effect_hue_by, direction, int_pos, perturbed_position, scale_in_the_end, weight_effects_on_by, 
                             function_over_all_graphs, ida_percentile = ida_percentile, caption, main_caption,
                             print = TRUE, plot = TRUE, for_combined_plot = FALSE, plot_effect_quality = TRUE, 
                             plot_false_pos_neg = TRUE, plot_effect_score = TRUE) {
@@ -461,15 +471,15 @@ display_effects <- function(effects_on_of, direction, int_pos, perturbed_positio
   
   for (dir in direction) {
     if (! ((dir == "on") ||  (dir == "of"))) {
-      effects_matrix <- rbind(effects_on_of$overAllGraphs_of, effects_on_of$overAllGraphs_on)
+      effects_matrix <- rbind(effects$overAllGraphs_of, effects$overAllGraphs_on)
       on_of_mean_effects <- apply(effects_matrix, 2, get(direction))
-      effects_on_of[[paste0("overAllGraphs_", direction, "_on_of")]] <- on_of_mean_effects
+      effects[[paste0("overAllGraphs_", direction, "_on_of")]] <- on_of_mean_effects
     }
     
     if (! ((dir == "on") ||  (dir == "of"))) {
-      effects_dir <- effects_on_of[[paste0("overAllGraphs_", direction, "_on_of")]]
+      effects_dir <- effects[[paste0("overAllGraphs_", direction, "_on_of")]]
     } else {
-      effects_dir <- effects_on_of[[paste0("overAllGraphs_", tolower(dir))]]
+      effects_dir <- effects[[paste0("overAllGraphs_", tolower(dir))]]
     }
     
     if (print || plot_effect_quality) {
@@ -522,7 +532,7 @@ display_effects <- function(effects_on_of, direction, int_pos, perturbed_positio
         false_pos_neg <- statistics_of_influenced_positions(effects_dir, percentile = ida_percentile, 
                                                             interesting_positions = int_pos, print = FALSE, return_list = FALSE) #neu belegen, diesmal mit String
       }
-      plot_effects(effects_dir, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption, 
+      plot_effects(effects_dir, effect_hue_by = effect_hue_by, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption, 
                    effect_quality = effect_quality, false_pos_neg = false_pos_neg, score = score)
     }
       
@@ -600,10 +610,11 @@ display_effects <- function(effects_on_of, direction, int_pos, perturbed_positio
     }
   }
   
-  return(effects_on_of)
+  return(effects)
 }
 
-plot_effects <- function(effects, int_pos, scale_in_the_end, caption, effect_quality, false_pos_neg, score) {
+plot_effects <- function(effects, effect_hue_by = effects, int_pos, scale_in_the_end, caption, effect_quality, 
+                         false_pos_neg, score, effect_to_color_mode = "#FFFFFF") {
   
   lines_needed_for_subcaption = 0
   if (!is.null(false_pos_neg)) {
@@ -623,16 +634,34 @@ plot_effects <- function(effects, int_pos, scale_in_the_end, caption, effect_qua
   mar[1] <- 3 + lines_needed_for_subcaption
   par(mar = mar, mgp = mgp)
   
-  scaled_effects_for_coloring <- scale_effects(as.matrix(effects), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
-  colors_by_effect <- color_by_effect(scaled_effects_for_coloring, int_pos, mode = "#FFFFFF")
+  if (is.character(effect_hue_by)) {
+    if (effect_hue_by == "effect") {
+      effect_hue_by <- effects
+    } else {
+      effect_hue_by <- get(effect_hue_by)
+    }
+  }
+  
+  scaled_effect_hue_by <- scale_effects(as.matrix(effect_hue_by), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
+  
+  # if (effect_hue_by == "effect") {
+  #   colors_by_effect <- color_by_effect(current_scaled_effects, int_pos, mode = effect_to_color_mode)
+  # } else if (effect_hue_by == "variance" || effect_hue_by == "var") {
+  #   vars <- apply(data, 2, var)
+  #   colors_by_effect <- color_by_effect(vars, int_pos, mode = effect_to_color_mode)
+  # }
+  
+  colors_by_effect <- color_by_effect(scaled_effect_hue_by, int_pos, mode = effect_to_color_mode)
+  
   if (!scale_in_the_end) {
     barplot(effects, 
             main = caption, 
-            col = colors_by_effect, las = 2)
+            col = colors_by_effect[names(effects)], las = 2)
   } else {
-    barplot(as.vector(scaled_effects_for_coloring), 
+    scaled_effects <- scale_effects(as.matrix(effects), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
+    barplot(as.vector(scaled_effects), 
             main = caption, 
-            col = colors_by_effect, las = 2, 
+            col = colors_by_effect[names(effects)], las = 2, 
             names.arg = rownames(scaled_effects_for_coloring))
   }
   
