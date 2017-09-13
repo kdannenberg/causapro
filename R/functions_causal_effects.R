@@ -7,8 +7,8 @@ library(colorspace)  # for mixcolor, hex
 
 # parameter barplot = TRUE remove, use mute_allplots = FALSE instead
 causal_effects_ida <- function(data, perturbated_position, direction = "both", weight_effects_on_by = "mean_abs_effect",
-                results = results, protein, coloring = "all", effect_hue_by = "variance", outpath, 
-                amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, 
+                results = results, protein, coloring = "all", effect_hue_by = "effect", #effect_hue_by = "variance",
+                outpath,amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, 
                 effect_to_color_mode = "#FFFFFF", pymol_bg_color = "black", caption, no_colors, 
                 show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75, mute_all_plots = FALSE) {
   

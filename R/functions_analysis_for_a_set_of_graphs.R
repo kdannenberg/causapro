@@ -5,7 +5,8 @@ analyse_set_of_graphs <- function(
   measure = "G",
   type_of_data = "DDDG",
   subtype_of_data = "5",
-  int_pos = interesting_positions(protein = protein, coloring = measure),
+  # int_pos = interesting_positions(protein = protein, coloring = measure),
+  int_pos = interesting_positions(protein = protein, coloring = ""),
   # use_DDG = FALSE,  # einfach den default im Skript umstellen
   protein_causality_function = get(paste0("protein_causality_", measure)),
   alpha = 0.1,
@@ -777,7 +778,8 @@ graph_to_results <- function(graph, ida_function) {
 
 # neg_effects: abs -> absolut value, discard -> drop
 # option "sep" fehlt hier gegenüber scale_effects
-quality_of_effects_distibution <- function(effects, int_pos, neg_effects = "abs", function_over_effects = mean, perturbed_position = "372") {
+# TODO: rename: quality_of_effects_height
+quality_of_effects_distibution <- function(effects, int_pos, neg_effects = "discard", function_over_effects = mean, perturbed_position = "372") {
   if (neg_effects == "abs") {
     effects <- abs(effects)
   } else if (neg_effects == "discard" || neg_effects == "drop") {
@@ -887,24 +889,27 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure = "S", type_of_data
   return(effects)
 }
 
-score_for_effects <- function(effects, int_pos, perturbed_position = 372, effect_quality, false_pos_neg, percentile) {
-  if (missing(effect_quality)) {
-    effect_quality <- quality_of_effects_distibution(effects = effects, int_pos = int_pos)
+quality_of_effects_classifier <- function(effects, int_pos, percentile = 1 - (length(int_pos) / length(effects)), perturbed_position) {
+  most_influenced_pos <- get_most_influenced_positions(effects, percentile = percentile)
+  most_influenced_pos_interesting <- intersect(int_pos, most_influenced_pos)
+  fp = setdiff(most_influenced_pos, most_influenced_pos_interesting)
+  fn = setdiff(int_pos, most_influenced_pos_interesting)
+  if (length(fp) != length(fn)) {
+    warning("Not as many false positives as false neagtives in quality_of_effects_classifier.")
+  }
+  return((mean(length(fp), length(fn))) / length(setdiff(int_pos, perturbed_position)))
+}
+
+score_for_effects <- function(effects, int_pos, perturbed_position = 372, effect_quality_height, false_pos_neg, 
+                              percentile = 1 - (length(int_pos) / length(effects))) {
+  if (missing(effect_quality_height)) {
+    effect_quality_height <- quality_of_effects_distibution(effects = effects, int_pos = int_pos)
   }
   if (missing(false_pos_neg)) {
-    if (missing(percentile)) {
-      stop("Missing percentile. Could not compute false neg/positives")
-    }
-    most_influenced_pos <- get_most_influenced_positions(effects, percentile = percentile)
-    most_influenced_pos_interesting <- intersect(interesting_positions, most_influenced_positions)
-    fp = setdiff(most_influenced_positions, most_influenced_pos_interesting)
-    fn = setdiff(int_pos, most_influenced_pos_interesting)
-    if (length(fp) != length(fn)) {
-      warning("Not as many false positives as false negatives.")
-    }
-    false_pos_neg <- length(fp)
+    quality_of_effects_classifier <- quality_of_effects_classifier(effects, int_pos, percentile, perturbed_position)
+  } else {
+    quality_of_effects_classifier <- false_pos_neg / length(setdiff(int_pos, perturbed_position))
   }
-  false_pos_neg_fraction <- false_pos_neg / length(setdiff(int_pos, perturbed_position))
   
   quality_score <- function(effect_quality, range_to_six = FALSE) {
     if (!range_to_six) {
@@ -961,5 +966,5 @@ score_for_effects <- function(effects, int_pos, perturbed_position = 372, effect
     }
   }
   
-  return(quality_score(effect_quality) + false_pos_neg_score(false_pos_neg_fraction))
+  return(quality_score(effect_quality_height) + false_pos_neg_score(quality_of_effects_classifier))
 }

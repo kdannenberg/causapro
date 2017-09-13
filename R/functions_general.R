@@ -106,7 +106,7 @@ protein_causality <- function(
   file_separator = "/"
 ) {
   # INIT
-  if (!mute_all_plots) {
+  if (!(mute_all_plots || for_combined_plot)) {
     graphics.off()
   }
   
@@ -1117,19 +1117,21 @@ get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info, data) 
       return(pc)
     }
     # file.copy(paste(outpath, "-info-pc.txt", sep = ""), paste(outpath, "-info.txt", sep = ""), overwrite = TRUE)
-  } # else {
-  directories <- strsplit(outpath, "/")
-  output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = "/", sep = "/")
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
-    print("Directory created.")
-  }
+  }  else {
+    warning("pc object not found.")
+    warning(outpath)
+    directories <- strsplit(outpath, "/")
+    output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = "/", sep = "/")
+    if (!dir.exists(output_dir)) {
+      dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
+      print("Directory created.")
+    }
   
   pc <- pc_fun(outpath)
   
   save(pc, file = paste(outpath, "-pc.RData", sep = ""))
   print_pc_results_to_info_file(paste(outpath, sep = ""), pc)
-  # }
+  }
   return(pc)
 }
 

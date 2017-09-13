@@ -18,7 +18,7 @@ plot_logscale_alpha = FALSE
 # if scalar: height of the y-axis = max. possible number of edges (binom(n_nodes, 2)) / ylim_for_plots
 # if vector: = ylim_for_plots
 # if NULL: automatically set in each plot
-ylim_for_plots = 5 # c(0, 200) # or NULL
+ylim_for_plots = c(0,200) #5 # c(0, 200) # or NULL
 opt_alpha_double_weight_conflict = FALSE
 compute_anew = FALSE
 
@@ -151,7 +151,7 @@ analyse_edge_types_by_alpha <- function(edge_types, plot_labels_as_rows_and_cols
     } else {
       subtype_of_data = "-"
     }
-    
+    best_alphas[[measure_type_sub]] <- list()
     if (plot) {
       # plot row labels
       if (plot_labels_as_rows_and_cols) {
@@ -226,109 +226,96 @@ quality_of_edge_distribution <- function(edge_types, weight_of_conflict_edges = 
   }
 }
 
-best_alphas_1 <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
-                                             plot_logscale_alpha = FALSE, ylim_for_plots = ylim_for_plots, # or NULL
-                                             opt_alpha_double_weight_conflict = FALSE,
-                                             print = TRUE, plot = TRUE)
-# best_alphas_2 <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
+# best_alphas_1 <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
 #                                              plot_logscale_alpha = FALSE, ylim_for_plots = ylim_for_plots, # or NULL
-#                                              opt_alpha_double_weight_conflict = TRUE,
-                                             # print = TRUE, plot = TRUE)
+#                                              opt_alpha_double_weight_conflict = FALSE,
+#                                              print = TRUE, plot = TRUE)
+best_alphas_2 <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
+                                             plot_logscale_alpha = FALSE, ylim_for_plots = ylim_for_plots, # or NULL
+                                             opt_alpha_double_weight_conflict = TRUE,
+print = TRUE, plot = TRUE)
 
-# pc_function = function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+
+
+# pc_function = function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
                                                                                     # mute_all_plots = TRUE))
 # analyse_set_of_graphs_fct
-effects_for_best_alphas <- list()
-par(mfcol = c(length(min_pos_vars), length(measures)))
 
-for (measure_type_sub in names(best_alphas_1)) {
-  measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
-  type_of_data = strsplit(measure_type_sub, "-")[[1]][1]
-  if (grepl("-", measure_type_sub)) {
-    subtype_of_data_list <- subtype_of_data <- strsplit(measure_type_sub, "-")[[1]][2]
+# distinct_alphas is a list containing for each measure a list (or vector) with a value alpha for each min_pos_var.
+# For all measures in names(distinct_alphas) and all min_pos_vars in names(distinct_alphas$<measure>), the corresponding alpha is chosen, effects computed
+# and displayed in grid
+# if measures / min_pos_vars are given, only those are used (but need to be existent in distinct_alphas)
+effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, for_all_alphas = FALSE,
+                                        measures, min_pos_vars) {
+  effects <- list()
+  
+  if (with_graphs) {
+    if (missing(min_pos_vars)) {
+      lines_of_plot <- length(names(distinct_alphas[[1]]))
+    } else {
+      lines_of_plot <- 2 * length(min_pos_vars)
+    }
   } else {
-    subtype_of_data <- ""
-    subtype_of_data_list <- "-"
+    if (missing(min_pos_vars)) {
+      lines_of_plot <- length(names(distinct_alphas[[1]]))
+    } else {
+      lines_of_plot <- length(min_pos_vars)
+    }
+  }
+  if (for_all_alphas) {
+    cols_of_plot = 5  # just sth
+  } else {
+    if (missing(measures)) {
+      cols_of_plot <- length(names(distinct_alphas))
+    }  else {
+      cols_of_plot <- length(measures)
+    }
   }
   
-  for (min_pos_var in as.numeric(names(best_alphas_1[[measure_type_sub]]))) {
-    alpha <- best_alphas_1[[measure_type_sub]][[as.character(min_pos_var)]]
+  par(mfcol = c(lines_of_plot, cols_of_plot))
+  
+
+  if (missing(measures)) {
+    measures <- names(distinct_alphas)
+  }
+  for (measure_type_sub in measures) {
+    measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
+    type_of_data = strsplit(measure_type_sub, "-")[[1]][1]
+    if (grepl("-", measure_type_sub)) {
+      subtype_of_data_list <- subtype_of_data <- strsplit(measure_type_sub, "-")[[1]][2]
+    } else {
+      subtype_of_data <- ""
+      subtype_of_data_list <- "-"
+    }
     
-    protein_causality_function = get(paste0("protein_causality_", measure))
+    if (missing(min_pos_vars)) {
+      min_pos_vars <- as.numeric(names(distinct_alphas[[measure_type_sub]]))
+    }
+    for (min_pos_var in min_pos_vars) {
+      if (!for_all_alphas && length(alpha) > 1) {
+        # alpha <- alpha[1]
+        alpha <- alpha[length(alpha)] 
+      }
+      alphas <- distinct_alphas[[measure_type_sub]][[as.character(min_pos_var)]]
+      for (alpha in alphas) {
+        
+        protein_causality_function = get(paste0("protein_causality_", measure))
     
-    pc_function_ <- function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
-                                                                           mute_all_plots = TRUE,
-                                                                           alpha = alpha, min_pos_var = min_pos_var))
+        pc_function_ <- function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
+                                                                               mute_all_plots = TRUE,
+                                                                               alpha = alpha, min_pos_var = min_pos_var))
     
-    effects_for_best_alphas[[type_of_data]][[subtype_of_data_list]][[as.character(min_pos_var)]][[as.character(alpha)]] <- 
-      analyse_set_of_graphs(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
-                            direction = "mean", measure = measure, pc_function = pc_function_, alpha = alpha, min_pos_var = min_pos_var,
-                            for_combined_plot = TRUE, scale_in_the_end = FALSE, new = FALSE, save = TRUE)
-      
-    #   analyse_set_of_graphs(
-    #   type_of_graph_set = "conflict", protein = "PDZ",
-    #   measure = measure,
-    #   type_of_data = type_of_data,
-    #   subtype_of_data = subtype_of_data,
-    #   protein_causality_function = get(paste0("protein_causality_", measure)),
-    #   alpha = alpha,
-    #   min_pos_var = min_pos_var, 
-    #   pc_solve_conflicts = FALSE,
-    #   # used when type_of_graph_set = "conflict"
-    #   pc_maj_rule_conflict = TRUE,
-    #   pc_conservative_conflict = FALSE,
-    #   use_scaled_effects_for_each_graph = FALSE,
-    #   scale_in_the_end = FALSE,
-    #   # results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
-    #   #                           pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
-    #   #                           graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
-    #   #                           data_in_results = TRUE, output_parameters_in_results = TRUE)
-    #   ida_percentile = 1 - (11 / dim(data)[2]), # top 11
-    #   # weight_effects_on_by = "",          # in der Summe ganz schlecht
-    #   # weight_effects_on_by = "var",
-    #   # weight_effects_on_by = "mean",
-    #   weight_effects_on_by = "median",  # sieht (in der Summe) am besten aus
-    #   scale_effects_on_so_372_equals_1 = TRUE,
-    #   # if dir == "on": only effects on
-    #   # if dir == "of": only effects of
-    #   # if dir == c("on", "of") or  dir == "both": both speparately
-    #   # if dir == "mean" : mean of effects on and of (first effects on are scaeld such that 372 has value 1)
-    #   # for best graphs, dir = "both" and dir = "mean" yield the same
-    #   direction = "mean",
-    #   # direction = "both",
-    #   # which part of the analysis should be plotted?
-    #   ## IDA für alle s Graphen berechen und summieren (besser wäre vllt: mitteln, also nochmal durch s teilen. Kannst du gerne machen, Marcel.)
-    #   plot = "over_all_graphs",
-    #   function_over_all_graphs = "mean",
-    #   ## IDA für alle s Graphen brechenen und denjenigen bestimmen, der am besten mit den gewünschten Ergebnissen übereinstimmt
-    #   # plot = "best graph"
-    #   ## für alle Graphen mit Nummern in <plot> die Abweichung von der Summe (dem zukünftigen Mittelwert) über alle Graphen bestimmen, 
-    #   ## also gewissermaßen wie repräsentativ der Graph jeweils für die Menge ist
-    #   # plot = 1:25     ## if (is.numeric(plot) && length(plot) > 1) --> deviation from mean for graph(s) nr. <plot>
-    #   # pc_function <- function(pc_solve_conflicts, pc_u2pd, pc_maj_rule, pc_conservative, evaluation, analysis) {
-    #   #   protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
-    #   #                       pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_maj_rule = pc_maj_rule, pc_conservative = pc_conservative,
-    #   #                       evaluation = evaluation, analysis = analysis)
-    #   # }
-    #   
-    #   # pc_function = function(pc_solve_conflicts, pc_u2pd, pc_maj_rule, pc_conservative, evaluation, analysis) {
-    #   #   protein_causality_function(min_pos_var = min_pos_var, alpha = alpha,
-    #   #                              pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_maj_rule = pc_maj_rule, pc_conservative = pc_conservative,
-    #   #                              evaluation = evaluation, analysis = analysis, mute_all_plots = for_combined_plot)
-    #   # },
-    #   # ida_function = function(results) {
-    #   #   causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
-    #   #                      protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
-    #   #                      amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
-    #   #                      pymol_bg_color = "grey", caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, 
-    #   #                      percentile = ida_percentile, mute_all_plots = for_combined_plot)
-    #   # },
-    #   s = 10,    # sample size
-    #   for_combined_plot = TRUE,
-    #   caption_as_subcaption = TRUE # for_combined_plot
-    # )
+        effects[[type_of_data]][[subtype_of_data_list]][[as.character(min_pos_var)]][[as.character(alpha)]] <-
+          analyse_set_of_graphs(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
+                                direction = "mean", measure = measure, pc_function = pc_function_, alpha = alpha, min_pos_var = min_pos_var,
+                                for_combined_plot = TRUE, scale_in_the_end = FALSE, new = FALSE, save = TRUE)
+        if (with_graphs) {
+          protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data, alpha = alpha, min_pos_var = min_pos_var, for_combined_plot = TRUE, pc_maj_rule = TRUE)
+        } 
+      }
+    }
   }
 }
 
 
-
+# effects_best_alphas <- effects_for_distinct_alphas(best_alphas_1)

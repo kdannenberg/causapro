@@ -1,14 +1,14 @@
 pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/") {
   if (missing(pdb_file)) {
-    pdb_file <- paste("..", "..", "", sep = file_separator)
+    pdb_file <- paste("..", "..", "..", "", sep = file_separator)
     if (protein == "GTB") {
-      # pdb_file <- "../../5bxc.pdb" 
+      # pdb_file <- "../../../5bxc.pdb" 
       pdb_file <- paste0(pdb_file, "5bxc.pdb")
     } else if (protein == "PDZ" || protein == "pdz") {
-      # pdb_file <- "../../1BE9.pdb"
+      # pdb_file <- "../../../1BE9.pdb"
       pdb_file <- paste0(pdb_file, "1BE9.pdb")
     } else if (protein == "p38g") {
-      # pdb_file <- "../../1cm8.pdb"
+      # pdb_file <- "../../../1cm8.pdb"
       pdb_file <- paste0(pdb_file, "1cm8.pdb")
       chain = "chain A"
     } else {

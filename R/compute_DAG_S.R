@@ -23,7 +23,7 @@ protein_causality_S <- function(
                                 # data parameters
                                 numerical = TRUE,
                                 protein = "PDZ",
-                                type_of_data = "DDS",
+                                type_of_data = "DS",
                                 subtype_of_data = "",
                                 data_set = "",
                                 position_numbering = "crystal",
@@ -113,7 +113,7 @@ protein_causality_S <- function(
 }
 
 
-results_S <- protein_causality_S(pc_maj_rule = TRUE, pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.08, min_pos_var = 0.001)
+# results_S <- protein_causality_S(pc_maj_rule = TRUE, pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.06, min_pos_var = 0.01, data_in_results = TRUE)
 # sink()
 # print(conflict_edges(results_S$pc@graph))
 
