@@ -161,8 +161,7 @@ protein_causality_G <- function(
 }
 
 # protein_causality_G(pc_maj_rule = TRUE)
-
-# results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "relaxed", pc_maj_rule = TRUE, pc_solve_confl = TRUE, analysis = FALSE)
+# results_G <- protein_causality_G(alpha = 0.1, pc_conservative = FALSE, pc_u2pd = "relaxed", pc_maj_rule = TRUE, pc_solve_confl = TRUE, analysis = FALSE)
 
 # TODO: warum geht das nur für effects of pos. 372
                                         # results_G <- protein_causality_G(pc_conservative = FALSE, pc_u2pd = "retry", pc_solve_confl = TRUE, analysis = TRUE)

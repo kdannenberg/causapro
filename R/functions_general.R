@@ -115,7 +115,7 @@ protein_causality <- function(
   # filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
   data <- read_data(data_description, only_cols = only_cols)
   data <- adjust_data(data = data, rank = ranked, min_var = min_pos_var) #mute = combined_plot)
-  type_of_data <- type_of_data_after_adjustment(type_of_data = type_of_data, rank = ranked, min_var = min_pos_var)
+  subtype_of_data <- subtype_of_data_after_adjustment(subtype_of_data = subtype_of_data, rank = ranked, min_var = min_pos_var)
   
   if (!is.numeric(ida_percentile)) {
     ida_percentile <- 1 - (as.numeric(ida_percentile) / dim(data)[2])
@@ -558,7 +558,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
                                  graph_layout = "dot", plot_as_subgraphs = plot_as_subgraphs, 
                                  plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console, 
                                  lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, graph_output_formats,
-                                 numerical, mute_all_plots = FALSE) {
+                                 numerical, mute_all_plots = FALSE, plot_no_isolated_nodes = FALSE) {
   print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
@@ -577,14 +577,26 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   }
   
   results <- list()
-  results$pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file, data = data)
+  
+  parameters_to_info_file(parameters_for_info_file, outpath)
+  
+  pc_func <- function_set_parameters(pc_fun, parameters = list(outpath = outpath))
+  loaded_object_ok_fun <- function(pc) {return(length(pc@graph@nodes) != dim(data)[2])}
+  results$pc <- compute_if_not_existent(filename = paste0(outpath, "-pc"), FUN = pc_func, obj_name = "pc", 
+                                        compute_anew = compute_pc_anew, loaded_object_ok_fun = loaded_object_ok_fun)
+  # results$pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file, data = data)
   
   # garbage <- graphics.off()
-  if (!mute_all_plots) {
-  plot_graph(graph = kernelize_graph(results$pc@graph), caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, 
-             coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
-             plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats)
+  # if (!mute_all_plots) {
+  if (plot_no_isolated_nodes) {
+    graph <- kernelize_graph(results$pc@graph)
+  } else {
+    graph <- results$pc@graph
   }
+  plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, 
+             coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
+             plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
+  # }
   
   return(results)
 } 
@@ -911,7 +923,7 @@ colors_for_nodes <- function(node_clusters, protein, coloring, colors, clusterin
 # TODO: call plot_graphs oder so
 plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", graph_layout = "dot", protein, 
                        position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE, 
-                       plot_only_subgraphs = NULL, subgraphs, numerical = TRUE, output_formats) {
+                       plot_only_subgraphs = NULL, subgraphs, numerical = TRUE, output_formats, mute_all_plots = FALSE) {
   if (numerical) {
     if (missing(coloring) || missing(colors)) {
       plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout, protein = protein, 
@@ -945,7 +957,7 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         #                     plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
         ## can not use missing here because those are not the parameters of this function
         node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
-        print(node_clustering)
+        # print(node_clustering)
         if (missing(subgraphs)) {
           if (plot_as_subgraphs_i || !is.null(plot_only_subgraphs)) {
             subgraphs <- subgraphs_from_node_clusters(node_clustering, graph, protein = protein)
@@ -965,7 +977,10 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         if (!is.null(coloring) && !(coloring == "")) {
             outpath <- paste(outpath, "_", graph_layout, "_colored-", coloring, sep = "")
         } 
-        plot_graph_new(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, outpath = outpath, caption = caption, plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
+        plot_graph_new(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, 
+                       graph_layout = graph_layout_i, outpath = outpath, caption = caption, 
+                       plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, 
+                       subgraphs = subgraphs, output_formats = output_formats, mute_all_plots = mute_all_plots)
       }
     }
   }
@@ -1036,11 +1051,15 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
   }
 }
 
+# TODO: call plot_graphs oder so
+
 ## instead of fixing/working on the above function I think it is easier to write a new plot function the way we need it and then integrate it into the program if necessary
 ## what to do about drawnode, if it would be missing it was previously computed through
 ## node_function_for_graph which, however needs coloring
 ## for now I assume that this has been already computed and is NOT missing
-plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="", plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL, output_formats = "pdf") {
+plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="", 
+                           plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL, 
+                           output_formats = "pdf", mute_all_plots = mute_all_plots) {
   
   nAttrs <- list()
   nAttrs$fillcolor <- fillcolor
@@ -1056,8 +1075,10 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
   }
   
   # this plots the graph with the given options
-  pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) 
-  plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
+  if (!mute_all_plots) {
+    pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) 
+    plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
+  }
 
   for (format in output_formats) {
     if (!nchar(outpath) == 0) {
@@ -1101,6 +1122,17 @@ get_eAttrs <- function(graph) {
   return(eAttrs$color)
 }
 
+# deprecated. Use 
+# 
+# parameters_to_info_file(parameters_for_info_file, outpath)
+# # pc_func <- function(outpath) {return(pc_fun(outpath))}
+# pc_func <- function_set_parameters(pc_fun, parameters = list(outpath = outpath))
+# loaded_object_ok_fun <- function(pc) {return(length(pc@graph@nodes) != dim(data)[2])}
+# compute_if_not_existent(filename = paste(outpath, "-pc.RData", sep = ""), FUN = pc_func, obj_name = "pc", 
+#                         compute_anew = compute_pc_anew, loaded_object_ok_fun = loaded_object_ok_fun)
+# 
+# instead of get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file, data = data).
+# 
 # Compute pc if necessary
 get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info, data) {
   parameters_to_info_file(parameters_for_info, outpath)

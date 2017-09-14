@@ -213,7 +213,10 @@ analyse_set_of_graphs <- function(
 determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function, s, new, save, outpath,
                                     pc_maj_rule_conflict, pc_conservative_conflict) {
   if (type_of_graph_set == "retry") {
-    if (new || !file.exists(file = paste0(outpath, "-pc-retry_results.RData")) || !file.exists(file = paste0(outpath, "-pc-retry_graphs.RData"))) {
+    if (new || (!file.exists(file = paste0(outpath, "-pc-retry_results.RData")) 
+            && !file.exists(file = paste0(get_old_outpath(outpath), "-pc-retry_results.RData")) )
+            || (!file.exists(file = paste0(outpath, "-pc-retry_graphs.RData"))
+            && !file.exists(file = paste0(get_old_outpath(outpath), "-pc-retry_graphs.RData")))) {
       ## all_graphs saved
       all_results <- list()
       all_graphs <- list()
@@ -250,11 +253,21 @@ determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function
         save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
       }
     } else {
-      load(file = paste0(outpath, "-pc-retry_graphs.RData"))
-      load(file = paste0(outpath, "-pc-retry_results.RData"))
+      if (file.exists(file = paste0(outpath, "-pc-retry_results.RData")) 
+          && !file.exists(file = paste0(outpath, "-pc-retry_graphs.RData"))) {
+        load(file = paste0(outpath, "-pc-retry_graphs.RData"))
+        load(file = paste0(outpath, "-pc-retry_results.RData"))
+      } else
+        load(file = paste0(get_old_outpath(outpath), "-pc-retry_graphs.RData"))
+        save(all_graphs, file = paste0(outpath, "-pc-retry_graphs.RData"))
+        load(file = paste0(get_old_outpath(outpath), "-pc-retry_results.RData"))
+        save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
     }
   } else if (type_of_graph_set == "conflict") {
-    if (new || !file.exists(file = paste0(outpath, "-all_confl_comb_results.RData")) || !file.exists(file = paste0(outpath, "-all_confl_comb_graphs.RData"))) {
+    if (new || (!file.exists(file = paste0(outpath, "-all_confl_comb_results.RData")) 
+                && !file.exists(file = paste0(get_old_outpath(outpath), "-all_confl_comb_results.RData")) )
+                || (!file.exists(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+                    && !file.exists(file = paste0(get_old_outpath(outpath), "-all_confl_comb_graphs.RData")) )) {
       results <- pc_function(pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", pc_maj_rule = pc_maj_rule_conflict, pc_conservative = pc_conservative_conflict, evaluation = FALSE, analysis = FALSE)
       # protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
       #                                             pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", 
@@ -271,7 +284,9 @@ determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function
         return(NULL)
         # stop("More than 15 conflict edges.")
       }
-      if (new || !file.exists(file = paste0(outpath, "-all_confl_comb_graphs.RData"))) {
+      if (new || (!file.exists(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+                  && !file.exists(file = paste0(get_old_outpath(outpath), "-all_confl_comb_graphs.RData")))) {
+        
         cat("Enumerating DAGs...")
         all_graphs <- enumerate_graphs(results$pc@graph) # in Zeile 1 berechnet
         cat(" Done. \n")
@@ -279,7 +294,15 @@ determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function
           save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
         }
       } else {
-        load(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+        if (file.exists(file = paste0(outpath, "-all_confl_comb_graphs.RData"))) {
+          load(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+        } else {
+          load(file = paste0(get_old_outpath(outpath), "-all_confl_comb_graphs.RData"))
+          if (save) {
+            save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+          }
+        }
+        
         # if (is.null(all_graphs)) {
         #   return(NULL)
         # }
@@ -294,8 +317,24 @@ determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function
         save(all_results, file = paste0(outpath, "-all_confl_comb_results.RData"))
       }
     } else {
-      load(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
-      load(file = paste0(outpath, "-all_confl_comb_results.RData"))
+      if (file.exists(file = paste0(outpath, "-all_confl_comb_graphs.RData"))) {
+        load(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+      } else {
+        load(file = paste0(get_old_outpath(outpath), "-all_confl_comb_graphs.RData"))
+        if (save) {
+          save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+        }
+      }
+      
+      if (file.exists(file = paste0(outpath, "-all_confl_comb_results.RData"))) {
+        load(file = paste0(outpath, "-all_confl_comb_results.RData"))
+      } else {
+        load(file = paste0(get_old_outpath(outpath), "-all_confl_comb_results.RData"))
+        if (save) {
+          save(all_graphs, file = paste0(outpath, "-all_confl_comb_results.RData"))
+        }
+      }
+      
     }
   }
   

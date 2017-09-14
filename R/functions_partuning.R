@@ -1,0 +1,219 @@
+
+analyse_edge_types_by_alpha <- function(edge_types, plot_labels_as_rows_and_cols = TRUE,
+                                        plot_logscale_alpha = FALSE,
+                                        ylim_for_plots = c(0,200), # or NULL
+                                        opt_alpha_double_weight_conflict = FALSE,
+                                        print = TRUE, plot = TRUE) {
+  best_alphas <- list()
+  
+  if (print) {
+    graphics.off()
+    if (plot_labels_as_rows_and_cols) {
+      # par(mfrow = c(length(measures) + 1, length(min_pos_vars) + 1))
+      par(mfcol = c(length(min_pos_vars) + 1, length(measures) + 1))
+    } else {
+      # par(mfrow = c(length(measures), length(min_pos_vars)))
+      par(mfcol = c(length(min_pos_vars), length(measures)))
+    }
+    # for (measure_type_sub in c(# "DDS", 
+    #   "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")) {
+    
+    # plot row labels
+    if (plot_labels_as_rows_and_cols) {
+      plot.new()
+      legend('center', legend = c(names(edge_types[[1]][[1]][[1]][[1]]), "sum"), col = c('red','green','orange', 'black'), lty = c(1,1,1,1), lwd = 1 )
+      for (min_pos_var in min_pos_vars) {
+        plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+        text(x = 0.5, y = 0.5, paste("min_pos_var \n=", min_pos_var), 
+             cex = 1.6, col = "black")
+      }
+    }
+  }
+  
+  for (measure_type_sub in measures) {
+    # measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
+    type_of_data = strsplit(measure_type_sub, "-")[[1]][1]
+    if (grepl("-", measure_type_sub)) {
+      subtype_of_data = strsplit(measure_type_sub, "-")[[1]][2]
+    } else {
+      subtype_of_data = "-"
+    }
+    best_alphas[[measure_type_sub]] <- list()
+    if (plot) {
+      # plot row labels
+      if (plot_labels_as_rows_and_cols) {
+        plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+        text(x = 0.5, y = 0.5, measure_type_sub, 
+             cex = 1.6, col = "black")
+      }
+    }
+    
+    for (min_pos_var in min_pos_vars) {
+      print(paste(measure_type_sub, " - min_pos_var =", min_pos_var))
+      edge_types_by_alpha <- matrix(unlist(edge_types[[type_of_data]][[subtype_of_data]][[as.character(min_pos_var)]]), ncol = 3, byrow = TRUE)
+      
+      rownames(edge_types_by_alpha) <- names(edge_types[[type_of_data]][[subtype_of_data]][[as.character(min_pos_var)]])
+      colnames(edge_types_by_alpha) <- names(edge_types[[type_of_data]][[subtype_of_data]][[as.character(min_pos_var)]][[1]])
+      
+      sum_of_edges <- apply(edge_types_by_alpha, 1, sum)
+      edge_types_by_alpha <- cbind(edge_types_by_alpha, sum = sum_of_edges)
+      if (opt_alpha_double_weight_conflict) {
+        conflict_edge_weight <- 2
+      } else {
+        conflict_edge_weight <- 1
+      }
+      quality <- apply(edge_types_by_alpha, 1, quality_of_edge_distribution, weight_of_conflict_edges = conflict_edge_weight)
+      best_alpha <- as.numeric(names(quality)[which(quality == max(quality))])
+      best_alphas[[measure_type_sub]][[as.character(min_pos_var)]] <- best_alpha
+      print(paste("Best alpha, according to quality:", best_alpha))
+      
+      if (print) {
+        print(cbind(edge_types_by_alpha, quality = quality))
+        cat("\n")
+      }
+      
+      if (plot) {
+        if (plot_logscale_alpha) {
+          log <- "x"
+        } else { 
+          log <- ""
+        }
+        
+        n_nodes <- numbers_of_nodes[[type_of_data]][[subtype_of_data]][[as.character(min_pos_var)]]
+        n_edges <- 1/2 * n_nodes * (n_nodes - 1)
+        if (length(ylim_for_plots) == 1) {
+          current_ylim_for_plots <- c(0, n_edges / ylim_for_plots)
+        } else {
+          current_ylim_for_plots <- ylim_for_plots
+        }
+        
+        matplot(edge_types_by_alpha, x = rownames(edge_types_by_alpha), xlab = "alpha", ylab = "# edges",
+                type = "l", lty = c(1,1,1,1), col = c('red','green','orange', 'black'), ylim = current_ylim_for_plots, log = log)
+        abline(h = 15, col = "red", lty = 2)
+        # abline(h = n_edges, col = "black", lty = 1)
+        abline(v = 0.01, col = "black", lty = 2)
+        abline(v = best_alpha, col = "black", lty = 1)
+        axis(1, at = best_alpha, labels = best_alpha, mgp = c(10, 2, 0))
+        if (!plot_labels_as_rows_and_cols) {
+          legend('top', legend = colnames(edge_types_by_alpha), col = c('red','green','orange', 'black'), lty = c(1,1,1,1), lwd = 1 )
+          caption <- paste0(measure_type_sub, ", min_pos_var = ", min_pos_var)
+          title(caption)
+        }
+      }
+    }
+  }
+  return(best_alphas)
+}
+
+find_best_alphas <- function(all_scores) {
+  result <- list()
+  for (measure_type_sub in names(all_scores)) {
+    # measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
+    # type_of_data = strsplit(measure_type_sub, "-")[[1]][1]
+    # if (grepl("-", measure_type_sub)) {
+    #   subtype_of_data_list <- subtype_of_data <- strsplit(measure_type_sub, "-")[[1]][2]
+    # } else {
+    #   subtype_of_data <- ""
+    #   subtype_of_data_list <- "-"
+    # }
+    result[[measure_type_sub]] <- list()
+    for (min_pos_var in as.numeric(names(all_scores[[measure_type_sub]][[1]]))) {
+      values <- list()
+      for (alpha in as.numeric(names(all_scores[[measure_type_sub]]))) {
+        values[[as.character(alpha)]] <- all_scores[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]]
+      }
+      result[[measure_type_sub]][[as.character(min_pos_var)]] <- names(which(unlist(values) == max(unlist(values))))
+    }
+  }
+  return(result)
+}
+
+
+# distinct_alphas is a list containing for each measure a list (or vector) with a value alpha for each min_pos_var.
+# For all measures in names(distinct_alphas) and all min_pos_vars in names(distinct_alphas$<measure>), the corresponding alpha is chosen, effects computed
+# and displayed in grid
+# if measures / min_pos_vars are given, only those are used (but need to be existent in distinct_alphas)
+effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, for_all_alphas = FALSE,
+                                        measures, min_pos_vars) {
+  effects <- list()
+  
+  if (with_graphs) {
+    if (missing(min_pos_vars)) {
+      lines_of_plot <- length(names(distinct_alphas[[1]]))
+    } else {
+      lines_of_plot <- 2 * length(min_pos_vars)
+    }
+  } else {
+    if (missing(min_pos_vars)) {
+      lines_of_plot <- length(names(distinct_alphas[[1]]))
+    } else {
+      lines_of_plot <- length(min_pos_vars)
+    }
+  }
+  if (for_all_alphas) {
+    cols_of_plot = 5  # just sth
+  } else {
+    if (missing(measures)) {
+      cols_of_plot <- length(names(distinct_alphas))
+    }  else {
+      cols_of_plot <- length(measures)
+    }
+  }
+  
+  par(mfcol = c(lines_of_plot, cols_of_plot))
+  
+  
+  if (missing(measures)) {
+    measures <- names(distinct_alphas)
+  }
+  for (measure_type_sub in measures) {
+    measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
+    type_of_data = strsplit(measure_type_sub, "-")[[1]][1]
+    if (grepl("-", measure_type_sub)) {
+      subtype_of_data_list <- subtype_of_data <- strsplit(measure_type_sub, "-")[[1]][2]
+    } else {
+      subtype_of_data <- ""
+      subtype_of_data_list <- "-"
+    }
+    
+    if (missing(min_pos_vars)) {
+      min_pos_vars <- as.numeric(names(distinct_alphas[[measure_type_sub]]))
+    }
+    for (min_pos_var in min_pos_vars) {
+      if (!for_all_alphas && length(alpha) > 1) {
+        # alpha <- alpha[1]
+        alpha <- alpha[length(alpha)] 
+      }
+      alphas <- distinct_alphas[[measure_type_sub]][[as.character(min_pos_var)]]
+      for (alpha in alphas) {
+        
+        protein_causality_function = get(paste0("protein_causality_", measure))
+        
+        pc_function_ <- function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
+                                                                                              mute_all_plots = TRUE,
+                                                                                              alpha = alpha, min_pos_var = min_pos_var))
+        
+        effects[[type_of_data]][[subtype_of_data_list]][[as.character(min_pos_var)]][[as.character(alpha)]] <-
+          analyse_set_of_graphs(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
+                                direction = "mean", measure = measure, pc_function = pc_function_, alpha = alpha, min_pos_var = min_pos_var,
+                                for_combined_plot = TRUE, scale_in_the_end = FALSE, new = FALSE, save = TRUE)
+        if (with_graphs) {
+          protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data, alpha = alpha, min_pos_var = min_pos_var, for_combined_plot = TRUE, pc_maj_rule = TRUE)
+        } 
+      }
+    }
+  }
+}
+
+
+
+
+# QUALITY MEASURES
+quality_of_edge_distribution <- function(edge_types, weight_of_conflict_edges = 1) {
+  if (edge_types["conflict"] > 15) {
+    return(0)                 # infeasible
+  } else {
+    return(edge_types["directed"]/(edge_types["undirected"] + weight_of_conflict_edges * edge_types["conflict"]))
+  }
+}
+

@@ -23,7 +23,7 @@ protein_causality_S <- function(
                                 # data parameters
                                 numerical = TRUE,
                                 protein = "PDZ",
-                                type_of_data = "DS",
+                                type_of_data = "DDS",
                                 subtype_of_data = "",
                                 data_set = "",
                                 position_numbering = "crystal",
@@ -112,8 +112,11 @@ protein_causality_S <- function(
  
 }
 
+# debug(compute_if_not_existent)
+results_S <- protein_causality_S(pc_maj_rule = TRUE, pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.05, min_pos_var = 1e-4, data_in_results = TRUE)
 
-# results_S <- protein_causality_S(pc_maj_rule = TRUE, pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.06, min_pos_var = 0.01, data_in_results = TRUE)
+# Sieht super aus, aber min_pos_var auch unanständig hoch
+# results_S <- protein_causality_S(pc_maj_rule = TRUE, pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.1, min_pos_var = 0.06, data_in_results = TRUE)
 # sink()
 # print(conflict_edges(results_S$pc@graph))
 

@@ -97,33 +97,42 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   return(data)
 }
 
-type_of_data_after_adjustment <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, remove_low_variance = FALSE,
+
+subtype_of_data_after_adjustment <- function(data, subtype_of_data, rank = FALSE, rank_obs_per_pos = FALSE, remove_low_variance = FALSE,
                                           zero_var_fct, min_var = 0.01) {
   if (rank) {
     if (!rank_obs_per_pos) {
-        type_of_data <- paste(type_of_data, "ranked", sep = "-")
+        subtype_of_data <- paste(subtype_of_data, "ranked", sep = "-")
         # type_of_data <- paste(type_of_data, "ranked-pos-per-obs", sep = "-")
     } else {
-        type_of_data <- paste(type_of_data, "ranked-obs-per-pos", sep = "-")
+        subtype_of_data <- paste(subtype_of_data, "ranked-obs-per-pos", sep = "-")
     }
   }
   
   # TODO: statistical test for zero variance
-    if (!typeof(min_var) == "closure") {
-      if (min_var > 0) {
-        type_of_data <- paste0(type_of_data, "-var>", min_var)
-      }
-    } else {
-      type_of_data <- paste(type_of_data, "var>fct", sep = "-")
+  if (subtype_of_data == "") {
+    delimiter = ""
+  } else {
+    delimiter = "-"
+  }
+  if (!typeof(min_var) == "closure") {
+    if (min_var > 0) {
+      subtype_of_data <- paste0(subtype_of_data, delimiter, "var>", min_var)
     }
+  } else {
+    subtype_of_data <- paste(subtype_of_data, delimiter, "var>fct", sep = "-")
+  }
   
-  return(type_of_data)
+  
+  
+  return(subtype_of_data)
 }
 
 
 
-get_outpath <- function(protein, type_of_data, subtype_of_data, data_set, suffix, alpha, min_pos_var, only_cols_label, 
-                        pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/") {
+get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "", alpha, min_pos_var, only_cols_label, 
+                        pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/", 
+                        filename_suffix, main_dir = "Outputs") {   ## last two options: only for get_old_outpath
   dir_1 <- protein
   dir_2 <- type_of_data
   # if (subtype_of_data != "")
@@ -132,6 +141,7 @@ get_outpath <- function(protein, type_of_data, subtype_of_data, data_set, suffix
   #   dir_3 <- type_of_data
   # }
   dir_3 <- pastes(type_of_data, paste(subtype_of_data, collapse = "+"), data_set, sep = "-")
+  
   dir_4 <- paste0(get_data_description(protein = protein, type_of_data = type_of_data, 
                                        subtype_of_data = paste(subtype_of_data, collapse = "+"), 
                                        data_set = data_set, suffix = suffix), "_alpha=", alpha)
@@ -139,25 +149,30 @@ get_outpath <- function(protein, type_of_data, subtype_of_data, data_set, suffix
   # if (min_pos_var > 0) {
   #   dir_4 <- paste0(dir_min_pos_var, "_mv=", min_pos_var)
   # }
+ 
   
-  output_dir <- paste("Outputs", dir_1, dir_2, dir_3, dir_4, sep = file_separator) 
+  output_dir <- paste(main_dir, dir_1, dir_2, dir_3, dir_4, sep = file_separator) 
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
   }
   
   filename <- dir_4
   
-  if (pc_solve_conflicts) {
-    filename <- paste0(filename, "_sc")
-  } 
-  if (pc_conservative) {
-    filename <- paste0(filename, "_cons")
-  }
-  if (pc_maj_rule) {
-    filename <- paste0(filename, "_maj")
-  }
-  if (!(pc_solve_conflicts || pc_conservative)) {
-    filename <- paste(filename, substr(pc_u2pd, 1, 3), sep = "_")
+  if (!missing(filename_suffix)) {
+    filename <- paste0(filename, filename_suffix)
+  } else {
+    if (pc_solve_conflicts) {
+      filename <- paste0(filename, "_sc")
+    } 
+    if (pc_conservative) {
+      filename <- paste0(filename, "_cons")
+    }
+    if (pc_maj_rule) {
+      filename <- paste0(filename, "_maj")
+    }
+    if (!(pc_solve_conflicts || pc_conservative)) {
+      filename <- paste(filename, substr(pc_u2pd, 1, 3), sep = "_")
+    }
   }
   
   
@@ -165,25 +180,87 @@ get_outpath <- function(protein, type_of_data, subtype_of_data, data_set, suffix
   return(paste(output_dir, filename, sep = file_separator))
 }
 
-
-
-
-compute_if_not_existent <- function(filename, FUN) {
-  if (file.exists(paste(filename, ".RData", sep = ""))) {
-    filename <- paste(filename, ".RData", sep = "")
-    load(filename)
-    if (!exists("data")) {
-      print("The file did not contain an object of name 'data'!")
+get_old_outpath <- function(outpath) {
+  print(outpath)
+  
+  dirs <- str_split(outpath, "/", simplify = TRUE)
+    
+  protein <- dirs[2]
+  type_of_data <- dirs[3]
+  extension <- sub(type_of_data, "", dirs[4])
+  if (is.null(extension) || extension == "NULL") {
+    subtype_of_data <- ""
+  } else {
+    extension <- substr(extension, 2, nchar(extension))
+    if (grepl(pattern = "-", extension)) {
+      subtype_of_data <- str_split(extension, "-", simplify = TRUE)[1]
     } else {
-      print(paste("Data loaded from ", filename, ".", sep = ""))
+      subtype_of_data <- ""
+    }
+    rest_of_extension <- sub(subtype_of_data, "", extension)
+    if (substr(rest_of_extension, 1, 1) == "-") {
+      rest_of_extension <- substr(rest_of_extension, 2, nchar(extension))
+    }
+    type_of_data <- pastes(type_of_data, rest_of_extension, sep = "-")
+  }
+  
+  start_of_alpha <- gregexpr(pattern ='alpha', outpath)[[1]][1]
+  end_that_starts_with_first_alpha <- substr(outpath, start_of_alpha + 6, nchar(outpath))
+  first_slash <- gregexpr(pattern ='/', end_that_starts_with_first_alpha)[[1]][1]
+  alpha <- substr(end_that_starts_with_first_alpha, 1, first_slash - 1)
+  # rest_of_extension <- str_replace(extension, ", "")
+  
+  filename <- dirs[length(dirs)]
+  start_of_suffix <- gregexpr(pattern ='alpha', filename)[[1]][1] + 6 + nchar(alpha)
+  filename_suffix <- substr(filename, start_of_suffix, nchar(filename)) 
+  
+  old_outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, alpha = alpha,
+                             filename_suffix = filename_suffix, main_dir = "Outputs_2017-09-14")
+  # old_outpath <- paste(old_outpath, paste(dirs[c(5,6)], collapse = "/"), sep = "/")
+  
+  return(old_outpath)
+}
+
+
+compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_anew = FALSE, 
+                                    loaded_object_ok_fun = function(obj) return(TRUE), 
+                                    try_old_outpath = TRUE) {
+  filename <- paste(filename, ".RData", sep = "")
+  if (file.exists(filename) && !compute_anew) {
+    # rm(list = ls()[which(ls() == obj_name)])
+    load(filename)
+    if (!exists(obj_name)) {
+      warning(paste("The file did not contain an object of name", obj_name, "!"))
+    } else if (loaded_object_ok_fun(get(obj_name))) {
+      warning("The loaded object did not fit!")
+    } else {
+      print(paste(obj_name, " object loaded from ", filename, ".", sep = ""))
+      return(get(obj_name))
     }
   } else {
-    print("Computing data.")
-    data <- FUN()
-    save(data, file = paste(filename, ".RData", sep = ""))
-    print("Data computed and saved.")
-  }
-  return(data)
+    # if (!missing(old_outpath)) {
+    old_outpath <- get_old_outpath(filename)
+    if (try_old_outpath && file.exists(old_outpath) && !compute_anew) {
+      # rm(list = ls()[which(ls() == obj_name)])
+      load(old_outpath)
+      if (!exists(obj_name)) {
+        warning(paste("The file did not contain an object of name", obj_name, "!"))
+      } else if (loaded_object_ok_fun(get(obj_name))) {
+        warning("The loaded object did not fit!")
+      } else {
+        print(paste("Old ", obj_name, " object loaded from ", old_outpath, ".", sep = ""))
+        save(list = obj_name, file = filename) # Objekt an neuem Ort speichern
+        return(get(obj_name))
+      }
+    }
+    # }
+  } # else {
+  print(paste("Computing", obj_name, "object."))
+  assign(obj_name, FUN())
+  save(list = obj_name, file = filename)
+  print(paste(obj_name, "object computed and saved."))
+  # }
+  return(get(obj_name))
 }
 
 readAlignment <- function(filename) {

@@ -93,6 +93,9 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
   connected_components <- connComp(graph)
   real_ones_ind <- which(sapply(connected_components, function(x) length(x) > 1))
   connected_components <- connected_components[real_ones_ind]
+  if (length(connected_components) == 0) {
+    return(NULL)
+  }
   if (only_int_pos) {
     int_pos_flat <- interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = FALSE)
     connected_components <- lapply(connected_components, function(positions) return(

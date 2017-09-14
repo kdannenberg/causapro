@@ -1,13 +1,13 @@
 new = FALSE
 
 # get all_effects
-if (!exists("all_effects")) {
+# if (!exists("all_effects")) {
   if (!new) {
     load(file = "RData/all_effects.RData")
   } else {
     source('~/Documents/Uni/Viren/ProteinCausalPaths/R/analysis_for_a_set_of_graphs.R')
   }
-}
+# }
 
 int_pos <- interesting_positions("PDZ")
 percentile = 1 - (length(int_pos) / dim(data)[2])
