@@ -2,8 +2,8 @@ source("~/.configuration_code.R")
 
 source_all_function_scripts()
 
-source("compute_DAG_G.R")
-source("compute_DAG_S.R")
+# source("compute_DAG_G.R")
+# source("compute_DAG_S.R")
 
 source("configuration_data.R")
 

@@ -127,8 +127,17 @@ analyse_set_of_graphs <- function(
                                            s = s, new = new, save = save, outpath = outpath,
                                            pc_maj_rule_conflict = pc_maj_rule_conflict, pc_conservative_conflict = pc_conservative_conflict)
   if (is.null(set_of_graphs)) {
+    
+    if (caption_as_subcaption) {
+      caption = caption
+      # main_caption = NULL  # soll missing sein
+    } else {
+      # main_caption = caption
+      caption = NULL
+    }
+    
     if (for_combined_plot) {
-      plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+      plot(c(0, 1), c(0, 1), xlab = "", ylab = "", bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n', main = caption)
       text(x = 0.5, y = 0.5, "infeasible", 
            cex = 1.6, col = "black")
     }
@@ -265,29 +274,29 @@ determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function
         load(file = paste0(get_old_outpath(outpath), "-pc-retry_results.RData"))
         save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
     }
+    # TODO: rename: -rel_conflict_graph_set
   } else if (type_of_graph_set == "conflict") {
     if (new || (!file.exists(file = paste0(outpath, "-all_confl_comb_results.RData")) 
                 && !file.exists(file = paste0(get_old_outpath(outpath), "-all_confl_comb_results.RData")) )
                 || (!file.exists(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
                     && !file.exists(file = paste0(get_old_outpath(outpath), "-all_confl_comb_graphs.RData")) )) {
-      results <- pc_function(pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", pc_maj_rule = pc_maj_rule_conflict, pc_conservative = pc_conservative_conflict, evaluation = FALSE, analysis = FALSE)
-      # protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
-      #                                             pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", 
-      #                                             pc_maj_rule = pc_maj_rule, pc_conservative = pc_conservative,
-      #                                             evaluation = FALSE, analysis = FALSE)
-      edges <- conflict_edges(results$pc@graph)
-      print(edges)
       
-      # Sys.sleep(2)
-      
-      if (edges$conflict >= 15) {
-        # all_graphs = NULL
-        # save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
-        return(NULL)
-        # stop("More than 15 conflict edges.")
-      }
       if (new || (!file.exists(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
                   && !file.exists(file = paste0(get_old_outpath(outpath), "-all_confl_comb_graphs.RData")))) {
+        
+        results <- pc_function(pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", pc_maj_rule = pc_maj_rule_conflict, pc_conservative = pc_conservative_conflict, evaluation = FALSE, analysis = FALSE)
+        
+        edges <- conflict_edges(results$pc@graph)
+        print(edges)
+        
+        # Sys.sleep(2)
+        
+        if (edges$conflict >= 15) {
+          all_graphs = NULL
+          save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+          return(NULL)
+          # stop("More than 15 conflict edges.")
+        }
         
         cat("Enumerating DAGs...")
         all_graphs <- enumerate_graphs(results$pc@graph) # in Zeile 1 berechnet
@@ -305,9 +314,9 @@ determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function
           }
         }
         
-        # if (is.null(all_graphs)) {
-        #   return(NULL)
-        # }
+        if (is.null(all_graphs)) {
+          return(NULL)
+        }
       }
       # all_results <- pblapply(all_graphs, graph_to_results, ida_function = ida_function)   ## schneller (?) # library("pbapply")
       all_results <- list()

@@ -3,10 +3,7 @@
 # next: partuning_alpha_by_mean_effects
 source("~/.configuration_code.R")
 
-source("functions_causal_effects.R")
-source("functions_general.R")
-source("functions_conversions.R")
-source("functions_tools.R")
+source_all_function_scripts()
 
 source("functions_analysis_for_a_set_of_graphs.R")
 # source("functions_protein_causality.R")
@@ -14,19 +11,18 @@ source("functions_analysis_for_a_set_of_graphs.R")
 # tests
 source("tests_analysis_for_a_set_of_graphs.R")
 
-source("compute_DAG_G.R")
-source("compute_DAG_S.R")
+# source("compute_DAG_G.R")
+# source("compute_DAG_S.R")
 
 source("configuration_data.R")
 
-# debug(plot_connected_components_in_pymol)
-
+debug(determine_set_of_graphs)
 
 # measures <- c("DDS", "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")
 measures <- c("DDS")
-alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
+# alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
 # alphas = c(0.001, 0.01, 0.05, 0.1)
-# alphas <- c(1e-20, 1e-10)
+alphas <- c(0.08)
 min_pos_vars = c(0.0001, 0.001, 0.01)
 
 # measures <- c("DDG-5")
