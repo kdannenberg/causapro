@@ -1,8 +1,9 @@
+library(stringr) # for str_sub
 
 analyse_edge_types_by_alpha <- function(edge_types, plot_labels_as_rows_and_cols = TRUE,
                                         plot_logscale_alpha = FALSE,
                                         ylim_for_plots = c(0,200), # or NULL
-                                        opt_alpha_double_weight_conflict = FALSE,
+                                        conflict_edge_weight = 1,
                                         print = TRUE, plot = TRUE) {
   best_alphas <- list()
   
@@ -57,11 +58,6 @@ analyse_edge_types_by_alpha <- function(edge_types, plot_labels_as_rows_and_cols
       
       sum_of_edges <- apply(edge_types_by_alpha, 1, sum)
       edge_types_by_alpha <- cbind(edge_types_by_alpha, sum = sum_of_edges)
-      if (opt_alpha_double_weight_conflict) {
-        conflict_edge_weight <- 2
-      } else {
-        conflict_edge_weight <- 1
-      }
       quality <- apply(edge_types_by_alpha, 1, quality_of_edge_distribution, weight_of_conflict_edges = conflict_edge_weight)
       best_alpha <- as.numeric(names(quality)[which(quality == max(quality))])
       best_alphas[[measure_type_sub]][[as.character(min_pos_var)]] <- best_alpha
@@ -205,10 +201,134 @@ effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, fo
   }
 }
 
+# which_effects gives the slot of the list of effects (e.g. )
+apply_to_all_effects_in_nested_list <- function(all_effects, FUN, which_effects = "overAllGraphs_mean_on_of") {
+  result <- list()
+  for (measure_type_sub in names(all_effects)) {
+    # measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
+    # type_of_data = strsplit(measure_type_sub, "-")[[1]][1]
+    # if (grepl("-", measure_type_sub)) {
+    #   subtype_of_data_list <- subtype_of_data <- strsplit(measure_type_sub, "-")[[1]][2]
+    # } else {
+    #   subtype_of_data <- ""
+    #   subtype_of_data_list <- "-"
+    # }
+    result[[measure_type_sub]] <- list()
+    for (alpha in as.numeric(names(all_effects[[measure_type_sub]]))) {
+      result[[measure_type_sub]][[as.character(alpha)]] <- list()
+      for (min_pos_var in as.numeric(names(all_effects[[measure_type_sub]][[as.character(alpha)]]))) {
+        if (!is.null(all_effects[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]][[which_effects]])) {
+          result[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]] <- 
+            FUN(effects = all_effects[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]][[which_effects]])
+        }
+      }
+      if (length(result[[measure_type_sub]][[as.character(alpha)]]) == 0) {
+        result[[measure_type_sub]][[as.character(alpha)]] <- NULL
+      }
+    }
+  }
+  return(result)
+}
+
+# TODO: sicherstellen, dass oma nur gesetzt wird, wenn auch eine main_caption (title) geprintet wird
+
+analyse_graphs_for_alphas_and_minposvars <- function(measure = "S", type_of_data = "DDS", subtype_of_data = "", 
+                                                     alphas = c(0.001, 0.005, 0.01, 0.05, 0.1), min_pos_vars = c(0.0001, 0.001, 0.01),
+                                                     protein_causality_function = get(paste0("protein_causality_", measure)),
+                                                     # TODO: DAS FUNKTIONIERT NICHT!! DIE PARAMETER, DIE NCIHT ÜBERGEBEN WERDEN, WERDEN NCIHT JETZT SCHON BELEGT!
+                                                     # ALLES WIRD ERST BEI AUFRUF AUSGEWERTET
+                                                     # pc_function = function(pc_solve_conflicts, pc_u2pd, pc_maj_rule, pc_conservative, evaluation, analysis) {
+                                                     #   protein_causality_function(type_of_data = eval(type_of_data), subtype_of_data = eval(subtype_of_data), min_pos_var = min_pos_var, alpha = alpha,
+                                                     #                              pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_maj_rule = pc_maj_rule, pc_conservative = pc_conservative,
+                                                     #                              evaluation = evaluation, analysis = analysis, mute_all_plots = TRUE)
+                                                     # pc_function = f_protein_causality_pc_parameters_eval_analysis(measure = measure, type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+                                                     #### min_pos_var = min_pos_var, alpha = alpha, 
+                                                     # mute_all_plots = TRUE)
+                                                     pc_function = function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+                                                                                                                                         mute_all_plots = TRUE))
+) {
+  
+  # if (missing(pc_function)) {
+  #   pc_function <- function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+  #                                                                         mute_all_plots = TRUE))
+  # }
+  
+  effects <- list()
+  
+  graphics.off()
+  oma <- c( 2, 0, 2, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
+  if (length(alphas) <= 4) {
+    par(mfrow = c(length(alphas), length(min_pos_vars)), oma = oma)
+  } else {
+    par(mfrow = c(4, length(min_pos_vars)), oma = oma)
+  }
+  
+  for (alpha in alphas) {
+    effects[[as.character(alpha)]] <- list()
+    for (min_pos_var in min_pos_vars) {
+      # for (measure in c("G", "S")) {
+      # if (
+      #     (
+      #       (type_of_data == "DDDG" && subtype_of_data == "5") &&
+      #       ((alpha == 0.05 && min_pos_var == 0.001) #||  # More than 15 conflict edges. (22)
+      #       || (alpha == 0.1 && min_pos_var == 0.001)  # More than 15 conflict edges.
+      #       || (alpha == 0.05 && min_pos_var == 0.0001) # More than 15 conflict edges.
+      #       || (alpha == 0.1 && min_pos_var == 0.0001) # More than 15 conflict edges.
+      #       )
+      #      # ) || (
+      #      #   (type_of_data == "DDDG" && subtype_of_data == "10") &&
+      #      #   (
+      #      #   (alpha == 0.005 && min_pos_var == 0.001) ##  "Fehler in wgt.unique[x, ] : Indizierung außerhalb der Grenzen"
+      #      #   # || (alpha == 0.05 && min_pos_var == 0.0001)
+      #      #   # || (alpha == 0.1 && min_pos_var == 0.0001)
+      #      #   )
+      #      ) || (
+      #        (type_of_data == "DDG" && subtype_of_data == "10") &&
+      #        (
+      #          (alpha == 0.1 && min_pos_var == 0.0001) ##  15 conflict edges
+      #          || (alpha == 0.1 && min_pos_var == 0.001) ##  13 conflict edges
+      #        )
+      #      ) || (
+      #        (measure == "S") &&
+      #        (alpha == 0.1 && min_pos_var == 0.0001)
+      #      ) || (
+      #        (type_of_data == "DDG" && subtype_of_data == "5") &&
+      #        (
+      #          (alpha == 0.05 && min_pos_var == 0.0001) #  More than 15 conflict edges. (20)
+      #       || (alpha == 0.05 && min_pos_var == 0.001) #  More than 15 conflict edges. (20)
+      #       || (alpha == 0.05 && min_pos_var == 0.01) #  More than 15 conflict edges. (18)
+      #       || (alpha == 0.1 && min_pos_var == 0.0001) #  More than 15 conflict edges. (20)
+      #       || (alpha == 0.1 && min_pos_var == 0.001) #  More than 15 conflict edges. (20)
+      #       || (alpha == 0.1 && min_pos_var == 0.01) #  More than 15 conflict edges. (21)
+      #        )
+      #      )
+      #     ) {
+      #   plot.new()
+      # } else {
+      cat("\n")
+      cat(paste0("alpha = ", alpha, ", min_pos_var = ", min_pos_var, "\n"))
+      pc_function_ <- function_set_parameters(pc_function, parameters = list(alpha = alpha, min_pos_var = min_pos_var))
+      effects[[as.character(alpha)]][[as.character(min_pos_var)]] <- analyse_set_of_graphs(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+                                                                                           direction = "mean", measure = measure, pc_function = pc_function_, alpha = alpha, min_pos_var = min_pos_var,
+                                                                                           for_combined_plot = TRUE, scale_in_the_end = FALSE, new = FALSE, save = TRUE)
+      
+      # }
+      # }
+    }
+  }
+  
+  # title(main = paste0(type_of_data, "-", subtype_of_data),
+  #       sub = "Mean causal effects over all conflict graphs and over the effects on and of position 372", outer = TRUE)
+  title(main = paste0("Mean causal effects over all conflict graphs and over the effects on and of position 372",
+                      "\n", type_of_data, "-", subtype_of_data), outer = TRUE)
+  return(effects)
+}
+
 
 
 
 # QUALITY MEASURES
+# BY EDGES
 quality_of_edge_distribution <- function(edge_types, weight_of_conflict_edges = 1) {
   if (edge_types["conflict"] > 15) {
     return(0)                 # infeasible
@@ -217,3 +337,127 @@ quality_of_edge_distribution <- function(edge_types, weight_of_conflict_edges = 
   }
 }
 
+# BY EFFECTS
+quality_of_effects_classifier <- function(effects, int_pos, percentile = 1 - (length(int_pos) / length(effects)), perturbed_position) {
+  most_influenced_pos <- get_most_influenced_positions(effects, percentile = percentile)
+  most_influenced_pos_interesting <- intersect(int_pos, most_influenced_pos)
+  fp = setdiff(most_influenced_pos, most_influenced_pos_interesting)
+  fn = setdiff(int_pos, most_influenced_pos_interesting)
+  if (length(fp) != length(fn)) {
+    warning("Not as many false positives as false neagtives in quality_of_effects_classifier.")
+  }
+  return((mean(length(fp), length(fn))) / length(setdiff(int_pos, perturbed_position)))
+}
+
+score_for_effects <- function(effects, int_pos, perturbed_position = 372, effect_quality_height, false_pos_neg, 
+                              percentile = 1 - (length(int_pos) / length(effects))) {
+  if (missing(effect_quality_height)) {
+    effect_quality_height <- quality_of_effects_distibution(effects = effects, int_pos = int_pos, perturbed_position = perturbed_position)
+  }
+  if (missing(false_pos_neg)) {
+    quality_of_effects_classifier <- quality_of_effects_classifier(effects, int_pos, percentile, perturbed_position)
+  } else {
+    quality_of_effects_classifier <- false_pos_neg / length(setdiff(int_pos, perturbed_position))
+  }
+  
+  return(score_of_effects_height(effect_quality_height) + score_of_effects_classifier(quality_of_effects_classifier))
+}
+
+# give either effect_quality_height directly, or effects, int_pos and perturbed_position,
+# so it can be computed internally
+# previously: quality_score 
+score_of_effects_height <- function(effect_quality_height, effects, int_pos, perturbed_position, range_to_six = FALSE) {
+  if (missing(effect_quality_height)) {
+    effect_quality_height <- quality_of_effects_distibution(effects = effects, int_pos = int_pos, perturbed_position = perturbed_position)
+  }
+  if (!range_to_six) {
+    if (effect_quality_height < 0.5) {
+      return(0)
+    } else if (effect_quality_height < 1) {
+      return(1)
+    } else if (effect_quality_height < 1.5) {
+      return(2)
+    } else if (effect_quality_height < 2) {
+      return(3)
+    } else if (effect_quality_height < 2.5) {
+      return(4)
+    } else if (effect_quality_height < 3) {
+      return(5)
+    } else {
+      return(6)
+    }
+  } else {
+    if (effect_quality_height < 1) {
+      return(0)
+    } else if (effect_quality_height < 2) {
+      return(1)
+    } else if (effect_quality_height < 3) {
+      return(2)
+    } else if (effect_quality_height < 4) {
+      return(3)
+    } else if (effect_quality_height < 5) {
+      return(4)
+    } else if (effect_quality_height < 6) {
+      return(5)
+    } else {
+      return(6)
+    }
+  }
+}
+
+# give either false_pos_neg_fraction directly, or effects, int_pos and perturbed_position,
+# so it can be computed internally
+# previously: false_pos_neg_score
+score_of_effects_classifier <- function(false_pos_neg_fraction, effects, int_pos, perturbed_position) {
+  if (missing(false_pos_neg_fraction)) {
+    false_pos_neg_fraction <- quality_of_effects_classifier(effects, int_pos = int_pos, perturbed_position = perturbed_position) 
+  }
+  if (false_pos_neg_fraction >= 1) {
+    return(0)
+  } else if (false_pos_neg_fraction >= 5/6) {
+    return(1)
+  } else if (false_pos_neg_fraction >= 4/6) {
+    return(2)
+  } else if (false_pos_neg_fraction >= 3/6) {
+    return(3)
+  } else if (false_pos_neg_fraction >= 2/6) {
+    return(4)
+  } else if (false_pos_neg_fraction >= 1/6) {
+    return(5)
+  } else {
+    return(6)
+  }
+  # if (false_pos_neg_fraction == 0) {
+  #   return(6)
+  # } else if (false_pos_neg_fraction <= 1/6) {
+  #   return(5)
+  # } else if (false_pos_neg_fraction <= 2/6) {
+  #   return(4)
+  # } else if (false_pos_neg_fraction <= 3/6) {
+  #   return(3)
+  # } else if (false_pos_neg_fraction <= 4/6) {
+  #   return(2)
+  # } else if (false_pos_neg_fraction <= 5/6) {
+  #   return(1)
+  # } else {
+  #   return(0)
+  # }
+}
+
+# neg_effects: abs -> absolut value, discard -> drop
+# option "sep" fehlt hier gegenüber scale_effects
+# TODO: rename: quality_of_effects_height
+quality_of_effects_distibution <- function(effects, int_pos, neg_effects = "discard", function_over_effects = mean, perturbed_position = "372") {
+  if (neg_effects == "abs") {
+    effects <- abs(effects)
+  } else if (neg_effects == "discard" || neg_effects == "drop") {
+    effects <- effects[!effects < 0]
+  } else if (neg_effects != "") {
+    warning("Unknown treatment of negative effects in quality_of_effects_distibution")
+  }
+  effects <- effects[!names(effects) %in% perturbed_position]
+  mean_effect_int <- function_over_effects(effects[names(effects) %in% int_pos])
+  mean_effect_other <- function_over_effects(effects[!names(effects) %in% int_pos])
+  
+  return(mean_effect_int / mean_effect_other)
+}

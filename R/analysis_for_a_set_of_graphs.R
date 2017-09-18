@@ -15,9 +15,9 @@ source("functions_analysis_for_a_set_of_graphs.R")
 source("tests_analysis_for_a_set_of_graphs.R")
 
 source("compute_DAG_G.R")
-source("~/.configuration_code.R")
 source("compute_DAG_S.R")
-# source("configuration_data.R")
+
+source("configuration_data.R")
 
 # debug(plot_connected_components_in_pymol)
 

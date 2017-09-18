@@ -1,18 +1,21 @@
 source("~/.configuration_code.R")
 
-# source("functions_causal_effects.R")
-# source("functions_general.R")
-# source("functions_conversions.R")
-# source("functions_tools.R")
+# # source("functions_causal_effects.R")
+# # source("functions_general.R")
+# # source("functions_conversions.R")
+# # source("functions_tools.R")
+# 
+# # source("analysis_for_a_set_of_graphs.R")
+# # source("~/.configuration_code.R")
+# source("functions_analysis_for_a_set_of_graphs.R")
+# source("functions_partuning.R")
 
-# source("analysis_for_a_set_of_graphs.R")
-# source("~/.configuration_code.R")
-source("functions_analysis_for_a_set_of_graphs.R")
-source("functions_partuning.R")
+source_all_function_scripts()
 
 source("compute_DAG_G.R")
-source("~/.configuration_code.R")
 source("compute_DAG_S.R")
+
+source("configuration_data.R")
 
 plot_labels_as_rows_and_cols = TRUE
 plot_logscale_alpha = FALSE
@@ -22,6 +25,7 @@ plot_logscale_alpha = FALSE
 ylim_for_plots = c(0,200) #5 # c(0, 200) # or NULL
 opt_alpha_double_weight_conflict = FALSE
 compute_anew = FALSE
+conflict_edge_weight = 1
 
 measures <- c("DDS",
   "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")
@@ -104,11 +108,11 @@ if (compute_anew || !exists("numbers_of_nodes")) {
 #                                              plot_logscale_alpha = FALSE, ylim_for_plots = ylim_for_plots, # or NULL
 #                                              opt_alpha_double_weight_conflict = FALSE,
 #                                              print = TRUE, plot = TRUE)
-best_alphas_2 <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
+best_alphas <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_as_rows_and_cols = TRUE,
                                              plot_logscale_alpha = FALSE, ylim_for_plots = ylim_for_plots, # or NULL
-                                             opt_alpha_double_weight_conflict = TRUE,
+                                             conflict_edge_weight = conflict_edge_weight,
                                              print = TRUE, plot = TRUE)
 
+# debug(determine_set_of_graphs)
 
-
-# effects_best_alphas <- effects_for_distinct_alphas(best_alphas_1)
+effects_best_alphas <- effects_for_distinct_alphas(best_alphas)

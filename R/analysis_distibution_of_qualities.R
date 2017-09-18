@@ -1,3 +1,11 @@
+source("~/.configuration_code.R")
+
+source("functions_partuning.R")
+source("functions_general.R")
+source("functions_causal_effects.R")
+
+source("configuration_data.R")
+
 new = FALSE
 
 # get all_effects
@@ -12,46 +20,30 @@ new = FALSE
 int_pos <- interesting_positions("PDZ")
 percentile = 1 - (length(int_pos) / dim(data)[2])
 
-# which_effects gives the slot of the list of effects (e.g. )
-apply_to_all_effects_in_nested_list <- function(all_effects, FUN, which_effects = "overAllGraphs_mean_on_of") {
-  result <- list()
-  for (measure_type_sub in names(all_effects)) {
-    # measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
-    # type_of_data = strsplit(measure_type_sub, "-")[[1]][1]
-    # if (grepl("-", measure_type_sub)) {
-    #   subtype_of_data_list <- subtype_of_data <- strsplit(measure_type_sub, "-")[[1]][2]
-    # } else {
-    #   subtype_of_data <- ""
-    #   subtype_of_data_list <- "-"
-    # }
-    result[[measure_type_sub]] <- list()
-    for (alpha in as.numeric(names(all_effects[[measure_type_sub]]))) {
-      result[[measure_type_sub]][[as.character(alpha)]] <- list()
-      for (min_pos_var in as.numeric(names(all_effects[[measure_type_sub]][[as.character(alpha)]]))) {
-        if (!is.null(all_effects[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]][[which_effects]])) {
-          result[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]] <- 
-            FUN(all_effects[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]][[which_effects]])
-        }
-      }
-      if (length(result[[measure_type_sub]][[as.character(alpha)]]) == 0) {
-        result[[measure_type_sub]][[as.character(alpha)]] <- NULL
-      }
-    }
-  }
-  return(result)
-}
-
+# HEIGHT
 function_quality_of_effects_distibution <- function_set_parameters(quality_of_effects_distibution, 
                                                                    parameters = list(int_pos = int_pos))
 all_q_height <- apply_to_all_effects_in_nested_list(all_effects = all_effects, FUN = function_quality_of_effects_distibution)
 
 
+function_score_of_effects_distibution <- function_set_parameters(score_of_effects_height, 
+                                                                   parameters = list(int_pos = int_pos, perturbed_position = 372))
+all_s_height <- apply_to_all_effects_in_nested_list(all_effects = all_effects, FUN = function_score_of_effects_distibution)
+
+# CLASSIFIER
 function_quality_of_effects_classifier <- function_set_parameters(quality_of_effects_classifier, 
                                                                   parameters = list(int_pos = int_pos,
                                                                                     perturbed_position = 372))
 all_q_classifier <- apply_to_all_effects_in_nested_list(all_effects = all_effects, FUN = function_quality_of_effects_classifier)
 
 
+function_score_of_effects_classifier <- function_set_parameters(score_of_effects_classifier, 
+                                                                  parameters = list(int_pos = int_pos,
+                                                                                    perturbed_position = 372))
+all_s_classifier <- apply_to_all_effects_in_nested_list(all_effects = all_effects, FUN = function_score_of_effects_classifier)
+
+
+# SUM
 function_score_for_effects <- function_set_parameters(score_for_effects, 
                                                       parameters = list(int_pos = int_pos, perturbed_position = 372))
 all_q_score <- apply_to_all_effects_in_nested_list(all_effects = all_effects, FUN = function_score_for_effects)
@@ -62,9 +54,15 @@ all_q_score <- apply_to_all_effects_in_nested_list(all_effects = all_effects, FU
 #                            function(x) {lapply(x,
 #                                                function(x) {lapply(x$overAllGraphs_mean_on_of, 
 #                                                                   quality_of_effects_distibution, int_pos = int_pos)})})
-par(mfrow = c(1,3))
+par(mfrow = c(1,7))
 breaks = 6
-hist(unlist(all_q_height), breaks = breaks)
+hist(unlist(all_q_height), breaks = breaks, main = "q_height \n 6 breaks")
+hist(unlist(all_q_height), breaks = c(0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5), main = "q_height \n breaks from code")
+hist(unlist(all_s_height), breaks = c(-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5), main = "s_height")
 # hist(unlist(all_q_classifier_old))
-hist(unlist(all_q_classifier), breaks = breaks)
-hist(unlist(all_q_score), breaks = breaks)
+hist(unlist(all_q_classifier), breaks = breaks, main = "q_classifier \n 6 breaks")
+hist(unlist(all_q_classifier), breaks = c(0, 1/6, 2/6, 3/6, 4/6, 5/6, 1), main = "q_classifier \n breaks from code")
+hist(unlist(all_s_classifier), breaks = c(-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5), main = "s_classifier")
+# barplot(unlist(all_s_classifier), main = "s_classifier")
+
+hist(unlist(all_q_score), breaks = breaks, main = "q_score")

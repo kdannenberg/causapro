@@ -187,3 +187,5 @@ protein_causality_G <- function(
 # 
 # print(paste("7,2: ", paste(ida(x.pos = 7, y.pos = 2, mcov = cov(data), graphEst = g), collapse = " / ")))
 # print(paste("7,2: ", causalEffect(x = 7, y = 2, g = g_w)))
+
+source("~/.configuration_code.R")

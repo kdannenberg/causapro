@@ -181,8 +181,6 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
 }
 
 get_old_outpath <- function(outpath) {
-  print(outpath)
-  
   dirs <- str_split(outpath, "/", simplify = TRUE)
     
   protein <- dirs[2]

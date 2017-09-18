@@ -88,7 +88,8 @@ protein_causality <- function(
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
-  # 
+  plot_no_isolated_nodes = TRUE,  # TODO: make true possible even for edgeless -> empty graphs
+   # 
   compute_pc_anew = FALSE,
   compute_localTests_anew = FALSE,
   # if (compute_everything_anew) {
@@ -173,7 +174,8 @@ protein_causality <- function(
                          graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                          unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
                          compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew, 
-                         graph_output_formats = graph_output_formats, numerical = numerical, mute_all_plots = mute_all_plots)
+                         graph_output_formats = graph_output_formats, numerical = numerical, mute_all_plots = mute_all_plots,
+                         plot_no_isolated_nodes = plot_no_isolated_nodes)
   }
   
   # Evaluation
@@ -300,6 +302,9 @@ kernelize_graph <- function(graph, ret_list = FALSE) {
     l[["isolated_nodes"]] <- isolated_nodes
     ## do something with the graph
     ## plot(g)
+    if (length(l$graph@nodes) == 0) {
+      l$graph <- graph    ## if new graph is empty, return old graph, to avoid trouble
+    }
     if(ret_list) {
       return(l)
     } else {
@@ -558,7 +563,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
                                  graph_layout = "dot", plot_as_subgraphs = plot_as_subgraphs, 
                                  plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console, 
                                  lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, graph_output_formats,
-                                 numerical, mute_all_plots = FALSE, plot_no_isolated_nodes = FALSE) {
+                                 numerical, mute_all_plots = FALSE, plot_no_isolated_nodes) {
   print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
@@ -1074,9 +1079,10 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
     subgraphs <- NULL
   }
   
+  pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) 
+  
   # this plots the graph with the given options
   if (!mute_all_plots) {
-    pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) 
     plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
   }
 
@@ -1111,6 +1117,9 @@ get_eAttrs <- function(graph) {
   # init eAtrrs
   eAttrs <- list()
   eAttrs$color <- c()
+  if (n == 0) {
+    return(eAttrs$color)
+  }
   for (i in 1:n) {
     for (j in 1:n) {
       if(wm[i,j] == 2) {
