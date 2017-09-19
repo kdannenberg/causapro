@@ -12,8 +12,8 @@ source("~/.configuration_code.R")
 
 source_all_function_scripts()
 
-source("compute_DAG_G.R")
-source("compute_DAG_S.R")
+# source("compute_DAG_G.R")
+# source("compute_DAG_S.R")
 
 source("configuration_data.R")
 
@@ -114,5 +114,6 @@ best_alphas <- analyse_edge_types_by_alpha(edge_types = edge_types, plot_labels_
                                              print = TRUE, plot = TRUE)
 
 # debug(determine_set_of_graphs)
+# debug(analyse_set_of_graphs)
 
 effects_best_alphas <- effects_for_distinct_alphas(best_alphas)

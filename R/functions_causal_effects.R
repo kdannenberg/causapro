@@ -9,7 +9,7 @@ library(colorspace)  # for mixcolor, hex
 causal_effects_ida <- function(data, perturbated_position, direction = "both", weight_effects_on_by = "mean_abs_effect",
                 results = results, protein, coloring = "all", effect_hue_by = "effect", #effect_hue_by = "variance",
                 outpath,amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, 
-                effect_to_color_mode = "#FFFFFF", pymol_bg_color = "black", caption, no_colors, 
+                effect_to_color_mode = "#FFFFFF", pymol = TRUE, pymol_bg_color = "black", caption, no_colors, 
                 show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75, mute_all_plots = FALSE) {
   
   lines <- 1 # lines in plot_space
@@ -114,10 +114,13 @@ causal_effects_ida <- function(data, perturbated_position, direction = "both", w
       if (!show_neg_causation) {
         current_effects <- NULL
       }
-      # plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbated_position = perturbated_position, protein = protein, 
-                                  # outpath = current_outpath,
-                                  # amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, ranked = opacity_ranked, 
-                                  # index = i, no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = current_effects)
+      
+      if (pymol) {
+        plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbated_position = perturbated_position, 
+                                    protein = protein, outpath = current_outpath, amplification_exponent = amplification_exponent, 
+                                    amplification_factor = amplification_factor, ranked = opacity_ranked,
+                                    index = i, no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = current_effects)
+      }
     
       # if (barplot) {
       if (!mute_all_plots) {

@@ -48,13 +48,16 @@ pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/")
 
 # most general; TODO: can the other fucntions (except for the paths) be implemented using this one? 
 plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file, 
-                                   label = TRUE, no_colors = FALSE, show_positions = TRUE) {
+                                   label = TRUE, no_colors = FALSE, show_positions = TRUE,
+                                   file_separator = "/", type_of_clustering = "") {
   
-  out_file <- paste(outpath, "-", length(node_clustering), "_clusters.pml", sep = "")
-  print(out_file)
+  out_file <- paste0(outpath, "-", length(node_clustering), pastes("_clusters", type_of_clustering, sep = "-"),".pml")
+  # out_file <- pastes(out_file, type_of_clustering, sep = "-")
+  # out_file <- paste0(out_file, ".pml")
+  # print(out_file)
   
   sink(file = out_file)
-  pymol_header(protein = protein)
+  pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
   if (!is.null(names(node_clustering))) {
     colors <- names(node_clustering)
   } else {
@@ -118,7 +121,7 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
     out_file <- paste(outpath, ".pml", sep = "")
   }
   sink(file = out_file)
-  pymol_header(protein = protein, file_separator = file_separator)
+  pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
   colors <- rainbow(length(connected_components))
   if (!only_dist) {
     # if (!show_int_pos) {
@@ -199,7 +202,7 @@ plot_paths_in_pymol <- function(protein, pdb_file, graph, outpath, paths, no_col
   out_file <- paste(outpath, "-paths.pml", sep = "")  # welche Pfade - hinzufügen
   
   sink(file = out_file)
-  pymol_header(protein = protein, file_separator = file_separator)
+  pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
   colors <- rainbow(length(paths))
   for (i in 1:length(paths)) {
     if (length(paths[[i]]) > 0) {

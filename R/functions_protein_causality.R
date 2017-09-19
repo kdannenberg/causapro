@@ -92,7 +92,8 @@ protein_causality <- function(
   ida_percentile = "11", # top 11
   # ida_percentile = 0.75, # top 75%
   #
-  file_separator = "/"
+  file_separator = "/",
+  cluster_methods = c("edge_betweenness", "infomap")
 ) {
   # INIT
   if (!(mute_all_plots || for_combined_plot)) {
@@ -153,6 +154,20 @@ protein_causality <- function(
   graph_computation <- graph_computation || evaluation || analysis
   # Computation of the Graph
   results <- list()
+
+  if (data_in_results) {
+    results$data <- data  
+  }
+  
+  # TODO: alle Eingabeparameter in results$pars$<parametername> schreiben
+  # if (parameters_in_results) {
+  #   
+  # }
+  
+  if (output_parameters_in_results) {
+    results$caption = caption
+    results$outpath = outpath
+  }
   
   if (graph_computation) {
     results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
@@ -181,6 +196,29 @@ protein_causality <- function(
   
   # Pymol
   if (graph_computation) {
+    # if (!is.null(clustering)) {
+    for (clustering in cluster_methods) {
+      igraph <- graph_from_graphnel(nelgraph)
+      cluster_fct <- get(paste0("cluster_", clustering))
+      cl <- cluster_fct(igraph)
+      # TODO: save plot, instaed of plotting
+      if (!mute_all_plots) {
+        plot(cl, igraph, main = paste0(caption, "\n", clustering))
+      }
+      node_clustering <- groups(cl)
+      
+      if (clustering == "edge_betweenness") {
+        type <- "eb"
+      } else if (clustering == "infomap") {
+        type <- "im"
+      } else {
+        type <- "igraph"
+      }
+      
+      plot_clusters_in_pymol(node_clustering = node_clustering, protein = protein, outpath = outpath, 
+                             file_separator = file_separator, type_of_clustering = type)  
+
+    
     if (!is.null(plot_only_subgraphs)) {
       # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
       node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
@@ -192,6 +230,7 @@ protein_causality <- function(
     
     plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = graph, 
                                        outpath = outpath, show_int_pos = TRUE, show_positions = FALSE, file_separator = file_separator)
+    }
   }
   
   
@@ -202,25 +241,19 @@ protein_causality <- function(
   # Analysis
   # if ("analysis" %in% steps) {
   if (analysis) {
-    results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+    if (conflict_edges(results$pc@graph)$conflict == 0) {
+      results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
                                   protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
                                   amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
                                   pymol_bg_color = "grey",
                                   mute_all_plots = FALSE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = ida_percentile)
-  }
-  
-  if (data_in_results) {
-    results$data <- data  
-  }
-  
-  # TODO: alle Eingabeparameter in results$pars$<parametername> schreiben
-  # if (parameters_in_results) {
-  #   
-  # }
-  
-  if (output_parameters_in_results) {
-    results$caption = caption
-    results$outpath = outpath
+    } else {
+      results_copy <- results
+      results_copy$data <- data  
+      results_copy$caption = caption
+      results_copy$outpath = outpath
+      analyse_set_of_graphs(results = results_copy, protein = "PDZ")
+    }
   }
   
   return(results)

@@ -1,12 +1,14 @@
 
 analyse_set_of_graphs <- function(
   type_of_graph_set = "conflict", # "retry" or "conflict"
+  results,
   protein = "PDZ",
   measure = "G",
   type_of_data = "DDDG",
   subtype_of_data = "5",
   # int_pos = interesting_positions(protein = protein, coloring = measure),
-  int_pos = interesting_positions(protein = protein, coloring = ""),
+  coloring = "",
+  int_pos = interesting_positions(protein = protein, coloring = coloring),
   # use_DDG = FALSE,  # einfach den default im Skript umstellen
   protein_causality_function = get(paste0("protein_causality_", measure)),
   alpha = 0.1,
@@ -15,7 +17,7 @@ analyse_set_of_graphs <- function(
   new = FALSE,
   save = TRUE,
   check_graph_equality = FALSE, # takes forever
-  pc_solve_conflicts = FALSE,
+  pc_solve_conflicts = TRUE,
   # used when type_of_graph_set = "conflict"
   pc_maj_rule_conflict = TRUE,
   pc_conservative_conflict = FALSE,
@@ -25,7 +27,7 @@ analyse_set_of_graphs <- function(
   plot_false_pos_neg = TRUE, 
   plot_effect_score = TRUE,
   # effect_hue_by = "effects",  
-  effect_hue_by = get_conservation(measure = measure, protein = protein), # DG/DS
+  effect_hue_by = get_conservation(measure = measure, protein = protein) / max(get_conservation(measure = measure, protein = protein)), # DG/DS
   # effect_hue_by = apply(data, 2, var),
   # results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
   #                           pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
@@ -83,33 +85,55 @@ analyse_set_of_graphs <- function(
   #                                             amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
   #                                             pymol_bg_color = "grey", caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE,
   #                                             percentile = ida_percentile, mute_all_plots = for_combined_plot),
+  effect_to_color_mode = "opacity", #"#FFFFFF",
+  pymol_bg_color = "grey",
+  show_neg_causation = TRUE,
+  neg_effects_in_scaling = "sep",
+  amplification_exponent = 1, 
+  amplification_factor = TRUE,
+  rank_effects = FALSE,
+  no_colors_in_pymol_ida = FALSE,
   ida_function = function_set_parameters(causal_effects_ida, parameters = list(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
-                                              protein = protein, coloring = "all", no_colors = FALSE, outpath = outpath,
-                                              amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
-                                              pymol_bg_color = "grey", caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE,
+                                              protein = protein, coloring = coloring, no_colors = no_colors_in_pymol_ida, outpath = outpath,
+                                              amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, 
+                                              rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode,
+                                              pymol = FALSE, pymol_bg_color = pymol_bg_color, caption = caption, show_neg_causation = show_neg_causation, 
+                                              neg_effects = neg_effects_in_scaling, analysis = TRUE,
                                               percentile = ida_percentile, mute_all_plots = for_combined_plot)),
   s = 10,    # sample size
   for_combined_plot = FALSE,
   caption_as_subcaption = for_combined_plot
 ) {
-  
-  if (type_of_graph_set == "conflict") {
+  if (!missing(results)) {
+    type_of_graph_set == "conflict"
     pc_u2pd = "relaxed"
-  } else if (type_of_graph_set == "retry") {
-    pc_u2pd = "retry"
-  }
+    data <- results$data
+    caption <- results$caption
+    outpath <- results$outpath
+  } else {
+    if (type_of_graph_set == "conflict") {
+      pc_u2pd = "relaxed"
+    } else if (type_of_graph_set == "retry") {
+      pc_u2pd = "retry"
+    }
   
-  results <- protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+    temp_results <- protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
                                         min_pos_var = min_pos_var, alpha = alpha,
                                         pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
+                                        pc_maj_rule = ifelse(type_of_graph_set == "retry", FALSE, pc_maj_rule_conflict),
+                                        pc_conservative = ifelse(type_of_graph_set == "retry", FALSE, pc_conservative_conflict),
                                         graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
                                         data_in_results = TRUE, output_parameters_in_results = TRUE, 
                                         mute_all_plots = TRUE, for_combined_plot = TRUE)
+    data <- temp_results$data
+    caption <- temp_results$caption
+    outpath <- temp_results$outpath
+  }
+  
   # TODO: besser, oder?
   # data <- read_data(get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data))
-  data <- results$data
-  caption <- results$caption
-  outpath <- results$outpath
+ 
+  
   
   if (direction == "both") {
     direction <- c("on", "of")
@@ -123,7 +147,7 @@ analyse_set_of_graphs <- function(
   
   
   
-  set_of_graphs <- determine_set_of_graphs(type_of_graph_set = type_of_graph_set, pc_function = pc_function, ida_function = ida_function, 
+  set_of_graphs <- determine_set_of_graphs(results = results, type_of_graph_set = type_of_graph_set, pc_function = pc_function, ida_function = ida_function, 
                                            s = s, new = new, save = save, outpath = outpath,
                                            pc_maj_rule_conflict = pc_maj_rule_conflict, pc_conservative_conflict = pc_conservative_conflict)
   if (is.null(set_of_graphs)) {
@@ -213,6 +237,15 @@ analyse_set_of_graphs <- function(
                                                      plot_false_pos_neg = plot_false_pos_neg, plot_effect_score = plot_effect_score, 
                                                      for_combined_plot = for_combined_plot)
     
+    pymol_mean_effects(effects_over_all_graphs_on_of, protein = protein, int_pos = int_pos, outpath = outpath, perturbed_position = perturbed_position, 
+                       amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, rank_effects = rank_effects, 
+                       effect_hue_by = "effect", #"effect", # alles außer effect sinnlos
+                       effect_to_color_mode = "opacity", # effect_to_color_mode, # opacity is best to see
+                       pymol_bg_color = ifelse(effect_to_color_mode == "opacity", "grey", "black"), # pymol_bg_color, # if effect_to_color_mode == "opacity", 
+                       # grey is better; if effect_to_color_mode == "#FFFFFF" black makes more sense, since 
+                       # completely black nodes should not be seen 
+                       show_neg_causation = show_neg_causation,
+                       neg_effects_in_scaling = neg_effects_in_scaling, no_colors = no_colors_in_pymol_ida)
     
     return(effects_over_all_graphs_on_of)
     
@@ -221,7 +254,56 @@ analyse_set_of_graphs <- function(
   }
 }
 
-determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function, s, new, save, outpath,
+pymol_mean_effects <- function(effects_over_all_graphs_on_of, protein, int_pos, outpath, perturbed_position = "372", amplification_exponent, 
+                               amplification_factor, rank_effects = FALSE, effect_hue_by = "effect", effect_to_color_mode = "opacity",
+                               pymol_bg_color = "black", show_neg_causation = TRUE, neg_effects_in_scaling = "sep", no_colors) {
+  
+  for (slot in names(effects_over_all_graphs_on_of)) {
+    descr_split <- str_split(string = slot, pattern = "_")[[1]]
+    dir <- str_replace(slot, paste0(descr_split[1], "_"), "")
+    
+    effects <- as.matrix(effects_over_all_graphs_on_of[[slot]])
+    
+    pymol_outpath <- outpath_for_ida(outpath = outpath, direction = dir, option_nr = "", neg_effects = neg_effects_in_scaling, 
+                                       perturbated_position = perturbed_position, amplification_exponent = amplification_exponent, 
+                                       amplification_factor = amplification_factor, 
+                                       no_colors = no_colors, rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode)
+    
+   
+    
+    # if (effect_hue_by == "effect") {
+    #   colors_by_effect <- color_by_effect(scaled_effects, int_pos, mode = effect_to_color_mode)
+    # } else if (effect_hue_by == "variance" || effect_hue_by == "var") {
+    #   vars <- apply(data, 2, var)
+    #   colors_by_effect <- color_by_effect(vars, int_pos, mode = effect_to_color_mode)
+    # } 
+    
+    
+    if (is.character(effect_hue_by)) {
+      if (effect_hue_by == "effect") {
+        current_effect_hue_by <- effects
+      } else {
+        warning(paste0("The pymol file ", pymol_outpath, " does not show the effects but ", effect_hue_by, "!"))
+        current_effect_hue_by <- get(effect_hue_by)
+      }
+    } else {
+      current_effect_hue_by <- effect_hue_by
+      warning(paste0("The pymol file ", pymol_outpath, " does not show the effects but what was explicitly given to the function in effect_hue_by!"))
+    }
+    
+    
+    # scaled_effects <- scale_effects(effect_hue_by, rank = rank_effects, amplification_factor = amplification_factor, neg_effects = neg_effects)
+    colors_by_effect <- color_by_effect(as.matrix(current_effect_hue_by), int_pos, mode = effect_to_color_mode) 
+    
+    
+    plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbated_position = perturbed_position, 
+                                protein = protein, outpath = pymol_outpath, amplification_exponent = amplification_exponent, 
+                                amplification_factor = amplification_factor, ranked = rank_effects,
+                                index = "", no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = effects)
+  }
+}
+
+determine_set_of_graphs <- function(results, type_of_graph_set, pc_function, ida_function, s, new, save, outpath,
                                     pc_maj_rule_conflict, pc_conservative_conflict) {
   if (type_of_graph_set == "retry") {
     if (new || (!file.exists(file = paste0(outpath, "-pc-retry_results.RData")) 
@@ -284,7 +366,9 @@ determine_set_of_graphs <- function(type_of_graph_set, pc_function, ida_function
       if (new || (!file.exists(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
                   && !file.exists(file = paste0(get_old_outpath(outpath), "-all_confl_comb_graphs.RData")))) {
         
-        results <- pc_function(pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", pc_maj_rule = pc_maj_rule_conflict, pc_conservative = pc_conservative_conflict, evaluation = FALSE, analysis = FALSE)
+        if (missing(results)) {
+          results <- pc_function(pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", pc_maj_rule = pc_maj_rule_conflict, pc_conservative = pc_conservative_conflict, evaluation = FALSE, analysis = FALSE)
+        }
         
         edges <- conflict_edges(results$pc@graph)
         print(edges)

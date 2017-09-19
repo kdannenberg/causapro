@@ -181,40 +181,44 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
 }
 
 get_old_outpath <- function(outpath) {
-  dirs <- str_split(outpath, "/", simplify = TRUE)
-    
-  protein <- dirs[2]
-  type_of_data <- dirs[3]
-  extension <- sub(type_of_data, "", dirs[4])
-  if (is.null(extension) || extension == "NULL") {
-    subtype_of_data <- ""
+  if (endsWith(outpath, "_sc_maj")) {
+    old_outpath <- str_replace(outpath, "_sc_maj", "_rel")
   } else {
-    extension <- substr(extension, 2, nchar(extension))
-    if (grepl(pattern = "-", extension)) {
-      subtype_of_data <- str_split(extension, "-", simplify = TRUE)[1]
-    } else {
+    dirs <- str_split(outpath, "/", simplify = TRUE)
+      
+    protein <- dirs[2]
+    type_of_data <- dirs[3]
+    extension <- sub(type_of_data, "", dirs[4])
+    if (is.null(extension) || extension == "NULL") {
       subtype_of_data <- ""
+    } else {
+      extension <- substr(extension, 2, nchar(extension))
+      if (grepl(pattern = "-", extension)) {
+        subtype_of_data <- str_split(extension, "-", simplify = TRUE)[1]
+      } else {
+        subtype_of_data <- ""
+      }
+      rest_of_extension <- sub(subtype_of_data, "", extension)
+      if (substr(rest_of_extension, 1, 1) == "-") {
+        rest_of_extension <- substr(rest_of_extension, 2, nchar(extension))
+      }
+      type_of_data <- pastes(type_of_data, rest_of_extension, sep = "-")
     }
-    rest_of_extension <- sub(subtype_of_data, "", extension)
-    if (substr(rest_of_extension, 1, 1) == "-") {
-      rest_of_extension <- substr(rest_of_extension, 2, nchar(extension))
-    }
-    type_of_data <- pastes(type_of_data, rest_of_extension, sep = "-")
+    
+    start_of_alpha <- gregexpr(pattern ='alpha', outpath)[[1]][1]
+    end_that_starts_with_first_alpha <- substr(outpath, start_of_alpha + 6, nchar(outpath))
+    first_slash <- gregexpr(pattern ='/', end_that_starts_with_first_alpha)[[1]][1]
+    alpha <- substr(end_that_starts_with_first_alpha, 1, first_slash - 1)
+    # rest_of_extension <- str_replace(extension, ", "")
+    
+    filename <- dirs[length(dirs)]
+    start_of_suffix <- gregexpr(pattern ='alpha', filename)[[1]][1] + 6 + nchar(alpha)
+    filename_suffix <- substr(filename, start_of_suffix, nchar(filename)) 
+    
+    old_outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, alpha = alpha,
+                               filename_suffix = filename_suffix, main_dir = "Outputs_2017-09-14")
+    # old_outpath <- paste(old_outpath, paste(dirs[c(5,6)], collapse = "/"), sep = "/")
   }
-  
-  start_of_alpha <- gregexpr(pattern ='alpha', outpath)[[1]][1]
-  end_that_starts_with_first_alpha <- substr(outpath, start_of_alpha + 6, nchar(outpath))
-  first_slash <- gregexpr(pattern ='/', end_that_starts_with_first_alpha)[[1]][1]
-  alpha <- substr(end_that_starts_with_first_alpha, 1, first_slash - 1)
-  # rest_of_extension <- str_replace(extension, ", "")
-  
-  filename <- dirs[length(dirs)]
-  start_of_suffix <- gregexpr(pattern ='alpha', filename)[[1]][1] + 6 + nchar(alpha)
-  filename_suffix <- substr(filename, start_of_suffix, nchar(filename)) 
-  
-  old_outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, alpha = alpha,
-                             filename_suffix = filename_suffix, main_dir = "Outputs_2017-09-14")
-  # old_outpath <- paste(old_outpath, paste(dirs[c(5,6)], collapse = "/"), sep = "/")
   
   return(old_outpath)
 }
