@@ -49,7 +49,7 @@ pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/")
 # most general; TODO: can the other fucntions (except for the paths) be implemented using this one? 
 plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file, 
                                    label = TRUE, no_colors = FALSE, show_positions = TRUE,
-                                   file_separator = "/", type_of_clustering = "") {
+                                   file_separator = "/", type_of_clustering = "", bg_color = "grey") {
   
   out_file <- paste0(outpath, "-", length(node_clustering), pastes("_clusters", type_of_clustering, sep = "-"),".pml")
   # out_file <- pastes(out_file, type_of_clustering, sep = "-")
@@ -85,13 +85,14 @@ plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file,
   }
   
   cat("zoom\n")
+  cat(paste0("bg_color ", bg_color, "\n"))
   sink()
 }
 
 # TODO: use file_separator consistently
 plot_connected_components_in_pymol <- function(protein, position_numbering, graph, outpath, label = TRUE, pdb_file, only_int_pos = FALSE, 
                                                show_int_pos = TRUE, color_int_pos = TRUE, only_color_int_pos = FALSE, coloring_for_int_pos, no_colors = FALSE, only_dist = FALSE, 
-                                               show_positions = TRUE, file_separator = "/") {
+                                               show_positions = TRUE, file_separator = "/", bg_color = "grey") {
   print(paste("Outpath for pymol-file:", outpath))
   connected_components <- connComp(graph)
   real_ones_ind <- which(sapply(connected_components, function(x) length(x) > 1))
@@ -193,11 +194,13 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
     cat("hide labels, dist", str_pad(i, number_of_digits_to_pad_to, pad = "0"), "\n", sep = "")
   }
   cat("zoom\n")
+  cat(paste0("bg_color ", bg_color, "\n"))
   sink()
 }
 
 
-plot_paths_in_pymol <- function(protein, pdb_file, graph, outpath, paths, no_colors = FALSE, label = TRUE, show_positions = TRUE, file_separator = "/") {
+plot_paths_in_pymol <- function(protein, pdb_file, graph, outpath, paths, no_colors = FALSE, label = TRUE, show_positions = TRUE, 
+                                file_separator = "/", bg_color = "grey") {
   
   out_file <- paste(outpath, "-paths.pml", sep = "")  # welche Pfade - hinzufügen
   
@@ -241,6 +244,7 @@ plot_paths_in_pymol <- function(protein, pdb_file, graph, outpath, paths, no_col
     }
   }
   cat("zoom\n")
+  cat(paste0("bg_color ", bg_color, "\n"))
   sink()
 }
 

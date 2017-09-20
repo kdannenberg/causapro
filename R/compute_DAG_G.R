@@ -23,8 +23,9 @@ source("configuration_data.R")
 ## sink()
 ## print(conflict_edges(results_G$pc@graph))
 
-
-results_G <- protein_causality_G(min_pos_var = 0.05)
+# DDDG-10.0.08.1e-04
+results_G <- protein_causality_G(type_of_data = "DDDG", subtype_of_data = "10", min_pos_var = 0.0001, 
+                                 alpha = 0.08, pc_maj_rule = TRUE, plot_no_isolated_nodes = FALSE)
 # g <- results_G$pc@graph
 # g_w <- set_edge_weights_for_graph(g, cov(data))
 # # ida()

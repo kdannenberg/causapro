@@ -76,6 +76,8 @@ protein_causality <- function(
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
+  plot_ida = FALSE,                                  # NEW!
+  plot_clusters = TRUE,                              # NEW!
   plot_no_isolated_nodes = TRUE,  # TODO: make true possible even for edgeless -> empty graphs
   # 
   compute_pc_anew = FALSE,
@@ -98,6 +100,15 @@ protein_causality <- function(
   # INIT
   if (!(mute_all_plots || for_combined_plot)) {
     graphics.off()
+  
+    if (!((plot_analysis && analysis) || (plot_ida && evaluation))) {
+      if (plot_clusters) {
+        cols <- length(cluster_methods) + 1
+      } else {
+        cols <- 1
+      }
+      par(mfrow = c(1, cols))
+    }
   }
   
   data_description <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set)
@@ -197,41 +208,43 @@ protein_causality <- function(
   # Pymol
   if (graph_computation) {
     # if (!is.null(clustering)) {
-    for (clustering in cluster_methods) {
-      igraph <- graph_from_graphnel(nelgraph)
-      cluster_fct <- get(paste0("cluster_", clustering))
-      cl <- cluster_fct(igraph)
-      # TODO: save plot, instaed of plotting
-      if (!mute_all_plots) {
-        plot(cl, igraph, main = paste0(caption, "\n", clustering))
+    if (plot_clusters) {
+      for (clustering in cluster_methods) {
+        igraph <- graph_from_graphnel(results$pc@graph)
+        cluster_fct <- get(paste0("cluster_", clustering))
+        cl <- cluster_fct(igraph)
+        # TODO: save plot, instaed of plotting
+        if (!mute_all_plots) {
+          plot(cl, igraph, main = paste0(caption, "\n", clustering))
+        }
+        node_clustering <- groups(cl)
+        
+        if (clustering == "edge_betweenness") {
+          type <- "eb"
+        } else if (clustering == "infomap") {
+          type <- "im"
+        } else {
+          type <- "igraph"
+        }
+        
+        plot_clusters_in_pymol(node_clustering = node_clustering, protein = protein, outpath = outpath, 
+                               file_separator = file_separator, type_of_clustering = type)  
       }
-      node_clustering <- groups(cl)
-      
-      if (clustering == "edge_betweenness") {
-        type <- "eb"
-      } else if (clustering == "infomap") {
-        type <- "im"
-      } else {
-        type <- "igraph"
-      }
-      
-      plot_clusters_in_pymol(node_clustering = node_clustering, protein = protein, outpath = outpath, 
-                             file_separator = file_separator, type_of_clustering = type)  
-
-    
-    if (!is.null(plot_only_subgraphs)) {
-      # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
-      node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
-      subgraphs <- subgraphs_from_node_clusters(node_clustering, graph = results$orig$graph$NEL, protein = protein)
-      graph <- subgraphs[[plot_only_subgraphs]]$graph
-    } else {
-      graph <- results$pc@graph
     }
     
-    plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = graph, 
-                                       outpath = outpath, show_int_pos = TRUE, show_positions = FALSE, file_separator = file_separator)
-    }
+  if (!is.null(plot_only_subgraphs)) {
+    # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
+    node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
+    subgraphs <- subgraphs_from_node_clusters(node_clustering, graph = results$orig$graph$NEL, protein = protein)
+    graph <- subgraphs[[plot_only_subgraphs]]$graph
+  } else {
+    graph <- results$pc@graph
   }
+  
+  plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = graph, 
+                                     outpath = outpath, show_int_pos = TRUE, show_positions = FALSE, file_separator = file_separator)
+  }
+
   
   
   # paths <- paths_between_nodes(graph = results$orig$graph$NEL, from = c(314), to = c(383), all_paths = FALSE)
@@ -335,7 +348,10 @@ protein_causality_G <- function(
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
-  # 
+  plot_ida = FALSE,                                  # NEW!
+  plot_clusters = TRUE,                              # NEW!
+  plot_no_isolated_nodes = TRUE,
+  #
   compute_pc_anew = FALSE,
   compute_localTests_anew = FALSE,
   # if (compute_everything_anew) {
@@ -384,6 +400,9 @@ protein_causality_G <- function(
                            print_analysis = print_analysis,
                            plot_analysis = plot_analysis,
                            plot_types = plot_types,
+                           plot_ida = plot_ida,
+                           plot_clusters = plot_clusters,
+                           plot_no_isolated_nodes = plot_no_isolated_nodes,
                            compute_pc_anew = compute_pc_anew,
                            compute_localTests_anew = compute_localTests_anew,
                            unabbrev_r_to_info = unabbrev_r_to_info,
@@ -434,6 +453,9 @@ protein_causality_S <- function(
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graph"),
+  plot_ida = FALSE,                                  # NEW!
+  plot_clusters = TRUE,                              # NEW!
+  #
   compute_pc_anew = FALSE,
   compute_localTests_anew = FALSE,
   unnabbrev_r_to_info = FALSE,
@@ -476,6 +498,8 @@ protein_causality_S <- function(
                            print_analysis = print_analysis,
                            plot_analysis = plot_analysis,
                            plot_types = plot_types,
+                           plot_ida = plot_ida,
+                           plot_clusters = plot_clusters,
                            compute_pc_anew = compute_pc_anew,
                            compute_localTests_anew = compute_localTests_anew,
                            unabbrev_r_to_info = unabbrev_r_to_info,

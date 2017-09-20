@@ -10,8 +10,8 @@ source("configuration_data.R")
 
 new = FALSE
 print_best_scenarios = TRUE
-with_graphs = TRUE
-for_all_best_alphas = TRUE
+with_graphs = FALSE
+for_all_best_alphas = FALSE
 
 # get all_effects
 if (!exists("all_effects")) {
@@ -43,7 +43,8 @@ best_alphas <- find_best_alphas(all_q_score)
 # }
 
 # debug(determine_set_of_graphs)
+# debug(analyse_set_of_graphs)
 
-effects_for_distinct_alphas(best_alphas, with_graphs = with_graphs, min_pos_vars = c(0.01), for_all_alphas = for_all_best_alphas)
+effects_for_distinct_alphas(best_alphas, with_graphs = with_graphs, for_all_alphas = for_all_best_alphas)
 # effects_for_distinct_alphas(best_alphas, with_graphs = FALSE)
 
