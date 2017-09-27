@@ -16,7 +16,7 @@ source("tests_analysis_for_a_set_of_graphs.R")
 
 source("configuration_data.R")
 
-debug(determine_set_of_graphs)
+# debug(determine_set_of_graphs)
 # debug(causal_effects_ida)
 
 new = FALSE

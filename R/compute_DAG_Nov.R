@@ -5,7 +5,7 @@ source_all_function_scripts()
 source("configuration_data.R")
 
 # debug(plot_clusters_in_pymol)
-
+# debug(protein_graph_clustering)
 
 results_NoV <- protein_causality_NoV(subtype_of_data = "", pc_conservative = FALSE, pc_maj_rule = TRUE, 
                                      pc_u2pd = "relaxed", pc_solve_confl = TRUE, analysis = FALSE,

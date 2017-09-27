@@ -51,6 +51,22 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
 protein_graph_clustering <- function(results, protein, outpath, file_separator, mute_all_plots, caption,
                                      cluster_methods, add_cluster_of_conserved_positions, 
                                      removed_cols, more_levels_of_conservedness = FALSE) {
+  
+  if (add_cluster_of_conserved_positions) {
+    # node_clustering <- c(node_clustering, "#FFFFFF" = list(removed_cols))
+    # names(node_clustering)[length(node_clustering)] <- "#FFFFFF"
+    
+    
+    if (more_levels_of_conservedness) {
+      removed_cols <- (removed_cols / max(removed_cols)) / 0.9999
+    }
+    colors_for_rem_pos <- color_by_effect(effects = removed_cols, int_pos = "", color_for_other_positions = "#000000", mode = "#FFFFFF")
+    
+    add_clusters <- sapply(names(table(colors_for_rem_pos)), 
+                           FUN = function(color) {return(names(colors_for_rem_pos[which(colors_for_rem_pos == color)]))}, 
+                           simplify = FALSE, USE.NAMES = TRUE)
+  }
+  
   for (clustering in cluster_methods) {
     igraph <- graph_from_graphnel(results$pc@graph)
     cluster_fct <- get(paste0("cluster_", clustering))
@@ -76,19 +92,6 @@ protein_graph_clustering <- function(results, protein, outpath, file_separator, 
     
     
     if (add_cluster_of_conserved_positions) {
-      # node_clustering <- c(node_clustering, "#FFFFFF" = list(removed_cols))
-      # names(node_clustering)[length(node_clustering)] <- "#FFFFFF"
-      
-      
-      if (more_levels_of_conservedness) {
-        removed_cols <- (removed_cols / max(removed_cols)) / 0.9999
-      }
-      colors_for_rem_pos <- color_by_effect(effects = removed_cols, int_pos = "", color_for_other_positions = "#000000", mode = "#FFFFFF")
-      
-      add_clusters <- sapply(names(table(colors_for_rem_pos)), 
-                             FUN = function(color) {return(names(colors_for_rem_pos[which(colors_for_rem_pos == color)]))}, 
-                             simplify = FALSE, USE.NAMES = TRUE)
-      
       node_clustering <- c(node_clustering, add_clusters)
     }
     
