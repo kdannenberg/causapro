@@ -129,11 +129,11 @@ find_best_alphas <- function(all_scores) {
 # For all measures in names(distinct_alphas) and all min_pos_vars in names(distinct_alphas$<measure>), the corresponding alpha is chosen, effects computed
 # and displayed in grid
 # if measures / min_pos_vars are given, only those are used (but need to be existent in distinct_alphas)
-effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, for_all_alphas = FALSE,
-                                        measures, min_pos_vars, cols_for_measures = TRUE) {
+effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, with_effects = TRUE, for_all_alphas = FALSE,
+                                        measures, min_pos_vars, cols_for_measures = TRUE, protein_causality_function) {
   effects <- list()
   
-  if (with_graphs) {
+  if (with_graphs && with_effects) {
     if (missing(min_pos_vars)) {
       lines_of_plot <- 2 * length(names(distinct_alphas[[1]]))
     } else {
@@ -187,17 +187,20 @@ effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, fo
         alphas <- alphas[length(alphas)] 
       }
       for (alpha in alphas) {
-        
-        protein_causality_function = get(paste0("protein_causality_", measure))
+        if (missing(protein_causality_function)) {
+          protein_causality_function = get(paste0("protein_causality_", measure))
+        }
         
         pc_function_ <- function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
                                                                                               plot_clusters = FALSE, alpha = alpha, min_pos_var = min_pos_var,
                                                                                               for_combined_plot = TRUE))
         pc_function_effects <- function_set_parameters(pc_function_, parameters = list(mute_all_plots = TRUE))
-        effects[[type_of_data]][[subtype_of_data_list]][[as.character(min_pos_var)]][[as.character(alpha)]] <-
-          analyse_set_of_graphs(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
-                                direction = "mean", measure = measure, pc_function = pc_function_effects, alpha = alpha, min_pos_var = min_pos_var,
-                                for_combined_plot = TRUE, scale_in_the_end = FALSE, new = FALSE, save = TRUE)
+        if (with_effects) {
+          effects[[type_of_data]][[subtype_of_data_list]][[as.character(min_pos_var)]][[as.character(alpha)]] <-
+            analyse_set_of_graphs(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
+                                  direction = "mean", measure = measure, pc_function = pc_function_effects, alpha = alpha, min_pos_var = min_pos_var,
+                                  for_combined_plot = TRUE, scale_in_the_end = FALSE, new = FALSE, save = TRUE)
+          }
         if (with_graphs) {
           pc_function_(pc_maj_rule = TRUE) # mute_all_plots = FALSE
           # protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data, alpha = alpha, 
@@ -251,8 +254,10 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure = "S", type_of_data
                                                      # pc_function = f_protein_causality_pc_parameters_eval_analysis(measure = measure, type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
                                                      #### min_pos_var = min_pos_var, alpha = alpha, 
                                                      # mute_all_plots = TRUE)
-                                                     pc_function = function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
-                                                                                                                                         mute_all_plots = TRUE))
+                                                     pc_function = function_set_parameters(protein_causality_function, 
+                                                          parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+                                                          mute_all_plots = TRUE)),
+                                                     new = FALSE, save = TRUE
 ) {
   
   # if (missing(pc_function)) {
@@ -317,7 +322,7 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure = "S", type_of_data
       pc_function_ <- function_set_parameters(pc_function, parameters = list(alpha = alpha, min_pos_var = min_pos_var))
       effects[[as.character(alpha)]][[as.character(min_pos_var)]] <- analyse_set_of_graphs(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
                                                                                            direction = "mean", measure = measure, pc_function = pc_function_, alpha = alpha, min_pos_var = min_pos_var,
-                                                                                           for_combined_plot = TRUE, scale_in_the_end = FALSE, new = FALSE, save = TRUE)
+                                                                                           for_combined_plot = TRUE, scale_in_the_end = FALSE, new = new, save = save)
       
       # }
       # }
@@ -468,5 +473,10 @@ quality_of_effects_distibution <- function(effects, int_pos, neg_effects = "disc
   mean_effect_int <- function_over_effects(effects[names(effects) %in% int_pos])
   mean_effect_other <- function_over_effects(effects[!names(effects) %in% int_pos])
   
-  return(mean_effect_int / mean_effect_other)
+  quality <- mean_effect_int / mean_effect_other
+  
+  if (is.na(quality)) {
+    quality = 0
+  }  
+  return(quality)
 }

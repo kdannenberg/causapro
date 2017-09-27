@@ -147,7 +147,7 @@ analyse_set_of_graphs <- function(
   
   
   
-  set_of_graphs <- determine_set_of_graphs(results = results, type_of_graph_set = type_of_graph_set, pc_function = pc_function, ida_function = ida_function, 
+  set_of_graphs <- determine_set_of_graphs(results = results, data = data, type_of_graph_set = type_of_graph_set, pc_function = pc_function, ida_function = ida_function, 
                                            s = s, new = new, save = save, outpath = outpath,
                                            pc_maj_rule_conflict = pc_maj_rule_conflict, pc_conservative_conflict = pc_conservative_conflict)
   if (is.null(set_of_graphs)) {
@@ -303,12 +303,14 @@ pymol_mean_effects <- function(effects_over_all_graphs_on_of, protein, int_pos, 
   }
 }
 
-determine_set_of_graphs <- function(results, type_of_graph_set, pc_function, ida_function, s, new, save, outpath,
-                                    pc_maj_rule_conflict, pc_conservative_conflict) {
+# data is only necessary to check wether a loades graph has the right number of nodes
+determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_function, ida_function, s, new, save, outpath,
+                                    pc_maj_rule_conflict, pc_conservative_conflict, suffix_graphs = "graphs", 
+                                    suffix_results = "results-ida-reset") {
   start_new <- new
   if (type_of_graph_set == "retry") {
-    outpath_where_graphs_exist <- get_old_outpath(outpath, suffix = "-pc-retry_graphs.RData")
-    outpath_where_results_exist <- get_old_outpath(outpath, suffix = "-pc-retry_results.RData")
+    outpath_where_graphs_exist <- get_old_outpath(outpath, suffix = "-pc-retry_", suffix_graphs, ".RData")
+    outpath_where_results_exist <- get_old_outpath(outpath, suffix = "-pc-retry_", suffix_results, ".RData")
     if (is.null(outpath_where_graphs_exist) || is.null(outpath_where_results_exist)) {
       start_new <- TRUE
     }
@@ -333,11 +335,11 @@ determine_set_of_graphs <- function(results, type_of_graph_set, pc_function, ida
         }
       }
       if (save) {
-        save(all_graphs, file = paste0(outpath, "-pc-retry_graphs.RData"))
+        save(all_graphs, file = paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))
       }
       
       
-      #### save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
+      #### save(all_results, file = paste0(outpath, "-pc-retry_", suffix_results, ".RData"))
       
       
       #### all_results saved
@@ -346,38 +348,51 @@ determine_set_of_graphs <- function(results, type_of_graph_set, pc_function, ida
         all_results[[i]] <- ida_function(results)
       }
       if (save) {
-        save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
+        save(all_results, file = paste0(outpath, "-pc-retry_", suffix_results, ".RData"))
       }
     } else {
       load(file = outpath_where_graphs_exist)
-      if (!file.exists(paste0(outpath, "-pc-retry_graphs.RData"))) {
-        save(all_graphs, file = paste0(outpath, "-pc-retry_graphs.RData"))
+      if (!file.exists(paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))) {
+        save(all_graphs, file = paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))
       }
       
       load(file = outpath_where_results_exist)
-      if (!file.exists(paste0(outpath, "-pc-retry_results.RData"))) {
-        save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
+      if (!file.exists(paste0(outpath, "-pc-retry_", suffix_results, ".RData"))) {
+        save(all_results, file = paste0(outpath, "-pc-retry_", suffix_results, ".RData"))
       }
       
-      # if (file.exists(file = paste0(outpath, "-pc-retry_results.RData")) 
-      #     && file.exists(file = paste0(outpath, "-pc-retry_graphs.RData"))) {
-      #   load(file = paste0(outpath, "-pc-retry_graphs.RData"))
-      #   load(file = paste0(outpath, "-pc-retry_results.RData"))
+      # if (file.exists(file = paste0(outpath, "-pc-retry_", suffix_results, ".RData")) 
+      #     && file.exists(file = paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))) {
+      #   load(file = paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))
+      #   load(file = paste0(outpath, "-pc-retry_", suffix_results, ".RData"))
       # } else {
-      #   load(file = paste0(get_old_outpath(outpath), "-pc-retry_graphs.RData"))
-      #   save(all_graphs, file = paste0(outpath, "-pc-retry_graphs.RData"))
-      #   load(file = paste0(get_old_outpath(outpath), "-pc-retry_results.RData"))
-      #   save(all_results, file = paste0(outpath, "-pc-retry_results.RData"))
+      #   load(file = paste0(get_old_outpath(outpath), "-pc-retry_", suffix_graphs, ".RData"))
+      #   save(all_graphs, file = paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))
+      #   load(file = paste0(get_old_outpath(outpath), "-pc-retry_", suffix_results, ".RData"))
+      #   save(all_results, file = paste0(outpath, "-pc-retry_", suffix_results, ".RData"))
       # }
     }
     # TODO: rename: -rel_conflict_graph_set
   } else if (type_of_graph_set == "conflict") {
-    outpath_where_graphs_exist <- get_old_outpath(outpath, suffix = "-all_confl_comb_graphs.RData")
-    outpath_where_results_exist <- get_old_outpath(outpath, suffix = "-all_confl_comb_results.RData")
+    outpath_where_graphs_exist <- get_old_outpath(outpath, suffix = paste0("-all_confl_comb_", suffix_graphs, ".RData"))
+    outpath_where_results_exist <- get_old_outpath(outpath, suffix = paste0("-all_confl_comb_", suffix_results, ".RData"))
     if (is.null(outpath_where_graphs_exist) || is.null(outpath_where_results_exist)) {
       start_new <- TRUE
     }
+    
     if (start_new) {
+      if (!new && !is.null(outpath_where_graphs_exist)) {
+        load(file = outpath_where_graphs_exist)
+        # if (outpath_where_graphs_exist != paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData")) oder
+        if (!is.null(all_graphs) && length(all_graphs[[1]]@nodes) != dim(data)[2]) {
+          warning(paste0("Loaded graph did not have the right number of nodes: ", outpath_where_graphs_exist, "."))
+          outpath_where_graphs_exist <- NULL
+        } else {
+          if (!file.exists(paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))) {
+            save(all_graphs, file = paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))
+          }
+        }
+      }
       if (new || is.null(outpath_where_graphs_exist)) {
         if (missing(results)) {
           results <- pc_function(pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", pc_maj_rule = pc_maj_rule_conflict, pc_conservative = pc_conservative_conflict, evaluation = FALSE, analysis = FALSE)
@@ -390,7 +405,7 @@ determine_set_of_graphs <- function(results, type_of_graph_set, pc_function, ida
         
         if (edges$conflict >= 15) {
           all_graphs = NULL
-          save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+          save(all_graphs, file = paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))
           return(NULL)
           # stop("More than 15 conflict edges.")
         }
@@ -399,14 +414,10 @@ determine_set_of_graphs <- function(results, type_of_graph_set, pc_function, ida
         all_graphs <- enumerate_graphs(results$pc@graph) # in Zeile 1 berechnet
         cat(" Done. \n")
         if (save) {
-          save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+          save(all_graphs, file = paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))
         }
       } else {
-        load(file = outpath_where_graphs_exist)
-        # if (outpath_where_graphs_exist != paste0(outpath, "-all_confl_comb_graphs.RData")) oder
-        if (!file.exists(paste0(outpath, "-all_confl_comb_graphs.RData"))) {
-            save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
-        }
+        
       }
         
       if (is.null(all_graphs)) {
@@ -420,39 +431,20 @@ determine_set_of_graphs <- function(results, type_of_graph_set, pc_function, ida
         all_results[[i]] <- graph_to_results(all_graphs[[i]], ida_function = ida_function)
       }
       if (save) {
-        save(all_results, file = paste0(outpath, "-all_confl_comb_results.RData"))
+        save(all_results, file = paste0(outpath, "-all_confl_comb_", suffix_results, ".RData"))
       }
     } else {
       load(file = outpath_where_graphs_exist)
-      # if (outpath_where_graphs_exist != paste0(outpath, "-all_confl_comb_graphs.RData")) oder
-      if (!file.exists(paste0(outpath, "-all_confl_comb_graphs.RData"))) {
-        save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
+      # if (outpath_where_graphs_exist != paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData")) oder
+      if (!file.exists(paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))) {
+        save(all_graphs, file = paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))
       }
-      
-      # if (file.exists(file = paste0(outpath, "-all_confl_comb_graphs.RData"))) {
-      #   load(file = paste0(outpath, "-all_confl_comb_graphs.RData"))
-      # } else {
-      #   load(file = paste0(get_old_outpath(outpath), "-all_confl_comb_graphs.RData"))
-      #   if (save) {
-      #     save(all_graphs, file = paste0(outpath, "-all_confl_comb_graphs.RData"))
-      #   }
-      # }
       
       load(file = outpath_where_results_exist)
-      # if (outpath_where_graphs_exist != paste0(outpath, "-all_confl_comb_graphs.RData")) oder
-      if (!file.exists(paste0(outpath, "-all_confl_comb_results.RData"))) {
-        save(all_results, file = paste0(outpath, "-all_confl_comb_results.RData"))
+      # if (outpath_where_graphs_exist != paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData")) oder
+      if (!file.exists(paste0(outpath, "-all_confl_comb_", suffix_results, ".RData"))) {
+        save(all_results, file = paste0(outpath, "-all_confl_comb_", suffix_results, ".RData"))
       }
-      
-      # if (file.exists(file = paste0(outpath, "-all_confl_comb_results.RData"))) {
-      #   load(file = paste0(outpath, "-all_confl_comb_results.RData"))
-      # } else {
-      #   load(file = paste0(get_old_outpath(outpath), "-all_confl_comb_results.RData"))
-      #   if (save) {
-      #     save(all_results, file = paste0(outpath, "-all_confl_comb_results.RData"))
-      #   }
-      # }
-      
     }
   }
   

@@ -329,54 +329,6 @@ enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE, dir
   return(graphs)
 }
 
-protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
-                                 parameters_for_info_file, alpha, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule,
-                                 caption, analysis, stages, plot_types, coloring, colors, 
-                                 graph_layout = "dot", plot_as_subgraphs = plot_as_subgraphs, 
-                                 plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console, 
-                                 lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, graph_output_formats,
-                                 numerical, mute_all_plots = FALSE, plot_no_isolated_nodes) {
-  print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
-    print("Directory created.")
-  } 
-  
-  if (missing(outpath)) {
-    outpath <- paste(output_dir, filename, sep = "/")
-  }
-  
-  # Computation of pc 
-  pc_fun <- function(outpath) {
-    return(estimate_DAG_from_numerical_data(data, alpha = alpha, outpath = outpath, 
-                                            solve_conflicts = pc_solve_conflicts, u2pd = pc_u2pd, 
-                                            conservative = pc_conservative, maj_rule = pc_maj_rule))
-  }
-  
-  results <- list()
-  
-  parameters_to_info_file(parameters_for_info_file, outpath)
-  
-  pc_func <- function_set_parameters(pc_fun, parameters = list(outpath = outpath))
-  loaded_object_ok_fun <- function(pc) {return(length(pc@graph@nodes) != dim(data)[2])}
-  results$pc <- compute_if_not_existent(filename = paste0(outpath, "-pc"), FUN = pc_func, obj_name = "pc", 
-                                        compute_anew = compute_pc_anew, loaded_object_ok_fun = loaded_object_ok_fun)
-  # results$pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file, data = data)
-  
-  # garbage <- graphics.off()
-  # if (!mute_all_plots) {
-  if (plot_no_isolated_nodes) {
-    graph <- kernelize_graph(results$pc@graph)
-  } else {
-    graph <- results$pc@graph
-  }
-  plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, 
-             coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
-             plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
-  # }
-  
-  return(results)
-} 
 
 sink.reset <- function() {
   if (sink.number() > 0) {
@@ -954,6 +906,9 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
   amplify_with_factor <- function(effects, element_that_should_be_scaled_to = 2, 
                                   value_the_element_should_be_scaled_to = 0.9, cut_values_at = 1) {
     sorted_effects <- sort(effects, decreasing = TRUE)
+    if (sorted_effects[element_that_should_be_scaled_to] == 0) {
+      return(effects)
+    }
     factor = value_the_element_should_be_scaled_to / sorted_effects[element_that_should_be_scaled_to]
     # factor <- 0.9 / sorted_effects_pos[2] # permutated_position nicht skalieren, alle anderen so, dass der Zweitgrößte bei 0.9 ist
     effects <- effects * factor
@@ -967,70 +922,72 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
   effects_na <- as.matrix(effects[,1][is.na(effects[,1])])
   effects <- as.matrix(effects[,1][!is.na(effects[,1])])
   
-  if (neg_effects == "discard") {
-    effects[,1][effects[,1] < 0] <- 0
-  } else if (neg_effects == "abs") {
-    effects <- abs(effects)
-  }
-  if (rank) {
-    if (neg_effects == "sep") {
-      effects_pos <- as.matrix(effects[,1][effects[,1] >= 0])
-      effects_neg <- as.matrix(effects[,1][effects[,1] < 0])
-      effects_neg <- -effects_neg
-      effects_pos <- cbind(apply(effects_pos, 2, rank))
-      effects_neg <- cbind(apply(effects_neg, 2, rank))
-      
-      effects_pos <- effects_pos - min(effects_pos) + 1
-      effects_neg <- effects_neg - min(effects_neg) + 1
-      effects_pos <- effects_pos / max(effects_pos)
-      effects_neg <- effects_neg / max(effects_neg)
-      
-      effects_neg <- -effects_neg
-      effects <- rbind(effects_pos, effects_neg)
-      # effects_ <- effects_[order(rownames(effects_)), , drop = FALSE]
-      # effects <- effects_
-    } else {
-      effects <- cbind(apply(effects, 2, rank))
-      
-      effects <- effects - min(effects) + 1
-      effects <- effects / max(effects)
-      #effects <- effects/dim(effects)[1]
+  if (!length(effects) == 0) {
+    if (neg_effects == "discard") {
+      effects[,1][effects[,1] < 0] <- 0
+    } else if (neg_effects == "abs") {
+      effects <- abs(effects)
     }
-    amplification_exponent <- 1               # will man das? I think so
-  } else {
-    if (neg_effects != "sep") {
-      min_eff <- sort(effects)[1]
-      if (min_eff < 0) {
-        effects = (effects - min_eff) / 2
+    if (rank) {
+      if (neg_effects == "sep") {
+        effects_pos <- as.matrix(effects[,1][effects[,1] >= 0])
+        effects_neg <- as.matrix(effects[,1][effects[,1] < 0])
+        effects_neg <- -effects_neg
+        effects_pos <- cbind(apply(effects_pos, 2, rank))
+        effects_neg <- cbind(apply(effects_neg, 2, rank))
+        
+        effects_pos <- effects_pos - min(effects_pos) + 1
+        effects_neg <- effects_neg - min(effects_neg) + 1
+        effects_pos <- effects_pos / max(effects_pos)
+        effects_neg <- effects_neg / max(effects_neg)
+        
+        effects_neg <- -effects_neg
+        effects <- rbind(effects_pos, effects_neg)
+        # effects_ <- effects_[order(rownames(effects_)), , drop = FALSE]
+        # effects <- effects_
+      } else {
+        effects <- cbind(apply(effects, 2, rank))
+        
+        effects <- effects - min(effects) + 1
+        effects <- effects / max(effects)
+        #effects <- effects/dim(effects)[1]
       }
-      if (amplification_factor) {
-        effects <- amplify_with_factor(effects)
-      }
+      amplification_exponent <- 1               # will man das? I think so
     } else {
-      effects_pos <- as.matrix(effects[,1][effects[,1] >= 0])
-      # effects_pos <- as.matrix(effects[,1][effects[,1] >= 0 & !is.na(effects[,1])])
-      effects_neg <- as.matrix(effects[,1][effects[,1] < 0])
-      # effects_neg <- as.matrix(effects[,1][effects[,1] < 0 & !is.na(effects[,1])])
-      # effects_neg <- cbind(effects_neg[!is.na(effects_neg),]) # NAs nicht doppelt haben -- in neg rausschmeißen! 
-                                                              # TODO: in dan anderen Fällen ggf. auch !!!!! 
-      effects_neg <- -effects_neg
-      
-      
-      if (amplification_factor) {
-        effects_pos <- amplify_with_factor(effects_pos)
+      if (neg_effects != "sep") {
+        min_eff <- sort(effects)[1]
+        if (min_eff < 0) {
+          effects = (effects - min_eff) / 2
+        }
+        if (amplification_factor) {
+          effects <- amplify_with_factor(effects)
+        }
+      } else {
+        effects_pos <- as.matrix(effects[,1][effects[,1] >= 0])
+        # effects_pos <- as.matrix(effects[,1][effects[,1] >= 0 & !is.na(effects[,1])])
+        effects_neg <- as.matrix(effects[,1][effects[,1] < 0])
+        # effects_neg <- as.matrix(effects[,1][effects[,1] < 0 & !is.na(effects[,1])])
+        # effects_neg <- cbind(effects_neg[!is.na(effects_neg),]) # NAs nicht doppelt haben -- in neg rausschmeißen! 
+                                                                # TODO: in dan anderen Fällen ggf. auch !!!!! 
+        effects_neg <- -effects_neg
+        
+        
+        if (amplification_factor) {
+          effects_pos <- amplify_with_factor(effects_pos)
+        }
+        
+        if (amplification_factor && dim(effects_neg)[1] > 1) {
+          effects_neg <- amplify_with_factor(effects_neg)
+        }
+        
+        effects_neg <- -effects_neg
+        effects <- rbind(effects_pos, effects_neg)
+        # effects_ <- effects_[order(rownames(effects_)), , drop = FALSE]
+        # effects <- effects_
       }
-      
-      if (amplification_factor && dim(effects_neg)[1] > 1) {
-        effects_neg <- amplify_with_factor(effects_neg)
-      }
-      
-      effects_neg <- -effects_neg
-      effects <- rbind(effects_pos, effects_neg)
-      # effects_ <- effects_[order(rownames(effects_)), , drop = FALSE]
-      # effects <- effects_
     }
   }
-  
+
   effects <- rbind(effects, effects_na)
   
   effects <- effects[order(rownames(effects)), , drop = FALSE]

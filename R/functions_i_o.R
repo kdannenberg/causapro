@@ -116,7 +116,7 @@ subtype_of_data_after_adjustment <- function(data, subtype_of_data, rank = FALSE
     delimiter = "-"
   }
   if (!typeof(min_var) == "closure") {
-    if (min_var > 0) {
+    if ((min_var > 0) || (min_var < 0)) {
       subtype_of_data <- paste0(subtype_of_data, delimiter, "var>", min_var)
     }
   } else {
@@ -238,39 +238,39 @@ get_old_outpath <- function(outpath, suffix) {
   return(NULL)
 }
 
-
+# TODO: old_outpath an geänderte get_old_outpath-Funktion anpassen
 compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_anew = FALSE, 
                                     loaded_object_ok_fun = function(obj) return(TRUE), 
                                     try_old_outpath = TRUE) {
   filename <- paste(filename, ".RData", sep = "")
   if (file.exists(filename) && !compute_anew) {
     # rm(list = ls()[which(ls() == obj_name)])
-    load(filename)
+    try(load(filename))
     if (!exists(obj_name)) {
-      warning(paste("The file did not contain an object of name", obj_name, "!"))
+      warning(paste("File not loadable or did not contain an object of name", obj_name, "!"))
     } else if (loaded_object_ok_fun(get(obj_name))) {
       warning("The loaded object did not fit!")
     } else {
       print(paste(obj_name, " object loaded from ", filename, ".", sep = ""))
       return(get(obj_name))
     }
-  } else {
-    # if (!missing(old_outpath)) {
-    old_outpath <- get_old_outpath(filename)
-    if (try_old_outpath && file.exists(old_outpath) && !compute_anew) {
-      # rm(list = ls()[which(ls() == obj_name)])
-      load(old_outpath)
-      if (!exists(obj_name)) {
-        warning(paste("The file did not contain an object of name", obj_name, "!"))
-      } else if (loaded_object_ok_fun(get(obj_name))) {
-        warning("The loaded object did not fit!")
-      } else {
-        print(paste("Old ", obj_name, " object loaded from ", old_outpath, ".", sep = ""))
-        save(list = obj_name, file = filename) # Objekt an neuem Ort speichern
-        return(get(obj_name))
-      }
-    }
-    # }
+  # } else {
+  #   # if (!missing(old_outpath)) {
+  #   old_outpath <- get_old_outpath(filename)
+  #   if (try_old_outpath && file.exists(old_outpath) && !compute_anew) {
+  #     # rm(list = ls()[which(ls() == obj_name)])
+  #     load(old_outpath)
+  #     if (!exists(obj_name)) {
+  #       warning(paste("The file did not contain an object of name", obj_name, "!"))
+  #     } else if (loaded_object_ok_fun(get(obj_name))) {
+  #       warning("The loaded object did not fit!")
+  #     } else {
+  #       print(paste("Old ", obj_name, " object loaded from ", old_outpath, ".", sep = ""))
+  #       save(list = obj_name, file = filename) # Objekt an neuem Ort speichern
+  #       return(get(obj_name))
+  #     }
+  #   }
+  #   # }
   } # else {
   print(paste("Computing", obj_name, "object."))
   assign(obj_name, FUN())
@@ -337,8 +337,8 @@ rem_cols_by_colname <- function(data, remove) {
 
 ## previously: "caption"
 get_caption <- function(protein, data, alpha, min_pos_var, chars_per_line = 50) {
-  # par_string = paste("protein: ", protein, ", data: ", data, ", alpha: ", alpha, ", var !> ", min_pos_var, sep = "")
-  par_string = paste(data, " - alpha: ", alpha, ", var !> ", min_pos_var, sep = "")
+  # par_string = paste("protein: ", protein, ", data: ", data, ", alpha: ", alpha, ", var > ", min_pos_var, sep = "")
+  par_string = paste(data, " - alpha: ", alpha, ", var > ", min_pos_var, sep = "")
   caption = strwrap(par_string, width = chars_per_line)
   return(caption)
 }

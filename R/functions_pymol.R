@@ -1,4 +1,7 @@
-pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/") {
+# set seq_view, 1 # Sequence on
+
+
+pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/", seq_on = TRUE) {
   if (missing(pdb_file)) {
     pdb_file <- paste("..", "..", "..", "", sep = file_separator)
     if (protein == "GTB") {
@@ -11,6 +14,9 @@ pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/")
       # pdb_file <- "../../../1cm8.pdb"
       pdb_file <- paste0(pdb_file, "1cm8.pdb")
       chain = "chain A"
+    } else if (tolower(protein) == "nov") {
+      pdb_file <- paste0(pdb_file, "4X06.pdb")
+      # chain = "chain A"
     } else {
       stop("No pdb-file given.")
     }
@@ -44,12 +50,17 @@ pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/")
   cat("\n")
   cat("set label_position,(-2,-2,0)\n")
   cat("\n")
+  if (seq_on) {
+    cat("set seq_view, 1\n")
+    cat("\n")
+  }
 }
 
 # most general; TODO: can the other fucntions (except for the paths) be implemented using this one? 
 plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file, 
                                    label = TRUE, no_colors = FALSE, show_positions = TRUE,
-                                   file_separator = "/", type_of_clustering = "", bg_color = "grey") {
+                                   file_separator = "/", type_of_clustering = "", bg_color = "grey",
+                                   length_sort = TRUE) {
   
   out_file <- paste0(outpath, "-", length(node_clustering), pastes("_clusters", type_of_clustering, sep = "-"),".pml")
   # out_file <- pastes(out_file, type_of_clustering, sep = "-")
@@ -58,11 +69,16 @@ plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file,
   
   sink(file = out_file)
   pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
-  if (!is.null(names(node_clustering))) {
-    colors <- names(node_clustering)
-  } else {
-    colors <- rainbow(length(node_clustering))
-  }
+  
+  rainbow_colors <- rainbow(length(which(names(node_clustering) == "")))
+  names(node_clustering)[names(node_clustering) == ""] <- rainbow_colors
+  colors <- names(node_clustering)
+  
+  # if (!is.null(names(node_clustering))) {
+  #   colors <- names(node_clustering)
+  # } else {
+  #   colors <- rainbow(length(node_clustering))
+  # }
   
   for (i in 1:length(node_clustering)) {
     cat("create sector_", i, ", (resi ", 
@@ -152,25 +168,27 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
       } else {
         int_pos <- interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = TRUE, coloring = coloring_for_int_pos)
       }
-      for (i in 1:length(int_pos)) {
-        cat("create sector_interesting_", i, ", (resi ",
-            paste(int_pos[[i]], collapse = ","), ") \n", sep = "")
-        # if (show_positions) {
-        cat("show surface, sector_interesting_", i, "\n", sep = "")
-        if (color_int_pos) {
-          color <- col2rgb(names(int_pos[i]))
-          color <- color / 255
-          cat("set_color col_int_", i, ", [", paste(color, collapse = ","), "] \n", sep = "")
-          cat("color col_int_", i, ", sector_interesting_", i, "\n", sep = "")
+      if (!length(int_pos) == 0) {
+        for (i in 1:length(int_pos)) {
+          cat("create sector_interesting_", i, ", (resi ",
+              paste(int_pos[[i]], collapse = ","), ") \n", sep = "")
+          # if (show_positions) {
+          cat("show surface, sector_interesting_", i, "\n", sep = "")
+          if (color_int_pos) {
+            color <- col2rgb(names(int_pos[i]))
+            color <- color / 255
+            cat("set_color col_int_", i, ", [", paste(color, collapse = ","), "] \n", sep = "")
+            cat("color col_int_", i, ", sector_interesting_", i, "\n", sep = "")
+          }
+          # }
+          # if (!no_colors) {
+          #   color <- col2rgb(names(int_pos)[[i]])
+          #   color <- color / 255
+          #   position <- int_pos[]
+          #   cat("set_color col_interesting_", i, ", [", paste(color, collapse = ","), "] \n", sep = "")
+          #   cat("color col_interesting_", i, ", sector_interesting_", i, "\n", sep = "")
+          # }
         }
-        # }
-        # if (!no_colors) {
-        #   color <- col2rgb(names(int_pos)[[i]])
-        #   color <- color / 255
-        #   position <- int_pos[]
-        #   cat("set_color col_interesting_", i, ", [", paste(color, collapse = ","), "] \n", sep = "")
-        #   cat("color col_interesting_", i, ", sector_interesting_", i, "\n", sep = "")
-        # }
       }
     }
   }

@@ -8,7 +8,7 @@ source_all_function_scripts()
 source("configuration_data.R")
 
 
-new = FALSE
+new = TRUE
 print_best_scenarios = TRUE
 with_graphs = FALSE
 for_all_best_alphas = FALSE

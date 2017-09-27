@@ -4,7 +4,7 @@ library("ggm")    # for pcor  (partial correlation)
 library("RBGL")   # for tsort (top. sorting)
 library("dagitty") # for adjustmentSets
 
-source("configuration_code.R")
+source("~/.configuration_code.R")
 
 # source("functions_causal_effects.R")
 # source("functions_ci_tests.R")
@@ -17,6 +17,8 @@ source("functions_conversions.R")
 # source("functions_linkcommunities.R")
 # source("functions_pymol.R")
 # source("functions_tools.R")
+
+# source("configuration_data.R")
 
 set.seed(14)
 # pseudo_ida_by_causalEffect(x = 8, y = 12, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!   für p = 10
@@ -49,12 +51,26 @@ topological_nodesnames <- function(DAG) {
   return(as.character(top_node_names))
 }
 
-# only the parameters x, y and graphEst are used;  rest is only to mathc function definition of ida()
-pseudo_ida_by_causalEffect <- function(x, y, mcov, graphEst, method = "", y.notparent = FALSE, verbose = FALSE, all.dags = NA) {
-  cat(paste("Effect from", x, "on", y, "\n"))
+# only the parameters x, y and graphEst are used;  rest is only to match function definition of ida()
+# print can be use to mute command line prints
+pseudo_ida_by_causalEffect <- function(x, y, mcov, graphEst, method = "", y.notparent = FALSE, 
+                                       verbose = FALSE, all.dags = NA, print = FALSE, plot = FALSE, 
+                                       outpath) {
+  if (print) {
+    cat(paste("Effect from", x, "on", y, "\n"))
+  }
   # allDAGS <- pdag2allDags(wgtMatrix(graphEst))$dags
-  allDAGs <- set_of_DAGs(graphEst) 
+  outpath <- paste0(outpath, "-all_DAGs")
+  
+  if (!missing(outpath)) {
+     all_DAGs <- compute_if_not_existent(filename = outpath, FUN = set_parameters(set_of_DAGs, 
+                                        parameters = list(pDAG = graphEst)), obj_name = "all_DAGs")
+  } else {
+    allDAGs <- set_of_DAGs(graphEst) 
+  }
   # 
+  causal_effects <- c()
+  
   for (DAG_as in allDAGs) {
   #   print(paste("DAG", i))
   #   m <- matrix(allDAGS[i,], nrow = p, ncol = p, byrow = TRUE)
@@ -63,16 +79,28 @@ pseudo_ida_by_causalEffect <- function(x, y, mcov, graphEst, method = "", y.notp
   #   DAG_as <-  as(t(m), "graphNEL")
     # in einer Zeile: 
     # DAG_as <- as(t(matrix(pdag2allDags(wgtMatrix(pDAG))$dags[i,],p,p, byrow = TRUE)), "graphNEL")
-    plot(DAG_as)
+    
+    if (plot) {
+      plot(DAG_as)
+    }
+    
+    p <- length(graphEst@nodes)
     
     DAG_as_wgt <- set_edge_weights_for_graph(DAG_as, mcov)
     
-    print(wgtMatrix(DAG_as_wgt))
+    if (print) {
+      print(wgtMatrix(DAG_as_wgt))
+    }
     
     # nodenams topologisch machen
     orignial_node_names <- nodes(DAG_as_wgt)
     
-    sorting <- tsort(DAG_as_wgt)
+    if (isDirected(DAG_as_wgt)) {
+      sorting <- tsort(DAG_as_wgt)
+    } else {
+      sorting <- c(as.character(1:p))
+    }
+    
     top_node_names <- sapply(1:p, function(i) {return(which(sorting == i))})
     # nodes(DAG_as_wgt) <- topological_nodesnames(DAG_as_wgt) 
     nodes(DAG_as_wgt) <- as.character(top_node_names)
@@ -87,19 +115,32 @@ pseudo_ida_by_causalEffect <- function(x, y, mcov, graphEst, method = "", y.notp
     
     DAG_as_wgt <-  as(t(wgt_mat), "graphNEL")
     
-    plot(DAG_as_wgt, nodeAttrs = list(fontcolor = setNames(rep("red", p), as.character(1:p))))
+    if (plot) {
+      plot(DAG_as_wgt, nodeAttrs = list(fontcolor = setNames(rep("red", p), as.character(1:p))))
+    }
     
     causal_effect <- causalEffect(DAG_as_wgt, x = x_caus_eff, y = y_caus_eff)
+    if (x == y) {
+      causal_effect <- 1
+    }
+    causal_effects <- c(causal_effects, causal_effect)
     
-    cat(paste0("hier: ", causal_effect, " (", x_caus_eff, " on ", y_caus_eff, ") ", "\n"))
-    # #maybe better: ftM2graphNEL???
-    # source: https://support.bioconductor.org/p/90421/
-    # DAG_ftM2 <- ftM2graphNEL()
-    # plot(DAG)
-    cat(paste("ida:", ida(x.pos = x, y.pos = y, graphEst = DAG_as, mcov = mcov)))
-    cat("\n")
+    if (print) {
+      cat(paste0("hier: ", causal_effect, " (", x_caus_eff, " on ", y_caus_eff, ") ", "\n"))
+      # #maybe better: ftM2graphNEL???
+      # source: https://support.bioconductor.org/p/90421/
+      # DAG_ftM2 <- ftM2graphNEL()
+      # plot(DAG)
+      cat(paste("ida:", ida(x.pos = x, y.pos = y, graphEst = DAG_as, mcov = mcov)))
+      cat("\n")
+    }
   }
   # cat(paste("ida:", ida(x.pos = x, y.pos = y, graphEst = pDAG, mcov = mcov)))
+  return(causal_effects)
+}
+
+pseudo_idaFast_by_causalEffect <- function(x.pos, y.pos.set, mcov, graphEst, outpath) {
+  return(do.call(rbind, lapply(y.pos.set, function(y.pos) {return(pseudo_ida_by_causalEffect(x = x.pos, y = y.pos, mcov = mcov, graphEst = graphEst, outpath = outpath))})))
 }
 
 set_edge_weights_for_graph <- function(graph, cov) {
@@ -143,17 +184,18 @@ set_edge_weights_for_graph <- function(graph, cov) {
 
 
 set_of_DAGs <- function(pDAG) {
-  allDAGS_m <- pdag2allDags(wgtMatrix(pDAG))$dags
+  p <- length(pDAG@nodes)
+  allDAGs_m <- pdag2allDags(wgtMatrix(pDAG))$dags
   m <- function (line) {
     return(matrix(line, nrow = p, ncol = p, byrow = TRUE))
   }
-  allDAGS_adj <- alply(allDAGS_m, 1, m)
+  allDAGs_adj <- alply(allDAGs_m, 1, m)
   # allDAGS_adj <- apply(allDAGS_m, 1, matrix, nrow = p, ncol = p, byrow = TRUE)
     # m <- matrix(allDAGS[i,], nrow = p, ncol = p, byrow = TRUE)
     
     # Why is it necessary to transpose m?!
     # DAG_as <-  as(t(m), "graphNEL")
-  allDAGs <- lapply(allDAGS_adj, function(m) {return(as(t(m), "graphNEL"))})
+  allDAGs <- lapply(allDAGs_adj, function(m) {return(as(t(m), "graphNEL"))})
   return(allDAGs)
 }
 
@@ -161,7 +203,10 @@ set_of_DAGs <- function(pDAG) {
 # pseudo_ida_by_causalEffect(x = 2, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!
 # pseudo_ida_by_causalEffect(x = 5, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!
 
+debug(pseudo_ida_by_causalEffect)
+
 pseudo_ida_by_causalEffect(x = 3, y = 6, graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!   für p = 10
+res_idaFast <- pseudo_idaFast_by_causalEffect(x = 3, y = c(4,5,6), graphEst = pDAG, mcov = cov.d) # in Graph 3 nur fast gleich!   für p = 10
 
 # never used?
 ida_for_set_of_DAGs <- function(x, y, mcov, graphEst, method = "", y.notparent = FALSE, verbose = FALSE, all.dags = NA) {

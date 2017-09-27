@@ -1,7 +1,7 @@
 source("~/.configuration_code.R")
 
 source_all_function_scripts()
-
+# source("functions_causal_effect_without_IDA.R")
 ## sets working directory depending on local config file
 source("configuration_data.R")
 
@@ -16,9 +16,14 @@ source("configuration_data.R")
 # debug(pymol_mean_effects)
 # debug(compute_if_not_existent)
 
+# undebug(pseudo_ida_by_causalEffect)
+# debug(causal_effects_ida)
+# debug(scale_effects)
+# debug(set_effects_of_unconnected_positions_to_zero)
+
 graphics.off()
 par(mfrow = c(1,4))
-results_S <- protein_causality_S(alpha = 0.06, min_pos_var = 0.01, analysis = TRUE, pc_maj_rule = TRUE, pc_solve_confl = TRUE,
+results_S <- protein_causality_S(alpha = 0.002, min_pos_var = 0.001, analysis = TRUE, pc_maj_rule = TRUE, pc_solve_confl = TRUE,
                                  for_combined_plot = TRUE, data_in_results = TRUE)
 # results_S <- protein_causality_S(type_of_data = "DS", alpha = 0.01, min_pos_var = 0.01, analysis = TRUE, pc_maj_rule = TRUE, pc_solve_confl = TRUE, 
 #                                  for_combined_plot = TRUE, data_in_results = TRUE)
