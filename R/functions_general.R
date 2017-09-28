@@ -780,6 +780,12 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
   }
 }
 
+## TODO: write igraph plot function which colors vertices with interesting positions and conflict edges
+
+plot_graph_new_igraph <- function(graph) {
+  
+}
+
 # TODO: call plot_graphs oder so
 
 ## instead of fixing/working on the above function I think it is easier to write a new plot function the way we need it and then integrate it into the program if necessary
@@ -833,7 +839,7 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
 
 # function that computes the edgecolors of a given graph
 # edges with weight 2 (conflict edges) are colored red
-get_eAttrs <- function(graph) {
+get_eAttrs <- function(graph, igraph=FALSE) {
   # list of nodes
   ln <- nodes(graph)
   n <- length(ln)
