@@ -69,11 +69,16 @@ protein_graph_clustering <- function(results, protein, outpath, file_separator, 
   
   for (clustering in cluster_methods) {
     igraph <- graph_from_graphnel(results$pc@graph)
+    ## this is the only thing that works for me
+    ##igraph <- igraph.from.graphNEL(results$pc@graph)
     cluster_fct <- get(paste0("cluster_", clustering))
     cl <- cluster_fct(igraph)
     # TODO: save plot, instaed of plotting
     if (!mute_all_plots) {
-      plot(cl, igraph, main = paste0(caption, "\n", clustering))
+      ## edge.arrow.size determines size of arrows (1 is default), vertex.size determines size of the vertices (15 is default), edge.width determines width of edges (1 is default)
+      plot(cl, igraph, main = paste0(caption, "\n", clustering), edge.arrow.size=0.2, vertex.size=8, edge.width=0.7)
+      ##this is the old version, just in case my adjustments don't work for you
+      ##plot(cl, igraph, main = paste0(caption, "\n", clustering))
     }
     node_clustering <- groups(cl)
     node_clustering <- unname(node_clustering)  # otherwise interpreted as colors

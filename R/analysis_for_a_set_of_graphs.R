@@ -28,8 +28,9 @@ save = TRUE
 
 # measures <- c("DDS", "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")
 measures <- c("DDDG-10", "DDDG-5", "DDDG-all")
+
 # richtige Reihenfolge von -5, -10 und -all:
-# measures <- c("DDS", "DDG-5", "DDG-10", "DDG-all", "DDDG-5", "DDDG-10", "DDDG-all")
+#measures <- c("DDS", "DDG-5", "DDG-10", "DDG-all", "DDDG-5", "DDDG-10", "DDDG-all")
 # measures <- c("DDS")
 alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
 # alphas = c(0.001, 0.01, 0.05, 0.1)
