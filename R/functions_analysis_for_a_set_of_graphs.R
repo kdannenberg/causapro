@@ -382,9 +382,12 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
     
     if (start_new) {
       if (!new && !is.null(outpath_where_graphs_exist)) {
-        load(file = outpath_where_graphs_exist)
+        try(load(file = outpath_where_graphs_exist))
         # if (outpath_where_graphs_exist != paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData")) oder
-        if (!is.null(all_graphs) && length(all_graphs[[1]]@nodes) != dim(data)[2]) {
+        if (!exists("all_graphs")) {
+          warning(paste("File not loadable or did not contain an object of name all_graphs!"))
+          outpath_where_graphs_exist <- NULL
+        } else if (!is.null(all_graphs) && length(all_graphs[[1]]@nodes) != dim(data)[2]) {
           warning(paste0("Loaded graph did not have the right number of nodes: ", outpath_where_graphs_exist, "."))
           outpath_where_graphs_exist <- NULL
         } else {

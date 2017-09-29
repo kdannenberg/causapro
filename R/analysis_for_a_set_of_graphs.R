@@ -16,14 +16,18 @@ source("tests_analysis_for_a_set_of_graphs.R")
 
 source("configuration_data.R")
 
+# debug(analyse_set_of_graphs)
 # debug(determine_set_of_graphs)
 # debug(causal_effects_ida)
 
 new = FALSE
 save = TRUE
 
+
+# weitermaachen: DDG-all alpha = 0.004, min_pos_var = 0.0001
+
 # measures <- c("DDS", "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")
-measures <- c("DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")
+measures <- c("DDDG-10", "DDDG-5", "DDDG-all")
 # richtige Reihenfolge von -5, -10 und -all:
 # measures <- c("DDS", "DDG-5", "DDG-10", "DDG-all", "DDDG-5", "DDDG-10", "DDDG-all")
 # measures <- c("DDS")
@@ -33,8 +37,8 @@ alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09
 min_pos_vars = c(0.0001, 0.001, 0.01)
 
 # measures <- c("DDG-5")
-alphas <- c(0.002)
-min_pos_vars <- c(0.001)
+# alphas <- c(0.008)
+# min_pos_vars <- c(0.01)
 
 all_effects <- list()
 for (measure_type_sub in measures) {
