@@ -29,8 +29,9 @@ compute_anew = FALSE
 save_edge_types = TRUE
 conflict_edge_weight = 1
 
-measures <- c("DDS",
-  "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")
+# measures <- c("DDS",
+#   "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")
+measures <- c("DDS", "DDG-5", "DDG-10", "DDG-all", "DDDG-5", "DDDG-10", "DDDG-all")
 
 min_pos_vars <- c(0.0001, 0.001, 0.01)
 
@@ -38,10 +39,11 @@ min_pos_vars <- c(0.0001, 0.001, 0.01)
 alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
 # alphas <- c(0.01)
 
-
+# file = "RData/edge_types.RData"
+file = "RData/edge_types-ida-reset.RData"
 
 # if (compute_anew || !exists("edge_types")) {
-if (compute_anew || !file.exists("RData/edge_types.RData")) {
+if (compute_anew || !file.exists(file)) {
   edge_types <- list()
   for (measure_type_sub in measures) {
     measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
@@ -76,10 +78,10 @@ if (compute_anew || !file.exists("RData/edge_types.RData")) {
   # }
   # }
   if (save_edge_types) {
-    save(edge_types, file = "RData/edge_types.RData")
+    save(edge_types, file = file)
   }
 } else {
-  load(file = "RData/edge_types.RData")
+  load(file = file)
 }
 
 

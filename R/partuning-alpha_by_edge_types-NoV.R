@@ -25,7 +25,7 @@ plot_logscale_alpha = FALSE
 # if NULL: automatically set in each plot
 ylim_for_plots = c(0,200) #5 # c(0, 200) # or NULL
 opt_alpha_double_weight_conflict = FALSE
-compute_anew = FALSE
+compute_anew = TRUE
 save_edge_types = TRUE
 conflict_edge_weight = 2
 

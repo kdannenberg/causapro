@@ -358,9 +358,11 @@ quality_of_effects_classifier <- function(effects, int_pos, percentile = 1 - (le
   fp = setdiff(most_influenced_pos, most_influenced_pos_interesting)
   fn = setdiff(int_pos, most_influenced_pos_interesting)
   if (length(fp) != length(fn)) {
-    warning("Not as many false positives as false neagtives in quality_of_effects_classifier.")
+    # Das kann passieren, wenn es weniger als lenght(int_pos) nicht-null Effekte gibt!
+    warning("Not as many false positives as false negatives in quality_of_effects_classifier.") 
   }
-  return((mean(length(fp), length(fn))) / length(setdiff(int_pos, perturbed_position)))
+  # return((mean(c(length(fp), length(fn)))) / length(setdiff(int_pos, perturbed_position)))
+  return((max(c(length(fp), length(fn)))) / length(setdiff(int_pos, perturbed_position)))
 }
 
 score_for_effects <- function(effects, int_pos, perturbed_position = 372, effect_quality_height, false_pos_neg, 
@@ -374,13 +376,15 @@ score_for_effects <- function(effects, int_pos, perturbed_position = 372, effect
     quality_of_effects_classifier <- false_pos_neg / length(setdiff(int_pos, perturbed_position))
   }
   
-  return(score_of_effects_height(effect_quality_height) + score_of_effects_classifier(quality_of_effects_classifier))
+  s_height <- score_of_effects_height(effect_quality_height)
+  s_classifier <- score_of_effects_classifier(quality_of_effects_classifier)
+  return(s_height + s_classifier)
 }
 
 # give either effect_quality_height directly, or effects, int_pos and perturbed_position,
 # so it can be computed internally
 # previously: quality_score 
-score_of_effects_height <- function(effect_quality_height, effects, int_pos, perturbed_position, range_to_six = FALSE) {
+score_of_effects_height <- function(effect_quality_height, effects, int_pos, perturbed_position, range_to_six = TRUE) {
   if (missing(effect_quality_height)) {
     effect_quality_height <- quality_of_effects_distibution(effects = effects, int_pos = int_pos, perturbed_position = perturbed_position)
   }
@@ -401,20 +405,28 @@ score_of_effects_height <- function(effect_quality_height, effects, int_pos, per
       return(6)
     }
   } else {
-    if (effect_quality_height < 1) {
+    if (effect_quality_height == 0) {
       return(0)
-    } else if (effect_quality_height < 2) {
+    } else if (effect_quality_height < 1) {
       return(1)
-    } else if (effect_quality_height < 3) {
+    } else if (effect_quality_height < 1.5) {
       return(2)
-    } else if (effect_quality_height < 4) {
+    } else if (effect_quality_height < 2.5) {
       return(3)
-    } else if (effect_quality_height < 5) {
+    } else if (effect_quality_height < 3.5) {
       return(4)
-    } else if (effect_quality_height < 6) {
+    } else if (effect_quality_height < 5) {
       return(5)
-    } else {
+    } else if (effect_quality_height < 7) {
       return(6)
+    # } else if (effect_quality_height < 6.5) {
+    #   return(6)
+    } else if (effect_quality_height < 10) {
+      return(7)
+    } else if (effect_quality_height == Inf) {
+      return(9)
+    } else {
+      return(8)
     }
   }
 }
@@ -426,36 +438,42 @@ score_of_effects_classifier <- function(false_pos_neg_fraction, effects, int_pos
   if (missing(false_pos_neg_fraction)) {
     false_pos_neg_fraction <- quality_of_effects_classifier(effects, int_pos = int_pos, perturbed_position = perturbed_position) 
   }
-  if (false_pos_neg_fraction >= 1) {
-    return(0)
-  } else if (false_pos_neg_fraction >= 5/6) {
-    return(1)
-  } else if (false_pos_neg_fraction >= 4/6) {
-    return(2)
-  } else if (false_pos_neg_fraction >= 3/6) {
-    return(3)
-  } else if (false_pos_neg_fraction >= 2/6) {
-    return(4)
-  } else if (false_pos_neg_fraction >= 1/6) {
-    return(5)
-  } else {
-    return(6)
-  }
-  # if (false_pos_neg_fraction == 0) {
-  #   return(6)
-  # } else if (false_pos_neg_fraction <= 1/6) {
-  #   return(5)
-  # } else if (false_pos_neg_fraction <= 2/6) {
-  #   return(4)
-  # } else if (false_pos_neg_fraction <= 3/6) {
-  #   return(3)
-  # } else if (false_pos_neg_fraction <= 4/6) {
-  #   return(2)
-  # } else if (false_pos_neg_fraction <= 5/6) {
-  #   return(1)
-  # } else {
+  # if (false_pos_neg_fraction >= 1) {
   #   return(0)
+  # } else if (false_pos_neg_fraction >= 5/6) {
+  #   return(1)
+  # } else if (false_pos_neg_fraction >= 4/6) {
+  #   return(2)
+  # } else if (false_pos_neg_fraction >= 3/6) {
+  #   return(3)
+  # } else if (false_pos_neg_fraction >= 2/6) {
+  #   return(4)
+  # } else if (false_pos_neg_fraction >= 1/6) {
+  #   return(5)
+  # } else {
+  #   return(6)
   # }
+  if (false_pos_neg_fraction == 0) {
+    return(9)
+  } else if (false_pos_neg_fraction <= 1/9) {
+    return(8)
+  } else if (false_pos_neg_fraction <= 2/9) {
+    return(7)
+  } else if (false_pos_neg_fraction <= 3/9) {
+    return(6)
+  } else if (false_pos_neg_fraction <= 4/9) {
+    return(5)
+  } else if (false_pos_neg_fraction <= 5/9) {
+    return(4)
+  } else if (false_pos_neg_fraction <= 6/9) {
+    return(3)
+  } else if (false_pos_neg_fraction <= 7/9) {
+    return(2)
+  } else if (false_pos_neg_fraction <= 8/9) {
+    return(1)
+  } else {
+    return(0)
+  }
 }
 
 # neg_effects: abs -> absolut value, discard -> drop

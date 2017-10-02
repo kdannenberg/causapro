@@ -118,8 +118,8 @@ protein_causality <- function(
   data_orig <- read_data(data_description, only_cols = only_cols)
   data <- adjust_data(data = data_orig, rank = ranked, min_var = min_pos_var) #mute = combined_plot)
   
-  # removed_cols <- setdiff(colnames(data_orig), colnames(data))
-  # removed_cols <- apply(data_orig[, removed_cols], 2, var)
+  removed_cols <- setdiff(colnames(data_orig), colnames(data))
+  removed_cols <- apply(data_orig[, removed_cols, drop = F], 2, var)
   
   subtype_of_data <- subtype_of_data_after_adjustment(subtype_of_data = subtype_of_data, rank = ranked, min_var = min_pos_var)
   
@@ -214,9 +214,9 @@ protein_causality <- function(
   if (graph_computation) {
     # if (!is.null(clustering)) {
     if (plot_clusters) {
-      # protein_graph_clustering(results = results, protein = protein, outpath = outpath, file_separator = file_separator, 
-      #                          caption = caption, mute_all_plots = mute_all_plots, cluster_methods = cluster_methods, 
-      #                          add_cluster_of_conserved_positions = add_cluster_of_conserved_positions, removed_cols = removed_cols)
+      protein_graph_clustering(results = results, protein = protein, outpath = outpath, file_separator = file_separator,
+                               caption = caption, mute_all_plots = mute_all_plots, cluster_methods = cluster_methods,
+                               add_cluster_of_conserved_positions = add_cluster_of_conserved_positions, removed_cols = removed_cols)
     }
     
   if (!is.null(plot_only_subgraphs)) {

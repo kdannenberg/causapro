@@ -25,7 +25,7 @@ source("configuration_data.R")
 
 # DDDG-10.0.08.1e-04
 results_G <- protein_causality_G(type_of_data = "DDG", subtype_of_data = "5", min_pos_var = 0.01, 
-                                 alpha = 0.001, analysis = TRUE, pc_maj_rule = TRUE, plot_no_isolated_nodes = FALSE)
+                                 alpha = 0.001, analysis = FALSE, pc_maj_rule = TRUE, plot_no_isolated_nodes = FALSE)
 # g <- results_G$pc@graph
 # g_w <- set_edge_weights_for_graph(g, cov(data))
 # # ida()

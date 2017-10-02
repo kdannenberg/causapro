@@ -102,7 +102,8 @@ analyse_set_of_graphs <- function(
                                               percentile = ida_percentile, mute_all_plots = for_combined_plot)),
   s = 10,    # sample size
   for_combined_plot = FALSE,
-  caption_as_subcaption = for_combined_plot
+  caption_as_subcaption = for_combined_plot,
+  barplot_contour_black = TRUE
 ) {
   if (!missing(results)) {
     type_of_graph_set == "conflict"
@@ -235,7 +236,7 @@ analyse_set_of_graphs <- function(
                                                      ida_percentile = ida_percentile, caption = caption, main_caption = NULL,
                                                      print = TRUE, plot = TRUE, plot_effect_quality = plot_effect_quality, 
                                                      plot_false_pos_neg = plot_false_pos_neg, plot_effect_score = plot_effect_score, 
-                                                     for_combined_plot = for_combined_plot)
+                                                     for_combined_plot = for_combined_plot, barplot_contour_black = barplot_contour_black)
     
     pymol_mean_effects(effects_over_all_graphs_on_of, protein = protein, int_pos = int_pos, outpath = outpath, perturbed_position = perturbed_position, 
                        amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, rank_effects = rank_effects, 
@@ -599,7 +600,7 @@ compute_over_all_graphs <- function(all_results, weight_effects_on_by, use_scale
 display_effects <- function(effects, effect_hue_by, direction, int_pos, perturbed_position, scale_in_the_end, weight_effects_on_by, 
                             function_over_all_graphs, ida_percentile = ida_percentile, caption, main_caption,
                             print = TRUE, plot = TRUE, for_combined_plot = FALSE, plot_effect_quality = TRUE, 
-                            plot_false_pos_neg = TRUE, plot_effect_score = TRUE) {
+                            plot_false_pos_neg = TRUE, plot_effect_score = TRUE, barplot_contour_black) {
   
   
   if (plot) {
@@ -640,7 +641,7 @@ display_effects <- function(effects, effect_hue_by, direction, int_pos, perturbe
                                                           interesting_positions = int_pos, print = FALSE, return_list = TRUE)
       effect_quality <- quality_of_effects_distibution(effects = effects_dir, int_pos = int_pos)
       score <- score_for_effects(effects = effects_dir, int_pos = int_pos, perturbed_position = perturbed_position, 
-                                 effect_quality, length(false_pos_neg$fp))
+                                 effect_quality, length(false_pos_neg$fn))
     }
     
     if (print) {
@@ -686,7 +687,7 @@ display_effects <- function(effects, effect_hue_by, direction, int_pos, perturbe
                                                             interesting_positions = int_pos, print = FALSE, return_list = FALSE) #neu belegen, diesmal mit String
       }
       plot_effects(effects_dir, effect_hue_by = effect_hue_by, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption, 
-                   effect_quality = effect_quality, false_pos_neg = false_pos_neg, score = score)
+                   effect_quality = effect_quality, false_pos_neg = false_pos_neg, score = score, barplot_contour_black = barplot_contour_black)
     }
       
       ############# 
@@ -767,7 +768,7 @@ display_effects <- function(effects, effect_hue_by, direction, int_pos, perturbe
 }
 
 plot_effects <- function(effects, effect_hue_by = effects, int_pos, scale_in_the_end, caption, effect_quality, 
-                         false_pos_neg, score, effect_to_color_mode = "#FFFFFF") {
+                         false_pos_neg, score, effect_to_color_mode = "#FFFFFF", barplot_contour_black) {
   
   lines_needed_for_subcaption = 0
   if (!is.null(false_pos_neg)) {
@@ -806,15 +807,24 @@ plot_effects <- function(effects, effect_hue_by = effects, int_pos, scale_in_the
   
   colors_by_effect <- color_by_effect(scaled_effect_hue_by, int_pos, mode = effect_to_color_mode)
   
+  colors <- colors_by_effect[names(effects)]
+  
+  if (!barplot_contour_black) {
+    contour = colors
+  } else {
+    contour = par("fg")
+  }
+  
+  
   if (!scale_in_the_end) {
     barplot(effects, 
             main = caption, 
-            col = colors_by_effect[names(effects)], las = 2)
+            col = colors, border = contour, las = 2)
   } else {
     scaled_effects <- scale_effects(as.matrix(effects), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
     barplot(as.vector(scaled_effects), 
             main = caption, 
-            col = colors_by_effect[names(effects)], las = 2, 
+            col = colors, las = 2, 
             names.arg = rownames(scaled_effects_for_coloring))
   }
   

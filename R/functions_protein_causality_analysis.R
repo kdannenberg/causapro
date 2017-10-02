@@ -60,11 +60,14 @@ protein_graph_clustering <- function(results, protein, outpath, file_separator, 
     if (more_levels_of_conservedness) {
       removed_cols <- (removed_cols / max(removed_cols)) / 0.9999
     }
-    colors_for_rem_pos <- color_by_effect(effects = removed_cols, int_pos = "", color_for_other_positions = "#000000", mode = "#FFFFFF")
     
-    add_clusters <- sapply(names(table(colors_for_rem_pos)), 
-                           FUN = function(color) {return(names(colors_for_rem_pos[which(colors_for_rem_pos == color)]))}, 
-                           simplify = FALSE, USE.NAMES = TRUE)
+    if (!length(removed_cols) == 0) {
+      colors_for_rem_pos <- color_by_effect(effects = removed_cols, int_pos = "", color_for_other_positions = "#000000", mode = "#FFFFFF")
+      
+      add_clusters <- sapply(names(table(colors_for_rem_pos)), 
+                             FUN = function(color) {return(names(colors_for_rem_pos[which(colors_for_rem_pos == color)]))}, 
+                             simplify = FALSE, USE.NAMES = TRUE)
+    }
   }
   
   for (clustering in cluster_methods) {
@@ -96,7 +99,7 @@ protein_graph_clustering <- function(results, protein, outpath, file_separator, 
     }
     
     
-    if (add_cluster_of_conserved_positions) {
+    if (add_cluster_of_conserved_positions && exists("add_clusters")) {
       node_clustering <- c(node_clustering, add_clusters)
     }
     

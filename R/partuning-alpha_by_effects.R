@@ -7,20 +7,27 @@ source_all_function_scripts()
 
 source("configuration_data.R")
 
+# debug(score_for_effects)
 
-new = TRUE
+new = FALSE
 print_best_scenarios = TRUE
 with_graphs = FALSE
 for_all_best_alphas = FALSE
 
+file = "RData/all_effects-ida-reset.RData"
+
 # get all_effects
-if (!exists("all_effects")) {
+# if (!exists("all_effects")) {
   if (!new) {
-    load(file = "RData/all_effects.RData")
+    if (file.exists(file)) {
+      load(file = file)
+    } else {
+      warning("File did not exist, maybe you want to do: source('~/Documents/Uni/Viren/ProteinCausalPaths/R/analysis_for_a_set_of_graphs.R')")
+    }
   } else {
     source('~/Documents/Uni/Viren/ProteinCausalPaths/R/analysis_for_a_set_of_graphs.R')
   }
-}
+# }
 
 int_pos <- interesting_positions("PDZ")
 percentile = 1 - (length(int_pos) / dim(data)[2])
