@@ -504,8 +504,10 @@ protein_causality_S <- function(
 protein_causality_NoV <- function(
   # data parameters
   # available data:
-  # "NoV_NMR-Tit_BTS"
+  # "NoV_NMR-Tit_B4S"
   # "NoV_NMR-Tit_Fuc"
+  # and
+  # "NoV_NMR-Tit_B3S-with-unass"
   # type_of_data = "NMR-Tit"
   # type_of_data = c("NMR_Tit-Fuc", "NMR_Tit-BTS")
   # type_of_data = "Fuc-Tit-only-assigned"
