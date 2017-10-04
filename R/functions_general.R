@@ -410,6 +410,11 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
                    "#69A019" = bind_acceptor,          # green
                    "#FF9933" = c(close_to_bind_donor, bind_donor_indirect_H2O, bind_donor_indirct_Mn),    # orange
                    "#6B8E23" = close_to_bind_donor)    # olive
+    } else if (tolower(protein) == "nov") {
+      bind_ligand <- c(444, 443, 344, 345, 374, 442)
+      others <- c(347, 396, 348, 391, 392, 375)
+      list <- list("#69A019" = bind_ligand,            # green
+                   "#FFD700" = others)                  # yellow
     } else if (protein == "p38g") {
       if (coloring == "FS4") {
         blue_ <- c(53, 161, 215, 116, 137, 159, 154, 120, 130, 167, 219, 283, 125, 220, 209, 216, 212, 291, 287)
@@ -469,12 +474,12 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
             green_ <- c(green_, green_little_yellow, green_blue)
             red_ <- c(red_, red_blue)
             list <- list("#69A019" = sort(green_),       # green
-                         "#FFD700" = sort(yellow_),       # yellow
+                         "#FFD700" = sort(yellow_),      # yellow
                          "#CC0000" = sort(red_),         # red
                          "#1874CD" = sort(blue_))        # blue
           } else {
             list <- list("#69A019" = sort(green_),       # green
-                         "#FFD700" = sort(yellow_),       # yellow
+                         "#FFD700" = sort(yellow_),      # yellow
                          "#CC0000" = sort(red_),         # red
                          "#1874CD" = sort(blue_),        # blue
                          "#8B008B" = sort(red_blue),     # lilac
@@ -532,7 +537,7 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
         }
       }
     } else {
-      ## NoV enters this branch
+      ## NoV enters this branch <- not anymore
       list <- list()
     }
     if (!is.null(interesting_pos)) {  # !is.null(list) ?!

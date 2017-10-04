@@ -15,8 +15,8 @@ subtype_of_data = "B3S-with-unass"
 
 results_NoV <- protein_causality_NoV(type_of_data = type_of_data,
                                      subtype_of_data = subtype_of_data, pc_conservative = FALSE, pc_maj_rule = TRUE, 
-                                     pc_u2pd = "relaxed", pc_solve_confl = TRUE, analysis = FALSE, 
-                                     min_pos_var = 0.01, alpha = 0.9)
+                                     pc_u2pd = "relaxed", pc_solve_confl = TRUE, analysis = FALSE, min_pos_var = 0.01, 
+                                     alpha = 0.01)
 sink()
 print(conflict_edges(results_NoV$pc@graph))
 

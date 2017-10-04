@@ -19,7 +19,7 @@ get_data_description <- function(protein, type_of_data, subtype_of_data = "", da
 read_data <- function(files, path_to_data = "Data/", extension = ".csv", filename, transpose = FALSE, only_cols = NULL) {
   read <- function (file) {
     filename <- paste(path_to_data, file, extension, sep = "")
-    data_i = read.csv2(filename, row.names = 1, check.names=FALSE) # if check.names, an X is prepended to numerical column-names
+    data_i = read.csv2(filename, row.names = 1, check.names = FALSE) # if check.names, an X is prepended to numerical column-names
     if (!length(only_cols) == 0) {
       data_i = data_i[,as.character(only_cols)]
     }

@@ -70,9 +70,13 @@ plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file,
   sink(file = out_file)
   pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
   
-  rainbow_colors <- rainbow(length(which(names(node_clustering) == "")))
-  names(node_clustering)[names(node_clustering) == ""] <- rainbow_colors
-  colors <- names(node_clustering)
+  if (is.null(names(node_clustering))) {
+    colors <- rainbow(length(node_clustering))
+  } else {
+    rainbow_colors <- rainbow(length(which(names(node_clustering) == "")))
+    names(node_clustering)[names(node_clustering) == ""] <- rainbow_colors
+    colors <- names(node_clustering)
+  }
   
   # if (!is.null(names(node_clustering))) {
   #   colors <- names(node_clustering)
