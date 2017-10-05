@@ -50,7 +50,8 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
 
 protein_graph_clustering <- function(results, protein, outpath, file_separator, mute_all_plots, caption,
                                      cluster_methods, add_cluster_of_conserved_positions, 
-                                     removed_cols, more_levels_of_conservedness = FALSE, sort_clusters = "DDS-SVD") {
+                                     removed_cols, more_levels_of_conservedness = FALSE, sort_clusters = length) {
+                                     # sort_clusters = "DDS-SVD") {
   
   if (add_cluster_of_conserved_positions) {
     # node_clustering <- c(node_clustering, "#FFFFFF" = list(removed_cols))
@@ -94,7 +95,9 @@ protein_graph_clustering <- function(results, protein, outpath, file_separator, 
       #   length_except_last <- vapply(node_clustering[1:(length(node_clustering) - 1)], length, 1L)
       #   node_clustering <- node_clustering[c(order(length_except_last, decreasing = TRUE), length(node_clustering))]
       # } else {
-      if (sort_clusters == "DDS-SVD") {
+      if (typeof(sort_clusters) == "closure" || typeof(sort_clusters) == "builtin") {
+        node_clustering <- node_clustering[order(vapply(node_clustering, sort_clusters, 1L), decreasing = TRUE)]
+      } else if (sort_clusters == "DDS-SVD") {
         DDS_SVD <- read_data(files = paste0(protein, "_DDS-SVD-1"))
         cluster_weights <- lapply(node_clustering, function(nodes) {
             nodes <- nodes[which((nchar(nodes) >= 3) && (nodes %in% colnames(DDS_SVD)))]
@@ -108,11 +111,6 @@ protein_graph_clustering <- function(results, protein, outpath, file_separator, 
           })
         node_clustering <- node_clustering[order(unlist(cluster_weights), decreasing = TRUE)]
       }
-      else if (typeof(sort_clusters) == "closure" || typeof(sort_clusters) == "builtin") {
-        node_clustering <- node_clustering[order(vapply(node_clustering, sort_clusters, 1L), decreasing = TRUE)]
-      }
-        
-      # }
     }
     
     

@@ -84,7 +84,7 @@ protein_causality_NMR <- function(
                            plot_as_subgraphs = plot_as_subgraphs,
                            plot_only_subgraphs = plot_only_subgraphs,
                            for_combined_plot = FALSE,
-                           mute_plot = FALSE,
+                           mute_all_plots = FALSE,
                            other = other,
                            graph_computation = graph_computation,
                            evaluation = evaluation,
