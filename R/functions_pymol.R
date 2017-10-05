@@ -198,7 +198,7 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
   }
   # cat("show surface \n")
   # cat("set transparency, 0.4\n")
-  edge_list <- as_edgelist(graph_from_graphnel(graph))
+  edge_list <- as_edgelist(igraph.from.graphNEL(graph))
   if (only_int_pos) {
     # bereits oben berechnet
     # int_pos_flat <- interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = FALSE)

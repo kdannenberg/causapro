@@ -72,7 +72,7 @@ compute_link_communities <- function(graph, k, base_colors, plot_bar_plot = FALS
                                      plot_colored_graph = TRUE, classify_nodes = TRUE, round_categories = 2,
                                      pie_nodes = TRUE, color_edges = TRUE, protein, outpath) {
   # graph <- results$orig$graph$NEL
-  edge_list <- as_edgelist(graph_from_graphnel(graph))
+  edge_list <- as_edgelist(igraph.from.graphNEL(graph))
   rownames(edge_list) <- paste(edge_list[,1], edge_list[,2], sep = "-")
   link_comm <- getLinkCommunities(edge_list, plot = FALSE)
   # print(get_meaningful_names_for_clustering(link_comm$clusters))

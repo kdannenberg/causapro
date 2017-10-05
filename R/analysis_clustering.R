@@ -3,7 +3,8 @@ par(mfrow = c(1,3))
 source('~/Documents/Uni/Viren/ProteinCausalPaths/R/compute_DAG_S.R')
 
 nelgraph <- results_S$pc@graph
-igraph <- graph_from_graphnel(nelgraph)
+## igraph <- graph_from_graphnel(nelgraph)
+igraph <- igraph.from.graphNEL(nelgraph)
 
 cl_im <- cluster_infomap(igraph)
 cl_eb <- cluster_edge_betweenness(igraph)

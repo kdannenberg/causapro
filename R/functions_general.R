@@ -1075,7 +1075,7 @@ color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874
 
 # all_paths: plot all paths between from and to, instead of only the shortest
 paths_between_nodes <- function(graph, from, to, all_paths = FALSE) {
-  igraph <- graph_from_graphnel(graph)
+  igraph <- igraph.from.graphNEL(graph)
   
   from_to <- paste(from, to)
   

@@ -71,9 +71,9 @@ protein_graph_clustering <- function(results, protein, outpath, file_separator, 
   }
   
   for (clustering in cluster_methods) {
-    igraph <- graph_from_graphnel(results$pc@graph)
-    ## this is the only thing that works for me
-    ##igraph <- igraph.from.graphNEL(results$pc@graph)
+    ## old conversion method
+    ## igraph <- graph_from_graphnel(results$pc@graph)
+    igraph <- igraph.from.graphNEL(results$pc@graph)
     cluster_fct <- get(paste0("cluster_", clustering))
     cl <- cluster_fct(igraph)
     # TODO: save plot, instaed of plotting

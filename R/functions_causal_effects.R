@@ -409,7 +409,7 @@ set_effects_of_unconnected_positions_to_zero <- function(effects, graph, perturb
     mode <- "in"
   }
   
-  igraph <- graph_from_graphnel(graphNEL = graph)
+  igraph <- igraph.from.graphNEL(graphNEL = graph)
   dist <- distances(graph = igraph, v = perturbed_position, mode = mode)
   
   effects[dist == Inf] <- 0
