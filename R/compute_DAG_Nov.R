@@ -10,6 +10,7 @@ source("configuration_data.R")
 # NoV_NMR-Tit_B3S-with-unass
 type_of_data = "NMR-tit"
 subtype_of_data = "B3S-with-unass"
+subtype_of_data = c("Fuc", "B4S")
 
 # TODO: "with-unass" etc should rather ne data_set, shouldn't it?
 
