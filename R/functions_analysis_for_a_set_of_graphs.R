@@ -597,11 +597,19 @@ compute_over_all_graphs <- function(all_results, weight_effects_on_by, use_scale
   return(effects_over_all_graphs_on_of) #, all_mean = all_mean_effects))
 }
 
-display_effects <- function(effects, effect_hue_by, direction, int_pos, perturbed_position, scale_in_the_end, weight_effects_on_by, 
-                            function_over_all_graphs, ida_percentile = ida_percentile, caption, main_caption,
+display_effects <- function(effects, effect_hue_by = "effect", direction = "mean", int_pos, perturbed_position = int_pos[1], 
+                            scale_in_the_end = FALSE, weight_effects_on_by = "median", function_over_all_graphs = "mean", 
+                            ida_percentile, caption = "", main_caption = "",
                             print = TRUE, plot = TRUE, for_combined_plot = FALSE, plot_effect_quality = TRUE, 
-                            plot_false_pos_neg = TRUE, plot_effect_score = TRUE, barplot_contour_black) {
+                            plot_false_pos_neg = TRUE, plot_effect_score = TRUE, barplot_contour_black = TRUE) {
   
+  if (missing(ida_percentile)) {
+    if (!is.null(dim(effects))) {
+      ida_percentile <- 1 - (length(int_pos) / dim(effects)[1])
+    } else {
+      ida_percentile <- 1 - (length(int_pos) / length(effects))
+    }
+  }
   
   if (plot) {
     if (!for_combined_plot && !is.null(main_caption) && !missing(main_caption)) {
@@ -624,16 +632,20 @@ display_effects <- function(effects, effect_hue_by, direction, int_pos, perturbe
   # }
   
   for (dir in direction) {
-    if (! ((dir == "on") ||  (dir == "of"))) {
-      effects_matrix <- rbind(effects$overAllGraphs_of, effects$overAllGraphs_on)
-      on_of_mean_effects <- apply(effects_matrix, 2, get(direction))
-      effects[[paste0("overAllGraphs_", direction, "_on_of")]] <- on_of_mean_effects
-    }
-    
-    if (! ((dir == "on") ||  (dir == "of"))) {
-      effects_dir <- effects[[paste0("overAllGraphs_", direction, "_on_of")]]
+    if (! is.list(effects)) {
+      effects_dir <- effects
     } else {
-      effects_dir <- effects[[paste0("overAllGraphs_", tolower(dir))]]
+      if (! ((dir == "on") ||  (dir == "of"))) {
+        effects_matrix <- rbind(effects$overAllGraphs_of, effects$overAllGraphs_on)
+        on_of_mean_effects <- apply(effects_matrix, 2, get(direction))
+        effects[[paste0("overAllGraphs_", direction, "_on_of")]] <- on_of_mean_effects
+      }
+      
+      if (! ((dir == "on") ||  (dir == "of"))) {
+        effects_dir <- effects[[paste0("overAllGraphs_", direction, "_on_of")]]
+      } else {
+        effects_dir <- effects[[paste0("overAllGraphs_", tolower(dir))]]
+      }
     }
     
     if (print || plot_effect_quality) {
@@ -666,7 +678,7 @@ display_effects <- function(effects, effect_hue_by, direction, int_pos, perturbe
       } else if (dir == "on") {
         dir_print <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
       } else {
-        dir_print <- paste(" (", direction, " of: ", pastes("on", weight_effects_on_by, sep = "-rel-to-"), " and of) ")
+        dir_print <- paste0(" (", direction, " of: ", pastes("on", weight_effects_on_by, sep = "-rel-to-"), " and of) ")
       }
       if (missing(caption) || is.null(caption)) {
         caption <- paste0(function_over_all_graphs, " over all graphs of effects", dir_print, "position 372")
