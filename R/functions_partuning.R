@@ -212,9 +212,13 @@ effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, wi
 }
 
 # which_effects gives the slot of the list of effects (e.g. )
-apply_to_all_effects_in_nested_list <- function(all_effects, FUN, which_effects = "overAllGraphs_mean_on_of") {
+apply_to_all_effects_in_nested_list <- function(all_effects, FUN, measures = NULL, alphas = NULL, min_pos_vars = NULL,
+                                                which_effects = "overAllGraphs_mean_on_of") {
   result <- list()
-  for (measure_type_sub in names(all_effects)) {
+  if (is.null(measures)) {
+    measures <- names(all_effects)
+  }
+  for (measure_type_sub in measures) {
     # measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
     # type_of_data = strsplit(measure_type_sub, "-")[[1]][1]
     # if (grepl("-", measure_type_sub)) {
@@ -224,12 +228,20 @@ apply_to_all_effects_in_nested_list <- function(all_effects, FUN, which_effects 
     #   subtype_of_data_list <- "-"
     # }
     result[[measure_type_sub]] <- list()
-    for (alpha in as.numeric(names(all_effects[[measure_type_sub]]))) {
+    if (is.null(alphas)) {
+      alphas <- as.numeric(names(all_effects[[measure_type_sub]]))
+    }
+    for (alpha in alphas) {
       result[[measure_type_sub]][[as.character(alpha)]] <- list()
-      for (min_pos_var in as.numeric(names(all_effects[[measure_type_sub]][[as.character(alpha)]]))) {
+      if (is.null(min_pos_vars)) {
+        min_pos_vars <- as.numeric(names(all_effects[[measure_type_sub]][[as.character(alpha)]]))
+      }
+      for (min_pos_var in min_pos_vars) {
         if (!is.null(all_effects[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]][[which_effects]])) {
           result[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]] <- 
-            FUN(effects = all_effects[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]][[which_effects]])
+            FUN(effects = all_effects[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]][[which_effects]],
+                measure = measure_type_sub, alpha = alpha, min_pos_var = min_pos_var)               # this line is new (measure, alpha, min_pos_var added), 
+                                                                                                    # if not needed by FUN, hide by ...
         }
       }
       if (length(result[[measure_type_sub]][[as.character(alpha)]]) == 0) {
@@ -498,3 +510,4 @@ quality_of_effects_distibution <- function(effects, int_pos, neg_effects = "disc
   }  
   return(quality)
 }
+
