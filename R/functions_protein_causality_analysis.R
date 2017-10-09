@@ -39,9 +39,12 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   } else {
     graph <- results$pc@graph
   }
-  plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, 
-             coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
-             plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
+  ## plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout, 
+  ##          coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
+  ##        plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
+
+  call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = TRUE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = FALSE)
+  
   # }
   
   return(results)
@@ -51,8 +54,10 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
 protein_graph_clustering <- function(results, protein, outpath, file_separator, mute_all_plots, caption,
                                      cluster_methods, add_cluster_of_conserved_positions, 
                                      removed_cols, more_levels_of_conservedness = FALSE, sort_clusters = length) {
-                                     # sort_clusters = "DDS-SVD") {
-  
+
+  ## sort_clusters = "DDS-SVD") {
+  ## REMINDER: next line cannot stay!
+  ## return()
   if (add_cluster_of_conserved_positions) {
     # node_clustering <- c(node_clustering, "#FFFFFF" = list(removed_cols))
     # names(node_clustering)[length(node_clustering)] <- "#FFFFFF"
@@ -77,7 +82,7 @@ protein_graph_clustering <- function(results, protein, outpath, file_separator, 
     igraph <- igraph.from.graphNEL(results$pc@graph)
     cluster_fct <- get(paste0("cluster_", clustering))
     cl <- cluster_fct(igraph)
-    # TODO: save plot, instaed of plotting
+    ## TODO: save plot, instaed of plotting
     if (!mute_all_plots) {
       ## edge.arrow.size determines size of arrows (1 is default), vertex.size determines size of the vertices (15 is default), edge.width determines width of edges (1 is default)
       plot(cl, igraph, main = paste0(caption, "\n", clustering), edge.arrow.size=0.2, vertex.size=8, edge.width=0.7)

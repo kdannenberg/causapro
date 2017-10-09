@@ -714,7 +714,7 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         plot_graph_new(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, 
                        graph_layout = graph_layout_i, outpath = outpath, caption = caption, 
                        plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, 
-                       subgraphs = subgraphs, output_formats = output_formats, mute_all_plots = mute_all_plots)
+        subgraphs = subgraphs, output_formats = output_formats, mute_all_plots = mute_all_plots)
       }
     }
   }
@@ -785,11 +785,6 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
   }
 }
 
-## TODO: write igraph plot function which colors vertices with interesting positions and conflict edges
-
-plot_graph_new_igraph <- function(graph) {
-  
-}
 
 # TODO: call plot_graphs oder so
 
