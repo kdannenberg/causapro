@@ -214,7 +214,7 @@ protein_causality <- function(
   if (graph_computation) {
     # if (!is.null(clustering)) {
     if (plot_clusters) {
-      protein_graph_clustering(results = results, protein = protein, outpath = outpath, file_separator = file_separator,
+      protein_graph_clustering(results = results, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, outpath = outpath, output_formats = graph_output_formats, file_separator = file_separator,
                                caption = caption, mute_all_plots = mute_all_plots, cluster_methods = cluster_methods,
                                add_cluster_of_conserved_positions = add_cluster_of_conserved_positions, removed_cols = removed_cols)
     }

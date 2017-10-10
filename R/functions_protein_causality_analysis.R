@@ -43,7 +43,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   ##          coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
   ##        plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
 
-  call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = TRUE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = FALSE)
+  call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = FALSE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = FALSE)
   
   # }
   
@@ -51,13 +51,11 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
 } 
 
 
-protein_graph_clustering <- function(results, protein, outpath, file_separator, mute_all_plots, caption,
+protein_graph_clustering <- function(results, protein, position_numbering, coloring, colors, outpath,output_formats, file_separator, mute_all_plots, caption,
                                      cluster_methods, add_cluster_of_conserved_positions, 
                                      removed_cols, more_levels_of_conservedness = FALSE, sort_clusters = length) {
 
   ## sort_clusters = "DDS-SVD") {
-  ## REMINDER: next line cannot stay!
-  ## return()
   if (add_cluster_of_conserved_positions) {
     # node_clustering <- c(node_clustering, "#FFFFFF" = list(removed_cols))
     # names(node_clustering)[length(node_clustering)] <- "#FFFFFF"
@@ -85,7 +83,8 @@ protein_graph_clustering <- function(results, protein, outpath, file_separator, 
     ## TODO: save plot, instaed of plotting
     if (!mute_all_plots) {
       ## edge.arrow.size determines size of arrows (1 is default), vertex.size determines size of the vertices (15 is default), edge.width determines width of edges (1 is default)
-      plot(cl, igraph, main = paste0(caption, "\n", clustering), edge.arrow.size=0.2, vertex.size=8, edge.width=0.7)
+      ## plot(cl, igraph, main = paste0(caption, "\n", clustering), edge.arrow.size=0.2, vertex.size=8, edge.width=0.7)
+      call_plot_igraph(g = results$pc@graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = TRUE, clustering = cl, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots)
       ##this is the old version, just in case my adjustments don't work for you
       ##plot(cl, igraph, main = paste0(caption, "\n", clustering))
     }

@@ -8,37 +8,33 @@ library(igraph)
 
 ## wrapper around plot function below
 
-call_plot_igraph <- function(g, protein, position_numbering, coloring, colors, clusters = FALSE, caption, outpath, output_formats, mute_all_plots) {
-  plot_graph_igraph(g = g, nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)), edgecolor = get_edgecolor_igraph(g),clusters = clusters, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots)
+call_plot_igraph <- function(g, protein, position_numbering, coloring, colors, clusters = FALSE, clustering, caption, outpath, output_formats, mute_all_plots) {
+  plot_graph_igraph(g = g, nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)), edgecolor = get_edgecolor_igraph(g),clusters = clusters, clustering = clustering, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots)
 }
 
 ## wrapper around the igraph plot function
 ## further parameters will be added later
 ## note that the graph that is given is still an graph object
-plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, caption, outpath, output_formats, mute_all_plots) {
+plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, clustering, caption, outpath, output_formats, mute_all_plots) {
   ## par(mfrow = c(2,2))
   ig = igraph.from.graphNEL(g)
   V(ig)$color = nodecolor
   E(ig)$color = edgecolor
   if(clusters) {
-    cluster_methods = c("edge_betweenness", "infomap")
-    for(clustering in cluster_methods) {
-      cluster_fct <- get(paste0("cluster_", clustering))
-      cl <- cluster_fct(ig)
-      E(ig)$color[crossing(cl, ig)] = "blue"
-      if(!mute_all_plots) {
-        plot(cl, ig, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=10, edge.width=0.7, main = paste0(caption, clustering))
-      }
-      for(format in output_formats) {
-        if (!nchar(outpath) == 0) {
-          if (format == "pdf") {
-            pdf(paste(outpath, clustering, ".pdf", sep = ""))
-          } else if ((format == "ps") || (format == "postscript")) {
-            postscript(paste(outpath, clustering, ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
-          }
-          plot(cl, ig, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=10, edge.width=0.7, main = paste0(caption, clustering))
-          dev.off()
+    E(ig)$color[crossing(clustering, ig)] = "blue"
+    E(ig)$color[intersect(which(crossing(clustering,ig)), which(E(ig)$color == "red"))] = "purple"
+    if(!mute_all_plots) {
+      plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=10, edge.width=0.7, main = caption)
+    }
+    for(format in output_formats) {
+      if (!nchar(outpath) == 0) {
+        if (format == "pdf") {
+          pdf(paste(outpath, clustering, ".pdf", sep = ""))
+        } else if ((format == "ps") || (format == "postscript")) {
+          postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
         }
+        plot(clustering, ig, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=10, edge.width=0.7, main = caption)
+        dev.off()
       }
     }
   } else {
