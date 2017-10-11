@@ -8,14 +8,14 @@ library(igraph)
 
 ## wrapper around plot function below
 
-call_plot_igraph <- function(g, protein, position_numbering, coloring, colors, clusters = FALSE, clustering, caption, outpath, output_formats, mute_all_plots) {
-  plot_graph_igraph(g = g, nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)), edgecolor = get_edgecolor_igraph(g),clusters = clusters, clustering = clustering, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots)
+call_plot_igraph <- function(g, protein, position_numbering, coloring, colors, clusters = FALSE, clustering, caption, outpath, output_formats, mute_all_plots, layout_str) {
+  plot_graph_igraph(g = g, nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)), edgecolor = get_edgecolor_igraph(g),clusters = clusters, clustering = clustering, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots, layout_str = layout_str)
 }
 
 ## wrapper around the igraph plot function
 ## further parameters will be added later
 ## note that the graph that is given is still an graph object
-plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, clustering, caption, outpath, output_formats, mute_all_plots) {
+plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, clustering, caption, outpath, output_formats, mute_all_plots, layout_str) {
   ## par(mfrow = c(2,2))
   ig = igraph.from.graphNEL(g)
   V(ig)$color = nodecolor
@@ -24,7 +24,7 @@ plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, clustering, cap
     E(ig)$color[crossing(clustering, ig)] = "blue"
     E(ig)$color[intersect(which(crossing(clustering,ig)), which(E(ig)$color == "red"))] = "purple"
     if(!mute_all_plots) {
-      plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=10, edge.width=0.7, main = caption)
+      plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=10, edge.width=0.8, main = caption)
     }
     for(format in output_formats) {
       if (!nchar(outpath) == 0) {
@@ -33,13 +33,20 @@ plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, clustering, cap
         } else if ((format == "ps") || (format == "postscript")) {
           postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
         }
-        plot(clustering, ig, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=10, edge.width=0.7, main = caption)
+        plot(clustering, ig, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=10, edge.width=0.8, main = caption)
         dev.off()
       }
     }
   } else {
+    layout_fct = get(layout_str)
+    layout = layout_fct(ig)
     if(!mute_all_plots) {
-      plot(ig, edge.arrow.size=0.1, vertex.size=8, edge.width=0.7, main = caption)
+
+      if(layout_str == "layout_with_sugiyama") {
+        plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+      } else {
+        plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+      }
     }
     for(format in output_formats) {
         if (!nchar(outpath) == 0) {
@@ -48,7 +55,11 @@ plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, clustering, cap
           } else if ((format == "ps") || (format == "postscript")) {
             postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
           }
-          plot(ig, edge.arrow.size=0.1, vertex.size=8, edge.width=0.7, main = caption)
+          if(layout_str == "layout_with_sugiyama") {
+            plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+          } else {
+            plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+          }
           dev.off()
         }
     }

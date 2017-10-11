@@ -43,7 +43,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   ##          coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, 
   ##        plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
 
-  call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = FALSE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = FALSE)
+  call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = FALSE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = FALSE, layout_str = graph_layout)
   
   # }
   
