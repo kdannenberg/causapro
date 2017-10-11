@@ -328,7 +328,7 @@ protein_causality_G <- function(
   ## "layout_with_dh" uses simulated annealing for the graph layouting
   ## "layout_with_fr" uses a force-directed algorithm
   ## "layout_with_kk" is a physical model based on springs
-  graph_layout = "layout_nicely",
+  graph_layout = "layout_with_kk",
   coloring = "auto", #"es",#"auto",  # "auto-all" or "all"
   colors = NULL,
   # 
