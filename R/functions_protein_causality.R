@@ -332,7 +332,7 @@ protein_causality_G <- function(
   coloring = "auto", #"es",#"auto",  # "auto-all" or "all"
   colors = NULL,
   # 
-  plot_as_subgraphs = FALSE,
+  plot_as_subgraphs = TRUE,
   plot_only_subgraphs = NULL, # 1 oder NULL
   # TODO Marcel: dafür sorgen dass, wenn diese Option aktiv ist, kein graphics.off() o.ä. ausgeführt wird (und nur der graph geplottet wird)
   for_combined_plot = FALSE,

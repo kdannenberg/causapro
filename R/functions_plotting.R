@@ -8,14 +8,14 @@ library(igraph)
 
 ## wrapper around plot function below
 
-call_plot_igraph <- function(g, protein, position_numbering, coloring, colors, clusters = FALSE, clustering, caption, outpath, output_formats, mute_all_plots, layout_str) {
-  plot_graph_igraph(g = g, nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)), edgecolor = get_edgecolor_igraph(g),clusters = clusters, clustering = clustering, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots, layout_str = layout_str)
+call_plot_igraph <- function(g, protein, position_numbering, coloring, colors, clusters = FALSE, clustering, caption, outpath, output_formats, mute_all_plots, layout_str, plot_as_subgraphs) {
+  plot_graph_igraph(g = g, nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)), edgecolor = get_edgecolor_igraph(g),clusters = clusters, clustering = clustering, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots, layout_str = layout_str, plot_as_subgraphs = plot_as_subgraphs, subgraphs = get_subgraphs_igraph(node_clusters = interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors), protein = protein))
 }
 
 ## wrapper around the igraph plot function
 ## further parameters will be added later
 ## note that the graph that is given is still an graph object
-plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, clustering, caption, outpath, output_formats, mute_all_plots, layout_str) {
+plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, clustering, caption, outpath, output_formats, mute_all_plots, layout_str, plot_as_subgraphs, subgraphs) {
   ## par(mfrow = c(2,2))
   ig = igraph.from.graphNEL(g)
   V(ig)$color = nodecolor
@@ -41,11 +41,16 @@ plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, clustering, cap
     layout_fct = get(layout_str)
     layout = layout_fct(ig)
     if(!mute_all_plots) {
-
       if(layout_str == "layout_with_sugiyama") {
         plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
       } else {
-        plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+        if(plot_as_subgraphs) {
+          print(subgraphs)
+          print(V(ig))
+          plot(ig, mark.groups = subgraphs, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+        } else {
+          plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)          
+        }
       }
     }
     for(format in output_formats) {
@@ -85,4 +90,12 @@ get_nodecolor_igraph <- function(g, int_pos) {
   nodecolor[nodes(g)] <- "white"
   nodecolor[paste(int_pos)] <- names(int_pos)
   return(nodecolor)
+}
+
+get_subgraphs_igraph <- function(node_clusters, protein) {
+  if(protein == "PDZ") {
+    node_clusters[[1]] <- paste(c(node_clusters[[1]], node_clusters[[2]]))
+    node_clusters[[2]] <- NULL
+  }
+  return(node_clusters)
 }
