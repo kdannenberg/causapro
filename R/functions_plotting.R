@@ -40,14 +40,16 @@ plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, clustering, cap
   } else {
     layout_fct = get(layout_str)
     layout = layout_fct(ig)
+    mem = c()
+    mem[nodes(g)] = 1
+    mem[subgraphs[[1]]] = 2
+    cl = make_clusters(ig, mem)
     if(!mute_all_plots) {
       if(layout_str == "layout_with_sugiyama") {
         plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
       } else {
         if(plot_as_subgraphs) {
-          print(subgraphs)
-          print(V(ig))
-          plot(ig, mark.groups = subgraphs, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+          plot(cl, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
         } else {
           plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)          
         }
@@ -63,7 +65,11 @@ plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, clustering, cap
           if(layout_str == "layout_with_sugiyama") {
             plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
           } else {
-            plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+            if(plot_as_subgraphs) {
+              plot(cl, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+            } else {
+              plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)          
+            }
           }
           dev.off()
         }
