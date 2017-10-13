@@ -16,6 +16,7 @@ call_plot_igraph <- function(g, protein, position_numbering, coloring, colors, c
 ## note that the graph that is given is still an graph object
 plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str, clustering, caption, outpath, output_formats, mute_all_plots, layout_str, plot_as_subgraphs, subgraphs) {
   ## par(mfrow = c(2,2))
+  # kernel
   ig = igraph.from.graphNEL(g)
   V(ig)$color = nodecolor
   E(ig)$color = edgecolor
