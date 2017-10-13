@@ -84,7 +84,7 @@ protein_graph_clustering <- function(results, protein, position_numbering, color
     if (!mute_all_plots) {
       ## edge.arrow.size determines size of arrows (1 is default), vertex.size determines size of the vertices (15 is default), edge.width determines width of edges (1 is default)
       ## plot(cl, igraph, main = paste0(caption, "\n", clustering), edge.arrow.size=0.2, vertex.size=8, edge.width=0.7)
-      call_plot_igraph(g = results$pc@graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = TRUE, clustering = cl, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots)
+      call_plot_igraph(g = results$pc@graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = TRUE, cluster_str = clustering, clustering = cl, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots)
       ##this is the old version, just in case my adjustments don't work for you
       ##plot(cl, igraph, main = paste0(caption, "\n", clustering))
     }
