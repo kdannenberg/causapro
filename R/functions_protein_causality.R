@@ -320,7 +320,7 @@ protein_causality_G <- function(
   # 
   # Graphical parameters
   graph_output_formats = "ps",
-  graph_layout = "dot", # "dot", "circo", "fdp", "neato", "osage", "twopi"
+  ## graph_layout = "dot", # "dot", "circo", "fdp", "neato", "osage", "twopi"
   ## "layout_nicely" uses recommended layouts
   ## "layout_with_sugiyama" plots layered dags
   ## "layout_on_sphere" places the vertices uniformly on the surface of a spere (3d layout)
@@ -328,7 +328,7 @@ protein_causality_G <- function(
   ## "layout_with_dh" uses simulated annealing for the graph layouting
   ## "layout_with_fr" uses a force-directed algorithm
   ## "layout_with_kk" is a physical model based on springs
-  # graph_layout = "layout_nicely",
+  graph_layout = "layout_with_lgl",
   coloring = "auto", #"es",#"auto",  # "auto-all" or "all"
   colors = NULL,
   # 
