@@ -34,6 +34,8 @@ plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str, cl
           pdf(paste(outpath, "_", cluster_str, ".pdf", sep = ""))
         } else if ((format == "ps") || (format == "postscript")) {
           postscript(paste(outpath, "_", cluster_str, ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
+        } else if(format == "svg") {
+          svg(paste(outpath, "_", cluster_str, ".svg", sep = ""))
         }
         plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=10, edge.width=0.8, main = paste(caption, cluster_str))
         dev.off()
@@ -67,6 +69,9 @@ plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str, cl
             pdf(paste(outpath, "_", layout_str, "_as_sg", ".pdf", sep = ""))
           } else if ((format == "ps") || (format == "postscript")) {
             postscript(paste(outpath, "_", layout_str, "_as_sg", ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
+          }  else if(format == "svg") {
+            print("HI")
+            svg(paste(outpath, "_", layout_str, "_as_sg", ".svg", sep = ""))
           }
           if(layout_str == "layout_with_sugiyama") {
             plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)

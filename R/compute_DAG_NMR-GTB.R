@@ -90,7 +90,9 @@ protein_causality_NMRGTB <- function(
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
-  # 
+  plot_ida = FALSE,                                  # NEW!
+  plot_clusters = TRUE,                              # NEW!
+  plot_no_isolated_nodes = TRUE,
   compute_pc_anew = FALSE,
   compute_localTests_anew = FALSE,
   # if (compute_everything_anew) {
@@ -139,6 +141,9 @@ protein_causality_NMRGTB <- function(
                            print_analysis = print_analysis,
                            plot_analysis = plot_analysis,
                            plot_types = plot_types,
+                           plot_ida = plot_ida,
+                           plot_clusters = plot_clusters,
+                           plot_no_isolated_nodes = plot_no_isolated_nodes,
                            compute_pc_anew = compute_pc_anew,
                            compute_localTests_anew = compute_localTests_anew,
                            unabbrev_r_to_info = unabbrev_r_to_info,

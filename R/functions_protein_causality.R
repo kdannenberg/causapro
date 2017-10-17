@@ -319,7 +319,7 @@ protein_causality_G <- function(
   # 
   # 
   # Graphical parameters
-  graph_output_formats = "ps",
+  graph_output_formats = "svg",
   ## graph_layout = "dot", # "dot", "circo", "fdp", "neato", "osage", "twopi"
   ## "layout_nicely" uses recommended layouts
   ## "layout_with_sugiyama" plots layered dags
