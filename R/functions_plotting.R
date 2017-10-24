@@ -7,7 +7,7 @@ library(igraph)
 ## the igraph library is used, but options for the graph library will be added later
 
 ## wrapper around plot function below
-call_plot_igraph <- function(g, protein, position_numbering, coloring, colors, clusters = FALSE, cluster_str, clustering, caption, outpath, output_formats, mute_all_plots, layout_str, plot_as_subgraphs) {
+call_plot_igraph <- function(g, protein = "PDZ", position_numbering = "crystal", coloring = "", colors = "", clusters = FALSE, cluster_str = "infomap", clustering, caption = "", outpath = "", output_formats = c(), mute_all_plots = FALSE, layout_str = "layout_nicely", plot_as_subgraphs = "FALSE") {
   plot_graph_igraph(g = g, nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)), edgecolor = get_edgecolor_igraph(g),clusters = clusters, cluster_str = cluster_str, clustering = clustering, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots, layout_str = layout_str, plot_as_subgraphs = plot_as_subgraphs, subgraphs = get_subgraphs_igraph(node_clusters = interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors), protein = protein))
 }
 
@@ -52,7 +52,7 @@ plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str, cl
     cl = make_clusters(ig, mem)
     if(!mute_all_plots) {
       ## note that sugiyama does not work too well with CPDAGs (it needs actual DAGs)
-      ## therefore it will add new nodes to "solve" the circle etc
+      ## therefore it will add new nodes to "solve" the cycle etc
       if(layout_str == "layout_with_sugiyama") {
         plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
       } else {
@@ -64,13 +64,13 @@ plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str, cl
       }
     }
     for(format in output_formats) {
+      print(output_formats)
         if (!nchar(outpath) == 0) {
           if (format == "pdf") {
             pdf(paste(outpath, "_", layout_str, "_as_sg", ".pdf", sep = ""))
           } else if ((format == "ps") || (format == "postscript")) {
             postscript(paste(outpath, "_", layout_str, "_as_sg", ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
           }  else if(format == "svg") {
-            print("HI")
             svg(paste(outpath, "_", layout_str, "_as_sg", ".svg", sep = ""))
           }
           if(layout_str == "layout_with_sugiyama") {

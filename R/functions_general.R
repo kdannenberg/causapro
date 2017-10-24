@@ -778,12 +778,16 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
           pdf(paste(outpath, "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
         } else if ((format == "ps") || (format == "postscript")) {
           postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
+        } else if (format == "svg") {
+          svg(paste(outpath, "_", graph_layout, "_colored-", coloring, ".svg", sep = ""))
         }
       } else {
         if (format == "pdf") {
           pdf(paste(outpath, ".pdf", sep = ""))
         } else if ((format == "ps") || (format == "postscript")) {
           postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
+        } else if (format == "svg") {
+          svg(paste(outpath, ".svg", sep = ""))
         }
       }
       plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption) 
