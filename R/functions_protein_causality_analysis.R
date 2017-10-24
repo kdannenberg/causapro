@@ -1,10 +1,10 @@
 protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
                                  parameters_for_info_file, alpha, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule,
                                  caption, analysis, stages, plot_types, coloring, colors, 
-                                 graph_layout = "dot", plot_as_subgraphs = plot_as_subgraphs, 
+                                 graph_layout = "dot", graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs, 
                                  plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console, 
                                  lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, graph_output_formats,
-                                 numerical, mute_all_plots = FALSE, plot_no_isolated_nodes) {
+                                 numerical, mute_all_plots = FALSE, plot_no_isolated_nodes, plot_with_graphviz) {
   print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
@@ -39,11 +39,14 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   } else {
     graph <- results$pc@graph
   }
-  ##plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout,
-  ##         coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs,
-  ##       plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
 
-  call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = FALSE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = FALSE, layout_str = graph_layout, plot_as_subgraphs = plot_as_subgraphs)
+  if(plot_with_graphviz) {
+    plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout,
+             coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs,
+             plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
+  } else {
+    call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = FALSE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = FALSE, layout_str = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs)
+  }
   
   # }
   

@@ -59,7 +59,9 @@ protein_causality <- function(
   ## "layout_with_dh" uses simulated annealing for the graph layouting
   ## "layout_with_fr" uses a force-directed algorithm
   ## "layout_with_kk" is a physical model based on springs
-  graph_layout = "layout_nicely",
+  graph_layout_igraph = "layout_nicely",
+  ## TODO: use graph_layout_graphviz instead
+  graph_layout = "dot",
   coloring = "auto", #"es",#"auto",  # "auto-all" or "all"
   colors = NULL,
   # 
@@ -87,6 +89,7 @@ protein_causality <- function(
   plot_ida = FALSE,                                  # NEW!
   plot_clusters = TRUE,                              # NEW!
   plot_no_isolated_nodes = TRUE,  # TODO: make true possible even for edgeless -> empty graphs
+  plot_with_graphviz = FALSE, # NEW!
   # 
   compute_pc_anew = FALSE,
   compute_localTests_anew = FALSE,
@@ -198,11 +201,11 @@ protein_causality <- function(
                                     output_dir = output_dir, filename = filename, outpath = outpath, parameters_for_info_file = parameters_for_info_file,
                                     alpha = alpha, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
                                     caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
-                                    graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+                                    graph_layout = graph_layout, graph_layout_igraph = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                                     unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
                                     compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew, 
                                     graph_output_formats = graph_output_formats, numerical = numerical, mute_all_plots = mute_all_plots,
-                                    plot_no_isolated_nodes = plot_no_isolated_nodes)
+                                    plot_no_isolated_nodes = plot_no_isolated_nodes, plot_with_graphviz = plot_with_graphviz)
   }
   
   # Evaluation
@@ -328,7 +331,8 @@ protein_causality_G <- function(
   ## "layout_with_dh" uses simulated annealing for the graph layouting
   ## "layout_with_fr" uses a force-directed algorithm
   ## "layout_with_kk" is a physical model based on springs
-  graph_layout = "layout_with_lgl",
+  graph_layout_igraph = "layout_with_lgl",
+  graph_layout = "dot",
   coloring = "auto", #"es",#"auto",  # "auto-all" or "all"
   colors = NULL,
   # 
@@ -354,6 +358,7 @@ protein_causality_G <- function(
   plot_ida = FALSE,                                  # NEW!
   plot_clusters = TRUE,                              # NEW!
   plot_no_isolated_nodes = TRUE,
+  plot_with_graphviz = FALSE,
   #
   compute_pc_anew = FALSE,
   compute_localTests_anew = FALSE,
@@ -406,6 +411,8 @@ protein_causality_G <- function(
                            plot_ida = plot_ida,
                            plot_clusters = plot_clusters,
                            plot_no_isolated_nodes = plot_no_isolated_nodes,
+                           plot_with_graphviz = plot_with_graphviz,
+                           graph_layout_igraph = graph_layout_igraph,
                            compute_pc_anew = compute_pc_anew,
                            compute_localTests_anew = compute_localTests_anew,
                            unabbrev_r_to_info = unabbrev_r_to_info,
@@ -448,7 +455,8 @@ protein_causality_S <- function(
   ## "layout_with_dh" uses simulated annealing for the graph layouting
   ## "layout_with_fr" uses a force-directed algorithm
   ## "layout_with_kk" is a physical model based on springs
-  graph_layout = "layout_nicely",
+  graph_layout_igraph = "layout_nicely",
+  graph_layout = "dot",
   coloring = "auto", # "auto", "auto-all", "all"
   colors = NULL,
   plot_as_subgraphs = FALSE,
@@ -466,6 +474,7 @@ protein_causality_S <- function(
   plot_types = c("localTests", "graph"),
   plot_ida = FALSE,                                  # NEW!
   plot_clusters = TRUE,                              # NEW!
+  plot_with_graphviz = FALSE,
   #
   compute_pc_anew = FALSE,
   compute_localTests_anew = FALSE,
@@ -495,6 +504,7 @@ protein_causality_S <- function(
                            weight_effects_on_by = weight_effects_on_by,
                            graph_output_formats = graph_output_formats,
                            graph_layout = graph_layout,
+                           graph_layout_igraph = graph_layout_igraph,
                            coloring = coloring,
                            colors = colors,
                            plot_as_subgraphs = plot_as_subgraphs,
@@ -511,6 +521,7 @@ protein_causality_S <- function(
                            plot_types = plot_types,
                            plot_ida = plot_ida,
                            plot_clusters = plot_clusters,
+                           plot_with_graphviz = plot_with_graphviz,
                            compute_pc_anew = compute_pc_anew,
                            compute_localTests_anew = compute_localTests_anew,
                            unabbrev_r_to_info = unabbrev_r_to_info,
@@ -569,7 +580,8 @@ protein_causality_NoV <- function(
   ## "layout_with_dh" uses simulated annealing for the graph layouting
   ## "layout_with_fr" uses a force-directed algorithm
   ## "layout_with_kk" is a physical model based on springs
-  graph_layout = "layout_nicely",
+  graph_layout = "dot",
+  graph_layout_igraph = "layout_nicely",
   coloring = "auto", # "auto", "auto-all", "all"
   colors = NULL,
   plot_as_subgraphs = FALSE,
@@ -587,6 +599,7 @@ protein_causality_NoV <- function(
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graph"),
+  plot_with_graphviz = FALSE,
   compute_pc_anew = FALSE,
   compute_localTests_anew = FALSE,
   unnabbrev_r_to_info = FALSE,
@@ -615,6 +628,7 @@ protein_causality_NoV <- function(
                            weight_effects_on_by = weight_effects_on_by,
                            graph_output_formats = graph_output_formats,
                            graph_layout = graph_layout,
+                           graph_layout_igraph = graph_layout_igraph,
                            coloring = coloring,
                            colors = colors,
                            plot_as_subgraphs = plot_as_subgraphs,
@@ -631,6 +645,7 @@ protein_causality_NoV <- function(
                            plot_types = plot_types,
                            plot_ida = plot_ida,                                  # NEW!
                            plot_clusters = plot_clusters,                              # NEW!
+                           plot_with_graphviz = plot_with_graphviz,
                            compute_pc_anew = compute_pc_anew,
                            compute_localTests_anew = compute_localTests_anew,
                            unabbrev_r_to_info = unabbrev_r_to_info,

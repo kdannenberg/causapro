@@ -132,7 +132,7 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
     # TODO: outpath aus dem übergebenen outpath konstruieren (per strsplit)
     # directories <- strsplit(outpath, "/")
     # outpath <- paste(directories[[1]][1:(length(directories[[1]])-3)], collapse = "/", sep = "/")
-    outpath <- paste("../Outputs/", protein, "/", sep = "")
+    outpath <- paste("..", file_separator, "Outputs", file_separator, protein, file_separator, sep = "")
     if (grepl("all", coloring_for_int_pos)) {
       out_file <- paste(outpath, "interesting-all.pml", sep = "")
     } else {
