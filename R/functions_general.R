@@ -555,6 +555,13 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
   }
 }
 
+## it seems much easier to convert from the for_coloring version to the other one,
+## so for simplicitys sake I do it that way for now
+## that means that the standardized way to pass int_pos would be the for_coloring version
+conv_not_coloring <- function(int_pos) {
+  return(setNames(unlist(list, use.names = FALSE), rep(names(list), lengths(list))))
+}
+
 colors_for_edges <- function(clustering, colors, graph) {
   edge_groups <- clustering
   edge_groups <- lapply(edge_groups, function(positions) edgeNames(graph)[positions])

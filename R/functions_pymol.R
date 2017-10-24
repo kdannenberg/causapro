@@ -127,7 +127,7 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
         as.numeric(pos) %in% int_pos_flat))]))
   }
   
-  # change this to be able to print for example only the found links between interesting positions, whcih are colored accoringly
+  # change this to be able to print for example only the found links between interesting positions, which are colored accordingly
   if (only_color_int_pos) {
     # TODO: outpath aus dem übergebenen outpath konstruieren (per strsplit)
     # directories <- strsplit(outpath, "/")
