@@ -56,20 +56,21 @@ pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/",
   }
 }
 
-# most general; TODO: can the other fucntions (except for the paths) be implemented using this one? 
+## most general; TODO: can the other fucntions (except for the paths) be implemented using this one?
+## what is length_sort doing?
 plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file, 
                                    label = TRUE, no_colors = FALSE, show_positions = TRUE,
                                    file_separator = "/", type_of_clustering = "", bg_color = "grey",
-                                   length_sort = TRUE) {
-  
-  out_file <- paste0(outpath, "-", length(node_clustering), pastes("_clusters", type_of_clustering, sep = "-"),".pml")
-  # out_file <- pastes(out_file, type_of_clustering, sep = "-")
-  # out_file <- paste0(out_file, ".pml")
-  # print(out_file)
-  
-  sink(file = out_file)
-  pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
-  
+                                   length_sort = TRUE, core = FALSE) {
+  if(!core) {
+    out_file <- paste0(outpath, "-", length(node_clustering), pastes("_clusters", type_of_clustering, sep = "-"),".pml")
+    ## out_file <- pastes(out_file, type_of_clustering, sep = "-")
+    ## out_file <- paste0(out_file, ".pml")
+    ## print(out_file)
+    
+    sink(file = out_file)
+    pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
+  }
   if (is.null(names(node_clustering))) {
     colors <- rainbow(length(node_clustering))
   } else {
@@ -103,10 +104,11 @@ plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file,
     }
     cat("\n")
   }
-  
-  cat("zoom\n")
-  cat(paste0("bg_color ", bg_color, "\n"))
-  sink()
+  if(!core) {
+    cat("zoom\n")
+    cat(paste0("bg_color ", bg_color, "\n"))
+    sink()
+  }
 }
 
 # TODO: use file_separator consistently
@@ -145,26 +147,27 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
   pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
   colors <- rainbow(length(connected_components))
   if (!only_dist) {
-    # if (!show_int_pos) {
-    for (i in 1:length(connected_components)) {
-      cat("create sector_", i, ", (resi ", 
-          paste(connected_components[[i]], collapse = ","), ") \n", sep = "")
-      # if (show_positions) {
-      cat("show spheres, sector_", i, "\n", sep = "")
-      # }
-      if (!no_colors) {
-        color <- col2rgb(colors[i])
-        color <- color / 255
-        cat("set_color col_", i, ", [", paste(color, collapse = ","), "] \n", sep = "")
-        cat("color col_", i, ", sector_", i, "\n", sep = "")
-      }
-      if (label) {
-        # label n. CA and sector_1, resi
-        cat("label n. CA and sector_", i, ", resi\n", sep = "") # label only CA
-        # cat("label sector_", i, ", resi\n", sep = "")
-      }
-      cat("\n")
-    }
+    plot_clusters_in_pymol(node_clustering = connected_components, protein = protein, outpath = outpath, pdb_file = pdb_file, label = label, no_colors = no_colors, show_positions = show_positions, file_separator = file_separator, type_of_clustering = "connected_components", bg_color = bg_color, length_sort = TRUE, core = TRUE)
+    ## # if (!show_int_pos) {
+    ## for (i in 1:length(connected_components)) {
+    ##   cat("create sector_", i, ", (resi ", 
+    ##       paste(connected_components[[i]], collapse = ","), ") \n", sep = "")
+    ##   # if (show_positions) {
+    ##   cat("show spheres, sector_", i, "\n", sep = "")
+    ##   # }
+    ##   if (!no_colors) {
+    ##     color <- col2rgb(colors[i])
+    ##     color <- color / 255
+    ##     cat("set_color col_", i, ", [", paste(color, collapse = ","), "] \n", sep = "")
+    ##     cat("color col_", i, ", sector_", i, "\n", sep = "")
+    ##   }
+    ##   if (label) {
+    ##     # label n. CA and sector_1, resi
+    ##     cat("label n. CA and sector_", i, ", resi\n", sep = "") # label only CA
+    ##     # cat("label sector_", i, ", resi\n", sep = "")
+    ##   }
+    ##   cat("\n")
+    ## }
     # } else {
     if (show_int_pos) {
       if (missing(coloring_for_int_pos) && !no_colors) {
