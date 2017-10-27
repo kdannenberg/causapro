@@ -548,6 +548,9 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
   
   if (for_coloring) {
     return(list)
+    # n <- interesting_positions(protein = "PDZ")
+    # list <- lapply(unique(names(n)), function(color) {return(unname(n[which(names(n) == color)]))})
+    # names(list) <- unique(names(n))
   } else {
     # do not rename duplicate names
     return(setNames(unlist(list, use.names = FALSE), rep(names(list), lengths(list))))
