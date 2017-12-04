@@ -587,7 +587,7 @@ protein_causality_NoV <- function(
   plot_as_subgraphs = FALSE,
   plot_only_subgraphs = NULL, # 1 is another option
   plot_ida = FALSE,                                  # NEW!
-  plot_clusters = TRUE,                              # NEW!
+  plot_clusters = FALSE,                              # NEW!
   for_combined_plot = FALSE,
   mute_all_plots = FALSE,
   other = "", # "cov"
