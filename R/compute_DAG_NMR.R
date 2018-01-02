@@ -108,7 +108,8 @@ protein_causality_NMR <- function(
 }
 
 
-results_NMR <- protein_causality_NMR(pc_conservative = FALSE, pc_maj_rule = FALSE, pc_u2pd = "relaxed", pc_solve_confl = TRUE, analysis = FALSE, alpha = 0.01)
+results_NMR <- protein_causality_NMR(pc_conservative = FALSE, pc_maj_rule = FALSE, pc_u2pd = "relaxed", pc_solve_confl = TRUE, 
+                                     analysis = FALSE, alpha = 0.01)
 sink()
 print(conflict_edges(results_NMR$pc@graph))
 
