@@ -1,6 +1,6 @@
 source("~/.configuration_code.R")
 
-source_all_function_scripts()
+# source_all_function_scripts()
 
 source("configuration_data.R")
 

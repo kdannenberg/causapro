@@ -92,11 +92,17 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   if (length(drop) > 0) {
     # cat("\n")
     print(paste("Removed columns:", paste(colnames(data)[drop], collapse = ", ")))
+    data2 <- data[, !names(data) %in% names(drop)]
   }
-  data <- data[, !names(data) %in% names(drop)]
   return(data)
 }
 
+adjust_data_description <- function(data_description, ranked) {
+  if (ranked) {
+    data_description <- paste0(data_description, "_ranked")
+  }
+  return(data_description)
+}
 
 subtype_of_data_after_adjustment <- function(data, subtype_of_data, rank = FALSE, rank_obs_per_pos = FALSE, remove_low_variance = FALSE,
                                           zero_var_fct, min_var = 0.01) {
