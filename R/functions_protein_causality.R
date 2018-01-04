@@ -28,7 +28,7 @@ protein_causality <- function(
   # 
   # Analysis parameters
   # remove_positions_with_low_variance = TRUE,
-  min_pos_var = 0.3,
+  min_pos_var = 0.03,
   only_cols = NULL,
   only_cols_label = "",
   # 
@@ -50,7 +50,7 @@ protein_causality <- function(
   # 
   # 
   # Graphical parameters
-  graph_output_formats = c("ps", "svg"),
+  graph_output_formats = c("ps", "svg", "pdf"),
   ## graph_layout = "dot", # "dot", "circo", "fdp", "neato", "osage", "twopi"
   ## "layout_nicely" uses recommended layouts
   ## "layout_with_sugiyama" plots layered dags
@@ -556,101 +556,169 @@ protein_causality_p38g <- function(
   protein = "p38g",
   type_of_data = "NMR",
   subtype_of_data = "",
-  data_set = "act",
+  data_set = "inact",
   position_numbering = "crystal",
-  # analysis parameters
-  min_pos_var = 0,
+  # int_pos specific parameters
+  ida_percentile = "11",
+  # data-related parameters
   only_cols = NULL,
   only_cols_label = "",
-  alpha = 0.01,
-  ranked = FALSE,
-  pc_solve_conflicts = TRUE,
-  pc_u2pd = "relaxed",
-  pc_conservative = FALSE,
-  pc_maj_rule = TRUE,
-  weight_effects_on_by = "median", # "var", "mean", ""
-  # graphical parameters
-  graph_output_formats = "ps",
+  # data-dependent graphical parameters
+  graph_output_formats = NULL,
+  plot_with_graphviz = FALSE,
   graph_layout = "dot", # "circo", "fdp", "neato", "osage", "twopi"
+  graph_layout_igraph = NULL,
   coloring = "auto", # "auto", "auto-all", "all"
   colors = NULL,
   plot_as_subgraphs = FALSE,
   plot_only_subgraphs = NULL, # 1 is another option
-  for_combined_plot = FALSE,
-  mute_plot = FALSE,
-  other = "", # "cov"
+  # analysis parameters
+  min_pos_var = 0,
+  ranked = TRUE,
+  # analysis parameters: pc
+  alpha = NULL,
+  pc_solve_conflicts = NULL,
+  pc_u2pd = NULL,
+  pc_conservative = NULL,
+  pc_maj_rule = NULL,
+  # analysis parameters: ida
+  plot_ida = FALSE,
+  weight_effects_on_by = NULL, # "var", "mean", ""
+  # general graphical parameters
+  for_combined_plot = NULL,
+  mute_all_plots = NULL,
+  other = NULL,
+  # pymol 
+  pymol_show_int_pos = FALSE,
+  pymol_sort_connected_components_by_length = NULL, # NEW!
+  pymol_mix_connected_components = NULL,  # NEW!
+  print_connected_components = NULL,
   # technical parameters
-  graph_computation = TRUE,
-  evaluation = FALSE,
-  analysis = FALSE, # !pc_solve_conflicts
-  stages = c("orig"), # c("orig", "sub"), "sub"
-  print_analysis = FALSE,
-  plot_analysis = TRUE,
-  plot_types = c("localTests", "graph"),
+  graph_computation = NULL,
+  evaluation = NULL,
+  analysis = NULL,
+  stages = NULL,
+  print_analysis = NULL,
+  plot_analysis = NULL,
+  plot_types = NULL,
   plot_no_isolated_nodes = TRUE,
-  plot_with_graphviz = FALSE,
-  compute_pc_anew = FALSE,
-  compute_localTests_anew = FALSE,
-  unnabbrev_r_to_info = FALSE,
-  print_r_to_console = TRUE,
-  lines_in_abbr_of_r = 10,
-  data_in_results = FALSE,
-  output_parameters_in_results = FALSE,
-  ida_percentile = "11",
-  file_separator = "/"
+  plot_clusters = NULL,
+  compute_pc_anew = NULL,
+  compute_localTests_anew = NULL,
+  unabbrev_r_to_info = NULL,
+  print_r_to_console = NULL,
+  lines_in_abbr_of_r = NULL,
+  data_in_results = NULL,
+  output_parameters_in_results = NULL,
+  file_separator = NULL
 ) {
-  return(protein_causality(numerical = numerical,
-                           protein = protein,
-                           type_of_data = type_of_data,
-                           subtype_of_data = subtype_of_data,
-                           data_set = data_set,
-                           position_numbering = position_numbering,
-                           min_pos_var = min_pos_var,
-                           only_cols = only_cols,
-                           only_cols_label = only_cols_label,
-                           alpha = alpha,
-                           ranked = ranked,
-                           pc_solve_conflicts = pc_solve_conflicts,
-                           pc_u2pd = pc_u2pd,
-                           pc_conservative = pc_conservative,
-                           pc_maj_rule = pc_maj_rule,
-                           weight_effects_on_by = weight_effects_on_by,
-                           graph_output_formats = graph_output_formats,
-                           graph_layout = graph_layout,
-                           graph_layout_igraph = graph_layout_igraph,
-                           coloring = coloring,
-                           colors = colors,
-                           plot_as_subgraphs = plot_as_subgraphs,
-                           plot_only_subgraphs = plot_only_subgraphs,
-                           for_combined_plot = for_combined_plot,
-                           mute_all_plots = mute_all_plots,
-                           other = other,
-                           graph_computation = graph_computation,
-                           evaluation = evaluation,
-                           analysis = analysis,
-                           stages = stages,
-                           print_analysis = print_analysis,
-                           plot_analysis = plot_analysis,
-                           plot_types = plot_types,
-                           plot_ida = plot_ida,                                  # NEW!
-                           plot_clusters = plot_clusters,                              # NEW!
-                           plot_no_isolated_nodes = plot_no_isolated_nodes,  # NEW!
-                           plot_with_graphviz = plot_with_graphviz,
-                           pymol_show_int_pos = pymol_show_int_pos,compute_pc_anew,    # NEW!
-                           pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length, # NEW!
-                           pymol_mix_connected_components = pymol_mix_connected_components,  # NEW!
-                           print_connected_components = print_connected_components,    # NEW!
-                           compute_pc_anew = compute_pc_anew,
-                           compute_localTests_anew = compute_localTests_anew,
-                           unabbrev_r_to_info = unabbrev_r_to_info,
-                           print_r_to_console = print_r_to_console,
-                           lines_in_abbr_of_r = lines_in_abbr_of_r,
-                           data_in_results = data_in_results,
-                           output_parameters_in_results = output_parameters_in_results,
-                           ida_percentile = ida_percentile,
-                           file_separator = file_separator
-  )
-  )
+  
+  argList <-  as.list(match.call(expand.dots = TRUE)[-1])
+  # Enforce inclusion of non-optional arguments
+  argList$numerical <- numerical
+  argList$protein = protein
+  argList$type_of_data = type_of_data
+  argList$subtype_of_data = subtype_of_data
+  argList$data_set = data_set
+  argList$position_numbering = position_numbering
+  argList$min_pos_var = min_pos_var
+  argList$only_cols = only_cols
+  argList$only_cols_label = only_cols_label
+  argList$alpha = alpha
+  argList$ranked = ranked
+  argList$pc_solve_conflicts = pc_solve_conflicts
+  argList$pc_u2pd = pc_u2pd
+  argList$pc_conservative = pc_conservative
+  argList$pc_maj_rule = pc_maj_rule
+  argList$weight_effects_on_by = weight_effects_on_by
+  argList$graph_output_formats = graph_output_formats
+  argList$graph_layout = graph_layout
+  argList$graph_layout_igraph = graph_layout_igraph
+  argList$coloring = coloring
+  argList$colors = colors
+  argList$plot_as_subgraphs = plot_as_subgraphs
+  argList$plot_only_subgraphs = plot_only_subgraphs
+  argList$for_combined_plot = for_combined_plot
+  argList$mute_all_plots = mute_all_plots
+  argList$other = other
+  argList$graph_computation = graph_computation
+  argList$evaluation = evaluation
+  argList$analysis = analysis
+  argList$stages = stages
+  argList$print_analysis = print_analysis
+  argList$plot_analysis = plot_analysis
+  argList$plot_types = plot_types
+  argList$plot_ida = plot_ida                                 # NEW!
+  argList$plot_clusters = plot_clusters                             # NEW!
+  argList$plot_no_isolated_nodes = plot_no_isolated_nodes  # NEW!
+  argList$plot_with_graphviz = plot_with_graphviz
+  argList$pymol_show_int_pos = pymol_show_int_pos    # NEW!
+  argList$pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length # NEW!
+  argList$pymol_mix_connected_components = pymol_mix_connected_components  # NEW!
+  argList$print_connected_components = print_connected_components    # NEW!
+  argList$compute_pc_anew = compute_pc_anew
+  argList$compute_localTests_anew = compute_localTests_anew
+  argList$unabbrev_r_to_info = unabbrev_r_to_info
+  argList$print_r_to_console = print_r_to_console
+  argList$lines_in_abbr_of_r = lines_in_abbr_of_r
+  argList$data_in_results = data_in_results
+  argList$output_parameters_in_results = output_parameters_in_results
+  argList$ida_percentile = ida_percentile
+  argList$file_separator = file_separator
+  
+  do.call(protein_causality, argList)
+  # return(protein_causality(numerical = numerical,
+  #                          protein = protein,
+  #                          type_of_data = type_of_data,
+  #                          subtype_of_data = subtype_of_data,
+  #                          data_set = data_set,
+  #                          position_numbering = position_numbering,
+  #                          min_pos_var = min_pos_var,
+  #                          only_cols = only_cols,
+  #                          only_cols_label = only_cols_label,
+  #                          alpha = alpha,
+  #                          ranked = ranked,
+  #                          pc_solve_conflicts = pc_solve_conflicts,
+  #                          pc_u2pd = pc_u2pd,
+  #                          pc_conservative = pc_conservative,
+  #                          pc_maj_rule = pc_maj_rule,
+  #                          weight_effects_on_by = weight_effects_on_by,
+  #                          graph_output_formats = graph_output_formats,
+  #                          graph_layout = graph_layout,
+  #                          graph_layout_igraph = graph_layout_igraph,
+  #                          coloring = coloring,
+  #                          colors = colors,
+  #                          plot_as_subgraphs = plot_as_subgraphs,
+  #                          plot_only_subgraphs = plot_only_subgraphs,
+  #                          for_combined_plot = for_combined_plot,
+  #                          mute_all_plots = mute_all_plots,
+  #                          other = other,
+  #                          graph_computation = graph_computation,
+  #                          evaluation = evaluation,
+  #                          analysis = analysis,
+  #                          stages = stages,
+  #                          print_analysis = print_analysis,
+  #                          plot_analysis = plot_analysis,
+  #                          plot_types = plot_types,
+  #                          plot_ida = plot_ida,                                  # NEW!
+  #                          plot_clusters = plot_clusters,                              # NEW!
+  #                          plot_no_isolated_nodes = plot_no_isolated_nodes,  # NEW!
+  #                          plot_with_graphviz = plot_with_graphviz,
+  #                          pymol_show_int_pos = pymol_show_int_pos,compute_pc_anew,    # NEW!
+  #                          pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length, # NEW!
+  #                          pymol_mix_connected_components = pymol_mix_connected_components,  # NEW!
+  #                          print_connected_components = print_connected_components,    # NEW!
+  #                          compute_pc_anew = compute_pc_anew,
+  #                          compute_localTests_anew = compute_localTests_anew,
+  #                          unabbrev_r_to_info = unabbrev_r_to_info,
+  #                          print_r_to_console = print_r_to_console,
+  #                          lines_in_abbr_of_r = lines_in_abbr_of_r,
+  #                          data_in_results = data_in_results,
+  #                          output_parameters_in_results = output_parameters_in_results,
+  #                          ida_percentile = ida_percentile,
+  #                          file_separator = file_separator
+  # )
+  # )
   
 }
 
@@ -678,104 +746,160 @@ protein_causality_NoV <- function(
   data_set = "",
   position_numbering = "",
   # analysis parameters
-  min_pos_var = 0,
+  min_pos_var = NULL,
   only_cols = NULL,
   only_cols_label = "",
   alpha = 0.05,
   ranked = FALSE,
-  pc_solve_conflicts,
-  pc_u2pd,
-  pc_conservative,
-  pc_maj_rule,
-  weight_effects_on_by, # "var", "mean", ""
+  pc_solve_conflicts = NULL,
+  pc_u2pd = NULL,
+  pc_conservative = NULL,
+  pc_maj_rule = NULL,
+  weight_effects_on_by = NULL, # "var", "mean", ""
   # graphical parameters
   graph_output_formats = "pdf",
-  graph_layout,
-  graph_layout_igraph,
-  coloring,
-  colors,
-  plot_as_subgraphs,
-  plot_only_subgraphs, # 1 is another option
-  plot_ida,                                  # NEW!
-  plot_clusters,                              # NEW!
-  plot_no_isolated_nodes,  # TODO: make true possible even for edgeless -> empty graphs #NEW
-  for_combined_plot,
-  mute_all_plots,
-  other, # "cov"
+  graph_layout = NULL,
+  graph_layout_igraph = NULL,
+  coloring = NULL,
+  colors = NULL,
+  plot_as_subgraphs = NULL,
+  plot_only_subgraphs = NULL, # 1 is another option
+  plot_ida = NULL,                                  # NEW!
+  plot_clusters = NULL,                              # NEW!
+  plot_no_isolated_nodes = NULL,  # TODO: make true possible even for edgeless -> empty graphs #NEW
+  for_combined_plot = NULL,
+  mute_all_plots = NULL,
+  other = NULL, # "cov"
   # technical parameters
-  graph_computation,
-  evaluation,
-  analysis, # !pc_solve_conflicts
-  stages, # c("orig", "sub"), "sub"
+  graph_computation = NULL,
+  evaluation = NULL,
+  analysis = NULL, # !pc_solve_conflicts
+  stages = NULL, # c("orig", "sub"), "sub"
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graph"),
   plot_with_graphviz = FALSE,
   pymol_show_int_pos = FALSE,
-  pymol_sort_connected_components_by_length, # NEW!
-  pymol_mix_connected_components,  # NEW!
-  print_connected_components,
-  compute_pc_anew,
-  compute_localTests_anew,
-  unnabbrev_r_to_info,
-  print_r_to_console,
-  lines_in_abbr_of_r,
-  data_in_results,
-  output_parameters_in_results,
-  ida_percentile,
-  file_separator
+  pymol_sort_connected_components_by_length = NULL, # NEW!
+  pymol_mix_connected_components = NULL,  # NEW!
+  print_connected_components = NULL,
+  compute_pc_anew = NULL,
+  compute_localTests_anew = NULL,
+  unabbrev_r_to_info = NULL,
+  print_r_to_console = NULL,
+  lines_in_abbr_of_r = NULL,
+  data_in_results = NULL,
+  output_parameters_in_results = NULL,
+  ida_percentile = "11",
+  file_separator = NULL
 ) {
-  return(protein_causality(numerical = numerical,
-                           protein = protein,
-                           type_of_data = type_of_data,
-                           subtype_of_data = subtype_of_data,
-                           data_set = data_set,
-                           position_numbering = position_numbering,
-                           min_pos_var = min_pos_var,
-                           only_cols = only_cols,
-                           only_cols_label = only_cols_label,
-                           alpha = alpha,
-                           ranked = ranked,
-                           pc_solve_conflicts = pc_solve_conflicts,
-                           pc_u2pd = pc_u2pd,
-                           pc_conservative = pc_conservative,
-                           pc_maj_rule = pc_maj_rule,
-                           weight_effects_on_by = weight_effects_on_by,
-                           graph_output_formats = graph_output_formats,
-                           graph_layout = graph_layout,
-                           graph_layout_igraph = graph_layout_igraph,
-                           coloring = coloring,
-                           colors = colors,
-                           plot_as_subgraphs = plot_as_subgraphs,
-                           plot_only_subgraphs = plot_only_subgraphs,
-                           for_combined_plot = for_combined_plot,
-                           mute_all_plots = mute_all_plots,
-                           other = other,
-                           graph_computation = graph_computation,
-                           evaluation = evaluation,
-                           analysis = analysis,
-                           stages = stages,
-                           print_analysis = print_analysis,
-                           plot_analysis = plot_analysis,
-                           plot_types = plot_types,
-                           plot_ida = plot_ida,                                  # NEW!
-                           plot_clusters = plot_clusters,                              # NEW!
-                           plot_no_isolated_nodes = plot_no_isolated_nodes,  # NEW!
-                           plot_with_graphviz = plot_with_graphviz,
-                           pymol_show_int_pos = pymol_show_int_pos,compute_pc_anew,    # NEW!
-                           pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length, # NEW!
-                           pymol_mix_connected_components = pymol_mix_connected_components,  # NEW!
-                           print_connected_components = print_connected_components,    # NEW!
-                           compute_pc_anew = compute_pc_anew,
-                           compute_localTests_anew = compute_localTests_anew,
-                           unabbrev_r_to_info = unabbrev_r_to_info,
-                           print_r_to_console = print_r_to_console,
-                           lines_in_abbr_of_r = lines_in_abbr_of_r,
-                           data_in_results = data_in_results,
-                           output_parameters_in_results = output_parameters_in_results,
-                           ida_percentile = ida_percentile,
-                           file_separator = file_separator
-  )
-  )
+  
+  argList <-  as.list(match.call(expand.dots = TRUE)[-1])
+  # Enforce inclusion of non-optional arguments
+  argList$numerical <- numerical
+  argList$protein = protein
+  argList$type_of_data = type_of_data
+  argList$subtype_of_data = subtype_of_data
+  argList$data_set = data_set
+  argList$position_numbering = position_numbering
+  argList$min_pos_var = min_pos_var
+  argList$only_cols = only_cols
+  argList$only_cols_label = only_cols_label
+  argList$alpha = alpha
+  argList$ranked = ranked
+  argList$pc_solve_conflicts = pc_solve_conflicts
+  argList$pc_u2pd = pc_u2pd
+  argList$pc_conservative = pc_conservative
+  argList$pc_maj_rule = pc_maj_rule
+  argList$weight_effects_on_by = weight_effects_on_by
+  argList$graph_output_formats = graph_output_formats
+  argList$graph_layout = graph_layout
+  argList$graph_layout_igraph = graph_layout_igraph
+  argList$coloring = coloring
+  argList$colors = colors
+  argList$plot_as_subgraphs = plot_as_subgraphs
+  argList$plot_only_subgraphs = plot_only_subgraphs
+  argList$for_combined_plot = for_combined_plot
+  argList$mute_all_plots = mute_all_plots
+  argList$other = other
+  argList$graph_computation = graph_computation
+  argList$evaluation = evaluation
+  argList$analysis = analysis
+  argList$stages = stages
+  argList$print_analysis = print_analysis
+  argList$plot_analysis = plot_analysis
+  argList$plot_types = plot_types
+  argList$plot_ida = plot_ida                                 # NEW!
+  argList$plot_clusters = plot_clusters                             # NEW!
+  argList$plot_no_isolated_nodes = plot_no_isolated_nodes  # NEW!
+  argList$plot_with_graphviz = plot_with_graphviz
+  argList$pymol_show_int_pos = pymol_show_int_pos    # NEW!
+  argList$pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length # NEW!
+  argList$pymol_mix_connected_components = pymol_mix_connected_components  # NEW!
+  argList$print_connected_components = print_connected_components    # NEW!
+  argList$compute_pc_anew = compute_pc_anew
+  argList$compute_localTests_anew = compute_localTests_anew
+  argList$unabbrev_r_to_info = unabbrev_r_to_info
+  argList$print_r_to_console = print_r_to_console
+  argList$lines_in_abbr_of_r = lines_in_abbr_of_r
+  argList$data_in_results = data_in_results
+  argList$output_parameters_in_results = output_parameters_in_results
+  argList$ida_percentile = ida_percentile
+  argList$file_separator = file_separator
+  
+  do.call(protein_causality, argList)
+  
+  # return(protein_causality(numerical = numerical,
+  #                          protein = protein,
+  #                          type_of_data = type_of_data,
+  #                          subtype_of_data = subtype_of_data,
+  #                          data_set = data_set,
+  #                          position_numbering = position_numbering,
+  #                          min_pos_var = min_pos_var,
+  #                          only_cols = only_cols,
+  #                          only_cols_label = only_cols_label,
+  #                          alpha = alpha,
+  #                          ranked = ranked,
+  #                          pc_solve_conflicts = pc_solve_conflicts,
+  #                          pc_u2pd = pc_u2pd,
+  #                          pc_conservative = pc_conservative,
+  #                          pc_maj_rule = pc_maj_rule,
+  #                          weight_effects_on_by = weight_effects_on_by,
+  #                          graph_output_formats = graph_output_formats,
+  #                          graph_layout = graph_layout,
+  #                          graph_layout_igraph = graph_layout_igraph,
+  #                          coloring = coloring,
+  #                          colors = colors,
+  #                          plot_as_subgraphs = plot_as_subgraphs,
+  #                          plot_only_subgraphs = plot_only_subgraphs,
+  #                          for_combined_plot = for_combined_plot,
+  #                          mute_all_plots = mute_all_plots,
+  #                          other = other,
+  #                          graph_computation = graph_computation,
+  #                          evaluation = evaluation,
+  #                          analysis = analysis,
+  #                          stages = stages,
+  #                          print_analysis = print_analysis,
+  #                          plot_analysis = plot_analysis,
+  #                          plot_types = plot_types,
+  #                          plot_ida = plot_ida,                                  # NEW!
+  #                          plot_clusters = plot_clusters,                              # NEW!
+  #                          plot_no_isolated_nodes = plot_no_isolated_nodes,  # NEW!
+  #                          plot_with_graphviz = plot_with_graphviz,
+  #                          pymol_show_int_pos = pymol_show_int_pos,compute_pc_anew,    # NEW!
+  #                          pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length, # NEW!
+  #                          pymol_mix_connected_components = pymol_mix_connected_components,  # NEW!
+  #                          print_connected_components = print_connected_components,    # NEW!
+  #                          compute_pc_anew = compute_pc_anew,
+  #                          compute_localTests_anew = compute_localTests_anew,
+  #                          unabbrev_r_to_info = unabbrev_r_to_info,
+  #                          print_r_to_console = print_r_to_console,
+  #                          lines_in_abbr_of_r = lines_in_abbr_of_r,
+  #                          data_in_results = data_in_results,
+  #                          output_parameters_in_results = output_parameters_in_results,
+  #                          ida_percentile = ida_percentile,
+  #                          file_separator = file_separator
+  # )
+  # )
   
 }
