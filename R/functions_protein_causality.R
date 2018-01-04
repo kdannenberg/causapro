@@ -28,7 +28,7 @@ protein_causality <- function(
   # 
   # Analysis parameters
   # remove_positions_with_low_variance = TRUE,
-  min_pos_var = 0,
+  min_pos_var = 0.3,
   only_cols = NULL,
   only_cols_label = "",
   # 
@@ -40,7 +40,7 @@ protein_causality <- function(
   pc_solve_conflicts = TRUE,
   pc_u2pd = "relaxed",
   pc_conservative = FALSE,
-  pc_maj_rule = FALSE,
+  pc_maj_rule = TRUE,
   # 
   # weight_effects_on_by = "",
   # weight_effects_on_by = "var",
@@ -91,6 +91,12 @@ protein_causality <- function(
   plot_no_isolated_nodes = TRUE,  # TODO: make true possible even for edgeless -> empty graphs
   plot_with_graphviz = FALSE, # NEW!
   # 
+  pymol_show_int_pos = TRUE,                        # NEW!
+  pymol_sort_connected_components_by_length = TRUE, # NEW!
+  pymol_mix_connected_components = FALSE,           # NEW!
+  #
+  print_connected_components = FALSE,                # NEW!
+  #
   compute_pc_anew = FALSE,
   compute_localTests_anew = FALSE,
   # if (compute_everything_anew) {
@@ -231,17 +237,24 @@ protein_causality <- function(
                                add_cluster_of_conserved_positions = add_cluster_of_conserved_positions, removed_cols = removed_cols)
     }
     
-  if (!is.null(plot_only_subgraphs)) {
-    # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
-    node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
-    subgraphs <- subgraphs_from_node_clusters(node_clustering, graph = results$orig$graph$NEL, protein = protein)
-    graph <- subgraphs[[plot_only_subgraphs]]$graph
-  } else {
-    graph <- results$pc@graph
-  }
-  
-  plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = graph, 
-                                     outpath = outpath, show_int_pos = TRUE, show_positions = FALSE, file_separator = file_separator)
+    if (!is.null(plot_only_subgraphs)) {
+      # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
+      node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
+      subgraphs <- subgraphs_from_node_clusters(node_clustering, graph = results$orig$graph$NEL, protein = protein)
+      graph <- subgraphs[[plot_only_subgraphs]]$graph
+    } else {
+      graph <- results$pc@graph
+    }
+    
+    plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = graph, 
+                                       outpath = outpath, show_int_pos = pymol_show_int_pos, show_positions = TRUE, 
+                                       file_separator = file_separator, sort_connected_components_by_length = 
+                                       pymol_sort_connected_components_by_length, 
+                                       mix_connected_components = pymol_mix_connected_components)
+    if (print_connected_components) {
+      conn_comp <- nonsingular_connected_components(graph)
+      print(conn_comp)
+    }
   }
 
   
@@ -313,7 +326,7 @@ protein_causality_G <- function(
   pc_solve_conflicts = TRUE,
   pc_u2pd = "relaxed",
   pc_conservative = FALSE,
-  pc_maj_rule = FALSE,
+  pc_maj_rule = TRUE,
   # 
   # weight_effects_on_by = "",
   # weight_effects_on_by = "var",
@@ -444,7 +457,7 @@ protein_causality_S <- function(
   pc_solve_conflicts = TRUE,
   pc_u2pd = "relaxed",
   pc_conservative = FALSE,
-  pc_maj_rule = FALSE,
+  pc_maj_rule = TRUE,
   weight_effects_on_by = "median", # "var", "mean", ""
   # graphical parameters
   graph_output_formats = "ps",
@@ -537,60 +550,34 @@ protein_causality_S <- function(
   
 }
 
-protein_causality_NoV <- function(
+protein_causality_p38g <- function(
   # data parameters
-  # available data:
-  # "NoV_NMR-Tit_B4S"
-  # "NoV_NMR-Tit_Fuc"
-  # and
-  # "NoV_NMR-Tit_B3S-with-unass"
-  # type_of_data = "NMR-Tit"
-  # type_of_data = c("NMR_Tit-Fuc", "NMR_Tit-BTS")
-  # type_of_data = "Fuc-Tit-only-assigned"
-  # subtype_of_data = "Fuc-old"
-  # subtype_of_data = "Fuc"
-  # TODO: wieder ermöglichen
-  # subtype_of_data = c("Fuc", "BTS")
-  
   numerical = TRUE,
-  protein = "NoV",
-  # type_of_data = "NMR-Tit",
-  type_of_data = "DDS",
+  protein = "p38g",
+  type_of_data = "NMR",
   subtype_of_data = "",
-  # subtype_of_data = c("Fuc", "BTS"),
-  data_set = "",
-  position_numbering = "",
+  data_set = "act",
+  position_numbering = "crystal",
   # analysis parameters
   min_pos_var = 0,
   only_cols = NULL,
   only_cols_label = "",
-  alpha = 0.05,
+  alpha = 0.01,
   ranked = FALSE,
   pc_solve_conflicts = TRUE,
   pc_u2pd = "relaxed",
   pc_conservative = FALSE,
-  pc_maj_rule = FALSE,
+  pc_maj_rule = TRUE,
   weight_effects_on_by = "median", # "var", "mean", ""
   # graphical parameters
-  graph_output_formats = "pdf",
-  ## graph_layout = "dot", # "circo", "fdp", "neato", "osage", "twopi"
-  ## "layout_nicely" uses recommended layouts
-  ## "layout_with_sugiyama" plots layered dags
-  ## "layout_on_sphere" places the vertices uniformly on the surface of a spere (3d layout)
-  ## "layout_with_lgl" is a layout for large graphs
-  ## "layout_with_dh" uses simulated annealing for the graph layouting
-  ## "layout_with_fr" uses a force-directed algorithm
-  ## "layout_with_kk" is a physical model based on springs
-  graph_layout = "dot",
-  graph_layout_igraph = "layout_nicely",
+  graph_output_formats = "ps",
+  graph_layout = "dot", # "circo", "fdp", "neato", "osage", "twopi"
   coloring = "auto", # "auto", "auto-all", "all"
   colors = NULL,
   plot_as_subgraphs = FALSE,
   plot_only_subgraphs = NULL, # 1 is another option
-  plot_ida = FALSE,                                  # NEW!
-  plot_clusters = FALSE,                              # NEW!
   for_combined_plot = FALSE,
-  mute_all_plots = FALSE,
+  mute_plot = FALSE,
   other = "", # "cov"
   # technical parameters
   graph_computation = TRUE,
@@ -600,6 +587,7 @@ protein_causality_NoV <- function(
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graph"),
+  plot_no_isolated_nodes = TRUE,
   plot_with_graphviz = FALSE,
   compute_pc_anew = FALSE,
   compute_localTests_anew = FALSE,
@@ -646,7 +634,138 @@ protein_causality_NoV <- function(
                            plot_types = plot_types,
                            plot_ida = plot_ida,                                  # NEW!
                            plot_clusters = plot_clusters,                              # NEW!
+                           plot_no_isolated_nodes = plot_no_isolated_nodes,  # NEW!
                            plot_with_graphviz = plot_with_graphviz,
+                           pymol_show_int_pos = pymol_show_int_pos,compute_pc_anew,    # NEW!
+                           pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length, # NEW!
+                           pymol_mix_connected_components = pymol_mix_connected_components,  # NEW!
+                           print_connected_components = print_connected_components,    # NEW!
+                           compute_pc_anew = compute_pc_anew,
+                           compute_localTests_anew = compute_localTests_anew,
+                           unabbrev_r_to_info = unabbrev_r_to_info,
+                           print_r_to_console = print_r_to_console,
+                           lines_in_abbr_of_r = lines_in_abbr_of_r,
+                           data_in_results = data_in_results,
+                           output_parameters_in_results = output_parameters_in_results,
+                           ida_percentile = ida_percentile,
+                           file_separator = file_separator
+  )
+  )
+  
+}
+
+protein_causality_NoV <- function(
+  # data parameters
+  # available data:
+  # "NoV_NMR-Tit_B4S"
+  # "NoV_NMR-Tit_Fuc"
+  # and
+  # "NoV_NMR-Tit_B3S-with-unass"
+  # type_of_data = "NMR-Tit"
+  # type_of_data = c("NMR_Tit-Fuc", "NMR_Tit-BTS")
+  # type_of_data = "Fuc-Tit-only-assigned"
+  # subtype_of_data = "Fuc-old"
+  # subtype_of_data = "Fuc"
+  # TODO: wieder ermöglichen
+  # subtype_of_data = c("Fuc", "BTS")
+  
+  numerical = TRUE,
+  protein = "NoV",
+  # type_of_data = "NMR-Tit",
+  type_of_data = "DDS",
+  subtype_of_data = "",
+  # subtype_of_data = c("Fuc", "BTS"),
+  data_set = "",
+  position_numbering = "",
+  # analysis parameters
+  min_pos_var = 0,
+  only_cols = NULL,
+  only_cols_label = "",
+  alpha = 0.05,
+  ranked = FALSE,
+  pc_solve_conflicts,
+  pc_u2pd,
+  pc_conservative,
+  pc_maj_rule,
+  weight_effects_on_by, # "var", "mean", ""
+  # graphical parameters
+  graph_output_formats = "pdf",
+  graph_layout,
+  graph_layout_igraph,
+  coloring,
+  colors,
+  plot_as_subgraphs,
+  plot_only_subgraphs, # 1 is another option
+  plot_ida,                                  # NEW!
+  plot_clusters,                              # NEW!
+  plot_no_isolated_nodes,  # TODO: make true possible even for edgeless -> empty graphs #NEW
+  for_combined_plot,
+  mute_all_plots,
+  other, # "cov"
+  # technical parameters
+  graph_computation,
+  evaluation,
+  analysis, # !pc_solve_conflicts
+  stages, # c("orig", "sub"), "sub"
+  print_analysis = FALSE,
+  plot_analysis = TRUE,
+  plot_types = c("localTests", "graph"),
+  plot_with_graphviz = FALSE,
+  pymol_show_int_pos = FALSE,
+  pymol_sort_connected_components_by_length, # NEW!
+  pymol_mix_connected_components,  # NEW!
+  print_connected_components,
+  compute_pc_anew,
+  compute_localTests_anew,
+  unnabbrev_r_to_info,
+  print_r_to_console,
+  lines_in_abbr_of_r,
+  data_in_results,
+  output_parameters_in_results,
+  ida_percentile,
+  file_separator
+) {
+  return(protein_causality(numerical = numerical,
+                           protein = protein,
+                           type_of_data = type_of_data,
+                           subtype_of_data = subtype_of_data,
+                           data_set = data_set,
+                           position_numbering = position_numbering,
+                           min_pos_var = min_pos_var,
+                           only_cols = only_cols,
+                           only_cols_label = only_cols_label,
+                           alpha = alpha,
+                           ranked = ranked,
+                           pc_solve_conflicts = pc_solve_conflicts,
+                           pc_u2pd = pc_u2pd,
+                           pc_conservative = pc_conservative,
+                           pc_maj_rule = pc_maj_rule,
+                           weight_effects_on_by = weight_effects_on_by,
+                           graph_output_formats = graph_output_formats,
+                           graph_layout = graph_layout,
+                           graph_layout_igraph = graph_layout_igraph,
+                           coloring = coloring,
+                           colors = colors,
+                           plot_as_subgraphs = plot_as_subgraphs,
+                           plot_only_subgraphs = plot_only_subgraphs,
+                           for_combined_plot = for_combined_plot,
+                           mute_all_plots = mute_all_plots,
+                           other = other,
+                           graph_computation = graph_computation,
+                           evaluation = evaluation,
+                           analysis = analysis,
+                           stages = stages,
+                           print_analysis = print_analysis,
+                           plot_analysis = plot_analysis,
+                           plot_types = plot_types,
+                           plot_ida = plot_ida,                                  # NEW!
+                           plot_clusters = plot_clusters,                              # NEW!
+                           plot_no_isolated_nodes = plot_no_isolated_nodes,  # NEW!
+                           plot_with_graphviz = plot_with_graphviz,
+                           pymol_show_int_pos = pymol_show_int_pos,compute_pc_anew,    # NEW!
+                           pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length, # NEW!
+                           pymol_mix_connected_components = pymol_mix_connected_components,  # NEW!
+                           print_connected_components = print_connected_components,    # NEW!
                            compute_pc_anew = compute_pc_anew,
                            compute_localTests_anew = compute_localTests_anew,
                            unabbrev_r_to_info = unabbrev_r_to_info,

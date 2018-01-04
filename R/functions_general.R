@@ -537,7 +537,6 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
         }
       }
     } else {
-      ## NoV enters this branch <- not anymore
       list <- list()
     }
     if (!is.null(interesting_pos)) {  # !is.null(list) ?!
@@ -1118,8 +1117,73 @@ paths_between_nodes <- function(graph, from, to, all_paths = FALSE) {
 }
 
 
+nonsingular_connected_components <- function(graph, remove_non_assigned = TRUE){
+  connected_components <- connComp(graph)
+  if (remove_non_assigned) {
+    connected_components <- lapply(connected_components, function (list) {return(list[!grepl('\\[|\\]', list)])})
+  }
+  real_ones_ind <- which(sapply(connected_components, function(x) length(x) > 1))
+  connected_components <- connected_components[real_ones_ind]
+  
+  
+  return(connected_components)
+}
 
+# This function is used e.g. for plotting connected components in pymol.
+# Normally, the connected components are sorted alphabetically. 
+# Since in proteins the false impression that neighbouring residues are in the 
+# same connected components could arise when they have subsequent and thus 
+# indistinguishable rainbow colors, the components can be mixed (mix argment given).
+# Then, mix_offset determines how many other positions there are (at least) between two 
+# originally neighbouring components
 
+# if mix = "every_mix_offset_th", the mixed version is obtained by appending to the 
+# new list every i'th element from the original list, where i = mix_offset + 1, 
+# continuing with incremeted offset every time the end of the list is reached
+reorder_list_of_lists <- function(list, ordering, mix_mode = "mix_offset_between_original_neighbours", mix_offset = floor(sqrt(length(list))),
+                                  sort_mode, sort_descending = TRUE) {
+  if (ordering == "mix") {
+    if (mix_offset > 0) {
+      mixed_connected_components <- list()
+      if (mix_mode == "every_mix_offset_th") {
+        for (rest in seq(0, mix_offset)) {
+          for (multipicity in seq(0, floor(length(list)/mix_offset))) {
+            index_in_conn_comp <- multipicity * mix_offset + rest + 1
+            if (index_in_conn_comp <= length(list)) {
+              mixed_connected_components[[length(mixed_connected_components) + 1]] <- list[[index_in_conn_comp]]
+              # mixed_connected_components <- append(mixed_connected_components, connected_components[[index_in_conn_comp]])
+            }
+          }
+        }
+      } else {
+        # there are at least mix_offest + 1 blcoks (+ one block with the rest of the division).
+        # To obtain the permutation, first, the first elements of all the blocks are taken, 
+        # then the second ones and so on.
+        block_size = floor(length(list) / mix_offset)
+        for (offset in 0:(block_size-1)) {
+          for (block in seq(0, ceiling(length(list) / block_size))) {
+            index_in_conn_comp <- block * block_size + offset + 1
+            if (index_in_conn_comp <= length(list)) {
+              mixed_connected_components[[length(mixed_connected_components) + 1]] <- list[[index_in_conn_comp]]
+              # mixed_connected_components <- append(mixed_connected_components, connected_components[[index_in_conn_comp]])
+            }
+          }
+        }
+      }
+      list <- mixed_connected_components
+    }
+  } else if (grepl("sort", ordering)) {
+    if (sort_mode == "length") {
+      if (sort_descending) {
+        sorted_connected_components <- list[order(vapply(list, length, 1L), decreasing = TRUE)]
+      } else {
+        sorted_connected_components <- list[order(vapply(list, length, 1L), decreasing = FALSE)]
+      }
+    }
+    list <- sorted_connected_components
+  }
+  return(list)
+}
 
 
 

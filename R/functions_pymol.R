@@ -57,11 +57,21 @@ pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/",
 }
 
 ## most general; TODO: can the other fucntions (except for the paths) be implemented using this one?
-## what is length_sort doing?
+# length_sort - cluster are sorted din decreasing order of their size
+# mix cluster are mixed so that neigbouring clusters are as long as possible from each other (overrides length_sort)
+## was macht core?
 plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file, 
                                    label = TRUE, no_colors = FALSE, show_positions = TRUE,
                                    file_separator = "/", type_of_clustering = "", bg_color = "grey",
-                                   length_sort = TRUE, core = FALSE) {
+                                   length_sort = FALSE, mix = FALSE, core = FALSE) {
+  
+  if (length_sort) {
+    node_clustering <- reorder_list_of_lists(node_clustering, ordering = "sort", sort_mode = "length", sort_descending = TRUE)
+  }
+  if (mix) { ## TODO reorder only lists of same length, if length_sort && mix
+    node_clustering <- reorder_list_of_lists(node_clustering, ordering = "mix")
+  }
+  
   if(!core) {
     out_file <- paste0(outpath, "-", length(node_clustering), pastes("_clusters", type_of_clustering, sep = "-"),".pml")
     ## out_file <- pastes(out_file, type_of_clustering, sep = "-")
@@ -112,13 +122,15 @@ plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file,
 }
 
 # TODO: use file_separator consistently
-plot_connected_components_in_pymol <- function(protein, position_numbering, graph, outpath, label = TRUE, pdb_file, only_int_pos = FALSE, 
-                                               show_int_pos = TRUE, color_int_pos = TRUE, only_color_int_pos = FALSE, coloring_for_int_pos, no_colors = FALSE, only_dist = FALSE, 
-                                               show_positions = TRUE, file_separator = "/", bg_color = "grey") {
+# mix_connected_components overrides sort_connected_components_by_length
+plot_connected_components_in_pymol <- function(protein, position_numbering, graph, outpath, label = TRUE, pdb_file, 
+                                               only_int_pos = FALSE,  show_int_pos = TRUE, color_int_pos = TRUE, only_color_int_pos = FALSE, 
+                                               coloring_for_int_pos, no_colors = FALSE, only_dist = FALSE, show_positions = TRUE, 
+                                               file_separator = "/", bg_color = "grey", sort_connected_components_by_length = FALSE,
+                                               mix_connected_components = TRUE) {
   print(paste("Outpath for pymol-file:", outpath))
-  connected_components <- connComp(graph)
-  real_ones_ind <- which(sapply(connected_components, function(x) length(x) > 1))
-  connected_components <- connected_components[real_ones_ind]
+  connected_components <- nonsingular_connected_components(graph)
+  
   if (length(connected_components) == 0) {
     return(NULL)
   }
@@ -147,7 +159,11 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
   pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
   colors <- rainbow(length(connected_components))
   if (!only_dist) {
-    plot_clusters_in_pymol(node_clustering = connected_components, protein = protein, outpath = outpath, pdb_file = pdb_file, label = label, no_colors = no_colors, show_positions = show_positions, file_separator = file_separator, type_of_clustering = "connected_components", bg_color = bg_color, length_sort = TRUE, core = TRUE)
+    plot_clusters_in_pymol(node_clustering = connected_components, protein = protein, outpath = outpath, 
+                           pdb_file = pdb_file, label = label, no_colors = no_colors, show_positions = show_positions, 
+                           file_separator = file_separator, type_of_clustering = "connected_components", 
+                           bg_color = bg_color, length_sort = sort_connected_components_by_length,
+                           mix = mix_connected_components, core = TRUE)
     ## # if (!show_int_pos) {
     ## for (i in 1:length(connected_components)) {
     ##   cat("create sector_", i, ", (resi ", 

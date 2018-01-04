@@ -55,24 +55,7 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
 #   That is, per position, over all observations?
 adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, remove_low_variance = FALSE,
                         zero_var_fct, min_var = 0.01, mute_plot = TRUE) {
-  if (rank) {
-    if (!rank_obs_per_pos) {
-      if (!missing(data)) {
-        data <- t(apply(data, 1, rank))  # observationsweise (über alle Positionen)
-      }
-      if (!missing(type_of_data)) {
-        type_of_data <- paste(type_of_data, "ranked", sep = "-")
-        # type_of_data <- paste(type_of_data, "ranked-pos-per-obs", sep = "-")
-      }
-    } else {
-      if (!missing(data)) {
-        data <- cbind(apply(data, 2, rank)) # positionsweise (über alle Obeservationen)
-      }
-      if (!missing(type_of_data)) {
-        type_of_data <- paste(type_of_data, "ranked-obs-per-pos", sep = "-")
-      }
-    }
-  }
+  
   # TODO: statistical test for zero variance
   if (typeof(min_var) == "closure") {
     # remove_low_var_cols <-  nearZeroVar(data, freqCut = 15, saveMetrics = FALSE)
@@ -93,6 +76,26 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
     # cat("\n")
     print(paste("Removed columns:", paste(colnames(data)[drop], collapse = ", ")))
     data2 <- data[, !names(data) %in% names(drop)]
+  }
+  
+  
+  if (rank) {
+    if (!rank_obs_per_pos) {
+      if (!missing(data)) {
+        data <- t(apply(data, 1, rank))  # observationsweise (über alle Positionen)
+      }
+      if (!missing(type_of_data)) {
+        type_of_data <- paste(type_of_data, "ranked", sep = "-")
+        # type_of_data <- paste(type_of_data, "ranked-pos-per-obs", sep = "-")
+      }
+    } else {
+      if (!missing(data)) {
+        data <- cbind(apply(data, 2, rank)) # positionsweise (über alle Obeservationen)
+      }
+      if (!missing(type_of_data)) {
+        type_of_data <- paste(type_of_data, "ranked-obs-per-pos", sep = "-")
+      }
+    }
   }
   return(data)
 }
