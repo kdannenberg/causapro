@@ -16,13 +16,10 @@ get_data_description <- function(protein, type_of_data, subtype_of_data = "", da
 }
 
 
-read_data <- function(files, path_to_data = "Data/", extension = ".csv", filename, transpose = FALSE, only_cols = NULL) {
+read_data <- function(files, path_to_data = "Data/", extension = ".csv", filename, transpose = FALSE) {
   read <- function (file) {
     filename <- paste(path_to_data, file, extension, sep = "")
     data_i = read.csv2(filename, row.names = 1, check.names = FALSE) # if check.names, an X is prepended to numerical column-names
-    if (!length(only_cols) == 0) {
-      data_i = data_i[,as.character(only_cols)]
-    }
     i <- which(files == file)
     if ((length(transpose) > i && transpose[i]) || (length(transpose) == 1 && transpose[1])) {
       data_i <- t(data_i)
@@ -53,9 +50,19 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
 
 # rank_obs_per_pos: should the ranking be done the other way round? 
 #   That is, per position, over all observations?
-adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, remove_low_variance = FALSE,
-                        zero_var_fct, min_var = 0.01, mute_plot = TRUE) {
+adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, only_cols = NULL, 
+                        remove_low_variance = FALSE, zero_var_fct, min_var = 0.01, mute_plot = TRUE) {
   
+  if (!length(only_cols) == 0) {
+    # grep the right cols
+    only_cols_ind <- sapply(only_cols, function(x) which(grepl(as.character(x), colnames(data))))
+    # only_cols <- names(sapply(only_cols, function(x) which(grepl(as.character(x), colnames(data)))))
+    cols_not_found <- names(only_cols_ind[which(lapply(only_cols_ind, length) == 0)])
+    warning(paste("No columns containing", paste(cols_not_found, collapse = ", "), "found!"))
+    only_cols_ind <- only_cols_ind[which(!(lapply(only_cols_ind, length) == 0))]
+    only_cols <- colnames(data)[unlist(only_cols_ind)]
+    data = data[,as.character(only_cols)]
+  }
   # TODO: statistical test for zero variance
   if (typeof(min_var) == "closure") {
     # remove_low_var_cols <-  nearZeroVar(data, freqCut = 15, saveMetrics = FALSE)

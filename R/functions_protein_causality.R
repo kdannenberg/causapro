@@ -132,8 +132,8 @@ protein_causality <- function(
   data_description <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set)
   
   # filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
-  data_orig <- read_data(data_description, only_cols = only_cols)
-  data <- adjust_data(data = data_orig, rank = ranked, min_var = min_pos_var) #mute = combined_plot)
+  data_orig <- read_data(data_description)
+  data <- adjust_data(data = data_orig, rank = ranked, only_cols = only_cols, min_var = min_pos_var) #mute = combined_plot)
   data_description <- adjust_data_description(data_description = data_description, ranked = ranked)
   
   removed_cols <- setdiff(colnames(data_orig), colnames(data))
