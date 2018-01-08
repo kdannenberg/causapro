@@ -565,7 +565,7 @@ protein_causality_p38g <- function(
   only_cols_label = "",
   # data-dependent graphical parameters
   graph_output_formats = NULL,
-  plot_with_graphviz = FALSE,
+  plot_with_graphviz = TRUE,
   graph_layout = "dot", # "circo", "fdp", "neato", "osage", "twopi"
   graph_layout_igraph = NULL,
   coloring = "auto", # "auto", "auto-all", "all"
@@ -602,7 +602,7 @@ protein_causality_p38g <- function(
   plot_analysis = NULL,
   plot_types = NULL,
   plot_no_isolated_nodes = TRUE,
-  plot_clusters = NULL,
+  plot_clusters = FALSE,
   compute_pc_anew = NULL,
   compute_localTests_anew = NULL,
   unabbrev_r_to_info = NULL,

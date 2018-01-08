@@ -1,17 +1,19 @@
 source("~/.configuration_code.R")
 
-source("functions_causal_effects.R")
-source("functions_ci_tests.R")
-source("functions_compute_DAG_categorical.R")
-source("functions_compute_DAG_numerical.R")
-source("functions_conversions.R")
-source("functions_evaluate_DAG.R")
-source("functions_general.R")
-# source("functions_i_o.R")
-source("functions_linkcommunities.R")
-source("functions_pymol.R")
-source("functions_tools.R")
-## set working directory to 
+# source_all_function_scripts()
+# source("functions_causal_effects.R")
+# source("functions_ci_tests.R")
+# source("functions_compute_DAG_categorical.R")
+# source("functions_compute_DAG_numerical.R")
+# source("functions_conversions.R")
+# source("functions_evaluate_DAG.R")
+# source("functions_general.R")
+# # source("functions_i_o.R")
+# source("functions_linkcommunities.R")
+# source("functions_pymol.R")
+# source("functions_tools.R")
+
+## set working directory to
 source("configuration_data.R")
 
 
@@ -22,7 +24,7 @@ results_p38g <- protein_causality_p38g(analysis = FALSE, alpha = 0.01, min_pos_v
                                       pymol_sort_connected_components_by_length = FALSE, pymol_mix_connected_components = TRUE,
                                       print_connected_components = TRUE)
 sink()
-print(conflict_edges(results_NMR$pc@graph))
+print(conflict_edges(results_p38g$pc@graph))
 
 
 # sink.reset()

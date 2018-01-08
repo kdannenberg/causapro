@@ -840,11 +840,15 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
       #     postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
       #   }
       # } else {
-        if (format == "pdf") {
-          pdf(paste(outpath, ".pdf", sep = ""))
-        } else if ((format == "ps") || (format == "postscript")) {
-          postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
-        }
+      if (format == "pdf") {
+        pdf(paste(outpath, ".pdf", sep = ""))
+      } else if ((format == "ps") || (format == "postscript")) {
+        postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
+      } else if (format == "svg") {
+        svg(paste0(outpath, ".svg"))
+      } else {
+        warning(paste("Unknown format:", format))
+      }
       # }
       plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption) 
       dev.off()
