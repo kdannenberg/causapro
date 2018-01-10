@@ -534,6 +534,8 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
           }
           
           list <- classify_nodes(counts, round_categories = round_categories, mix = TRUE, base_colors = colnames(counts))
+          print("HI")
+          print(list)
         }
       }
     } else {
@@ -823,13 +825,17 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
     graph <- subgraphs[[plot_only_subgraphs]]$graph
     subgraphs <- NULL
   }
+
+    ## filter drawnode
+  if(length(drawnode) > 1) {
+    
+  }
+  drawnode = drawnode[nodes(graph)]
   
   pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) 
   
   # this plots the graph with the given options
   if (!mute_all_plots) {
-    print(length(drawnode))
-    print(pc_graph)
     plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
   }
 

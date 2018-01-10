@@ -30,7 +30,6 @@ node_function_for_graph <- function(pie = FALSE, counts, colors = c("#1874CD", "
                  col=cols[x > 0])
       }
     }
-    
     drawFuns <- apply(counts, 1, makeNodeDrawFunction)
   } else {
     drawFuns <- drawAgNode
