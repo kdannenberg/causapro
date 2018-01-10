@@ -5,7 +5,7 @@ library(colorspace)  # for mixcolor, hex
 node_function_for_graph <- function(pie = FALSE, counts, colors = c("#1874CD", "#69A019", "#FFD700", "#CC0000")) {
   if (pie) {
     if (missing(counts)) {
-      counts <- read.csv2("../Data/FigS3.csv", row.names = 1, check.names=FALSE, skip = 1)
+      counts <- read.csv2("Data/FigS3.csv", row.names = 1, check.names=FALSE, skip = 1)
       counts <- as.matrix(counts, ncol = 4)
     }
     if (missing(colors)) {

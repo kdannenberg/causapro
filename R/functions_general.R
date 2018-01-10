@@ -828,6 +828,8 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
   
   # this plots the graph with the given options
   if (!mute_all_plots) {
+    print(length(drawnode))
+    print(pc_graph)
     plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
   }
 
