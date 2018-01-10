@@ -19,22 +19,25 @@ source("configuration_data.R")
 
 
 
-results_p38g <- protein_causality_p38g(analysis = FALSE, alpha = 0.01, min_pos_var = 0.01, 
+results_p38g <- protein_causality_p38g(analysis = FALSE, alpha = 0.1, min_pos_var = 0.01, 
                                       ranked = FALSE, plot_no_isolated_nodes = FALSE, plot_with_graphviz = TRUE, 
                                       pymol_sort_connected_components_by_length = FALSE, pymol_mix_connected_components = TRUE,
-                                      print_connected_components = TRUE, coloring = "FS3-pie"
-                                      # only_cols = c("V26", "L76", "L89", "M109", "M112", "L170", "L116", "L119", "V161"), only_cols_label = "Fig.7a.1"
-                                      # only_cols = c("L76", "L77", "M81", "L89", "L149", "L343"), only_cols_label = "Fig.7a.2"
-                                      # only_cols = c("L77", "L78", "M81", "L149", "L174", "M182", "V186", "V187", "M201", "V333"), only_cols_label = "Fig.7a.3"
-                                      # only_cols = c("L77", "L78", "M81", "L170", "L174", "M182"), only_cols_label = "Fig.7b"
-                                      # only_cols = c("I150", "V187", "L198", "V250", "L253", "M262"), only_cols_label = "Fig.7c"
+                                      print_connected_components = TRUE, # coloring = "FS3-pie"
+                                      # only_cols = c("26", "78", "89", "109", "112", "170", "116", "119", "161"), only_cols_label = "Fig.7a.1"
+                                      # only_cols = c("77", "78", "81", "89", "149", "343", "109", "112", "116", "170"), only_cols_label = "Fig.7a.2"
+                                      # only_cols = c("77", "78", "81", "149", "174", "182", "186", "187", "201", "333"), only_cols_label = "Fig.7a.3"
+                                      # only_cols = c("77", "78", "81", "170", "174", "182"), only_cols_label = "Fig.7b"
+                                      only_cols = c("150", "187", "198", "250", "253", "262"), only_cols_label = "Fig.7c"
 )
 sink()
 print(conflict_edges(results_p38g$pc@graph))
 
 
-# only_cols = c("V26", "L76", "L89", "M109", "M112", "L170", "L116", "L119", "V161"), only_cols_label = "Fig.7a.1" # die meisten gibt es nicht in den Daten
+# only_cols = c("V26", "L76", "L89", "M109", "M112", "L170", "L116", "L119", "V161"), only_cols_label = "Fig.7a.1"
 # only_cols = c("L76", "L77", "M81", "L89", "L149", "L343"), only_cols_label = "Fig.7a.2"
+# only_cols = c("L77", "L78", "M81", "L149", "L174", "M182", "V186", "V187", "M201", "V333"), only_cols_label = "Fig.7a.3"
+# only_cols = c("L77", "L78", "M81", "L170", "L174", "M182"), only_cols_label = "Fig.7b"
+# only_cols = c("I150", "V187", "L198", "V250", "L253", "M262"), only_cols_label = "Fig.7c"
 
 # sink.reset()
 
