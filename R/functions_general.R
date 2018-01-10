@@ -826,11 +826,10 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
     subgraphs <- NULL
   }
 
-    ## filter drawnode
+  ## filter drawnode
   if(length(drawnode) > 1) {
-    
+    drawnode = drawnode[nodes(graph)] 
   }
-  drawnode = drawnode[nodes(graph)]
   
   pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) 
   
