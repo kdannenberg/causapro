@@ -186,6 +186,7 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
   filename <- dir_4
   
   if (!missing(filename_suffix)) {
+    filename <- paste0(filename, "_")
     filename <- paste0(filename, filename_suffix)
   } else {
     filename <- paste0(filename, only_cols_label)
