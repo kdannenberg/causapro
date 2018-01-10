@@ -23,6 +23,7 @@ protein_causality <- function(
   data_set,
   # data_set = "SVD",
   # data_set = "372",
+  transpose_data = FALSE,
   # 
   position_numbering = "crystal",
   # 
@@ -132,7 +133,7 @@ protein_causality <- function(
   data_description <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set)
   
   # filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
-  data_orig <- read_data(data_description)
+  data_orig <- read_data(data_description, transpose = transpose_data)
   data <- adjust_data(data = data_orig, rank = ranked, only_cols = only_cols, min_var = min_pos_var) #mute = combined_plot)
   data_description <- adjust_data_description(data_description = data_description, ranked = ranked)
   
@@ -557,6 +558,7 @@ protein_causality_p38g <- function(
   type_of_data = "NMR",
   subtype_of_data = "",
   data_set = "inact",
+  transpose_data = TRUE,
   position_numbering = "crystal",
   # int_pos specific parameters
   ida_percentile = "11",
@@ -620,6 +622,7 @@ protein_causality_p38g <- function(
   argList$type_of_data = type_of_data
   argList$subtype_of_data = subtype_of_data
   argList$data_set = data_set
+  argList$transpose_data = transpose_data
   argList$position_numbering = position_numbering
   argList$min_pos_var = min_pos_var
   argList$only_cols = only_cols
