@@ -30,6 +30,7 @@ protein_causality <- function(
   # Analysis parameters
   # remove_positions_with_low_variance = TRUE,
   min_pos_var = 0.03,
+  show_variance_cutoff_plot = FALSE,
   only_cols = NULL,
   only_cols_label = "",
   # 
@@ -134,7 +135,7 @@ protein_causality <- function(
   
   # filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
   data_orig <- read_data(data_description, transpose = transpose_data)
-  data <- adjust_data(data = data_orig, rank = ranked, only_cols = only_cols, min_var = min_pos_var) #mute = combined_plot)
+  data <- adjust_data(data = data_orig, rank = ranked, only_cols = only_cols, min_var = min_pos_var, mute_plot = !show_variance_cutoff_plot)
   data_description <- adjust_data_description(data_description = data_description, ranked = ranked)
   
   removed_cols <- setdiff(colnames(data_orig), colnames(data))
@@ -655,6 +656,7 @@ protein_causality_p38g <- function(
   plot_only_subgraphs = NULL, # 1 is another option
   # analysis parameters
   min_pos_var = 0,
+  show_variance_cutoff_plot = NULL,
   ranked = TRUE,
   # analysis parameters: pc
   alpha = NULL,
@@ -704,6 +706,7 @@ protein_causality_p38g <- function(
   argList$transpose_data = transpose_data
   argList$position_numbering = position_numbering
   argList$min_pos_var = min_pos_var
+  argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha

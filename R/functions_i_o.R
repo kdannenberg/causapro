@@ -93,8 +93,12 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   if (length(drop) > 0) {
     # cat("\n")
     print(paste("Removed columns:", paste(colnames(data)[drop], collapse = ", ")))
-    data2 <- data[, !names(data) %in% names(drop)]
+    data <- data[, !colnames(data) %in% names(drop)]
+  } else {
+    print(paste("No columns removed."))
   }
+  
+  print(paste("Next lowest variance:", min(apply(data, 2, var))))
   
   
   if (rank) {
