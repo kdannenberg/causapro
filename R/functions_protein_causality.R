@@ -322,6 +322,7 @@ protein_causality_G <- function(
   plot_only_subgraphs = NULL, # 1 is another option
   # analysis parameters
   min_pos_var = 0,
+  show_variance_cutoff_plot = NULL,
   ranked = TRUE,
   # analysis parameters: pc
   alpha = NULL,
@@ -369,6 +370,7 @@ protein_causality_G <- function(
   argList$data_set = data_set
   argList$position_numbering = position_numbering
   argList$min_pos_var = min_pos_var
+  argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
@@ -488,6 +490,7 @@ protein_causality_S <- function(
   plot_only_subgraphs = NULL, # 1 is another option
   ## analysis parameters
   min_pos_var = 0,
+  show_variance_cutoff_plot = NULL,
   ranked = FALSE,
   ## analysis parameters: pc
   alpha = NULL,
@@ -536,6 +539,7 @@ protein_causality_S <- function(
   argList$data_set = data_set
   argList$position_numbering = position_numbering
   argList$min_pos_var = min_pos_var
+  argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
@@ -832,6 +836,7 @@ protein_causality_NoV <- function(
   position_numbering = "",
   # analysis parameters
   min_pos_var = NULL,
+  show_variance_cutoff_plot = NULL,
   only_cols = NULL,
   only_cols_label = "",
   alpha = 0.05,
@@ -888,6 +893,7 @@ protein_causality_NoV <- function(
   argList$data_set = data_set
   argList$position_numbering = position_numbering
   argList$min_pos_var = min_pos_var
+  argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
