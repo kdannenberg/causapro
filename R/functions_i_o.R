@@ -192,7 +192,9 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
   if (!missing(filename_suffix)) {
     filename <- paste0(filename, filename_suffix)
   } else {
-    filename <- paste0(filename, "_")
+    if(only_cols_label != "") {
+      filename <- paste0(filename, "_")
+    }
     filename <- paste0(filename, only_cols_label)
     if (pc_solve_conflicts) {
       filename <- paste0(filename, "_sc")
