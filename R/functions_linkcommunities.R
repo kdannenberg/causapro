@@ -69,15 +69,16 @@ clusterlist_from_membershiplist <- function(membershiplist, cluster_names) {
 # if cut_k, the dendrogram is cut in such a way that k clusters arise (otherwise, k is ignored)
 compute_link_communities <- function(graph, k, base_colors, plot_bar_plot = FALSE, 
                                      plot_colored_graph = TRUE, classify_nodes = TRUE, round_categories = 2,
-                                     pie_nodes = TRUE, color_edges = TRUE, protein, outpath) {
+                                     pie_nodes = TRUE, color_edges = TRUE, protein, outpath, 
+                                     graph_output_formats = c("ps", "svg", "pdf")) {
   # graph <- results$orig$graph$NEL
   edge_list <- as_edgelist(igraph.from.graphNEL(graph))
   rownames(edge_list) <- paste(edge_list[,1], edge_list[,2], sep = "-")
   link_comm <- getLinkCommunities(edge_list, plot = FALSE)
   # print(get_meaningful_names_for_clustering(link_comm$clusters))
   # clusters_cut_cutDendrogram <- cutDendrogramAt(link_comm$hclust, lc = link_comm, cutat = 0.9982)
-  if (!missing(k)) {
-    base_colors <- base_colors[1:k]
+  if (!(missing(k) || is.null(k))) {
+    # base_colors <- base_colors[1:k]
     clusters_cut_cuttree <- cutree(link_comm$hclust, k = k)
     clusters <- clusterlist_from_membershiplist(clusters_cut_cuttree)
     # cluster_names <- list(1,2,3,4)
@@ -86,7 +87,7 @@ compute_link_communities <- function(graph, k, base_colors, plot_bar_plot = FALS
     clusters <- link_comm$clusters
   }
   
-  if (!(length(clusters) <= length(base_colors))) {
+  if ((length(base_colors) == 0) || (!(length(clusters) <= length(base_colors)))) {
     base_colors <- rainbow(length(clusters))
   } else {
     base_colors <- base_colors[1:length(clusters)]
@@ -141,10 +142,12 @@ compute_link_communities <- function(graph, k, base_colors, plot_bar_plot = FALS
     # plot_graph(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, numerical = TRUE, outpath = "")
     
     subgraphs <- subgraphs_from_node_clusters(node_clusters, graph)
-    # TODO: debug! (nothing happens! except for strange caption)
-    plot_graph(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, caption = "", numerical = TRUE, outpath = "", plot_as_subgraphs = TRUE, subgraphs = subgraphs)
+    plot.new()
+    plot_graph(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, 
+               caption = "", numerical = TRUE, outpath = "", plot_as_subgraphs = TRUE, 
+               subgraphs = subgraphs, output_formats = graph_output_formats)
   # }
-    plot_clusters_in_pymol(node_clustering = node_clusters, protein = protein, outpath = outpath)
+    plot_clusters_in_pymol(node_clustering = node_clusters, protein = protein, outpath = outpath, type_of_clustering = "linkcomm")
   return(cols)
 }
 

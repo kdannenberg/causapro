@@ -84,6 +84,10 @@ protein_causality <- function(
   graph_computation = TRUE,
   evaluation = FALSE,
   analysis = FALSE,#!pc_solve_conflicts,
+  linkcommunities = FALSE,
+  linkcommunities_k = NULL,
+  # linkcommunities_base_colors = ifelse(k==4, c("#FFD700", "#1874CD", "#CC0000",  "#69A019"), rainbow(linkcommunities_k)),
+  linkcommunities_base_colors = NULL,
   stages = c("orig"), #c("orig", "sub"), # "sub"
   print_analysis = FALSE,
   plot_analysis = TRUE,
@@ -257,6 +261,14 @@ protein_causality <- function(
       conn_comp <- nonsingular_connected_components(graph)
       print(conn_comp)
     }
+    
+    if (linkcommunities) {
+      cols <- compute_link_communities(results_p38g$pc@graph, k = linkcommunities_k, plot_bar_plot = FALSE,
+                                       classify_nodes = TRUE, pie_nodes = FALSE, color_edges = TRUE,
+                                       round_categories = 1, base_colors = linkcommunities_base_colors , protein = protein,
+                                       outpath = outpath)
+      
+    }
   }
 
   
@@ -346,6 +358,9 @@ protein_causality_G <- function(
   graph_computation = NULL,
   evaluation = NULL,
   analysis = NULL,
+  linkcommunities = TRUE,   
+  linkcommunities_k = NULL,
+  linkcommunities_base_colors = NULL,
   stages = NULL,
   print_analysis = NULL,
   plot_analysis = NULL,
@@ -392,7 +407,10 @@ protein_causality_G <- function(
   argList$other = other
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
-  argList$analysis = analysis
+  argList$analysis = analysis   
+  argList$linkcommunities = linkcommunities   
+  argList$linkcommunities_k = linkcommunities_k
+  argList$linkcommunities_base_colors = linkcommunities_base_colors
   argList$stages = stages
   argList$print_analysis = print_analysis
   argList$plot_analysis = plot_analysis
@@ -514,6 +532,9 @@ protein_causality_S <- function(
   graph_computation = NULL,
   evaluation = NULL,
   analysis = NULL, 
+  linkcommunities = TRUE,   
+  linkcommunities_k = NULL,
+  linkcommunities_base_colors = NULL,
   stages = NULL,
   print_analysis = NULL,
   plot_analysis = NULL,
@@ -561,7 +582,10 @@ protein_causality_S <- function(
   argList$other = other
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
-  argList$analysis = analysis
+  argList$analysis = analysis   
+  argList$linkcommunities = linkcommunities   
+  argList$linkcommunities_k = linkcommunities_k
+  argList$linkcommunities_base_colors = linkcommunities_base_colors
   argList$stages = stages
   argList$print_analysis = print_analysis
   argList$plot_analysis = plot_analysis
@@ -684,6 +708,9 @@ protein_causality_p38g <- function(
   graph_computation = NULL,
   evaluation = NULL,
   analysis = NULL,
+  linkcommunities = TRUE,   
+  linkcommunities_k = 4,
+  linkcommunities_base_colors = c("#FFD700", "#1874CD", "#CC0000",  "#69A019"),
   stages = NULL,
   print_analysis = NULL,
   plot_analysis = NULL,
@@ -733,6 +760,9 @@ protein_causality_p38g <- function(
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
   argList$analysis = analysis
+  argList$linkcommunities = linkcommunities   
+  argList$linkcommunities_k = linkcommunities_k
+  argList$linkcommunities_base_colors = linkcommunities_base_colors
   argList$stages = stages
   argList$print_analysis = print_analysis
   argList$plot_analysis = plot_analysis
@@ -864,6 +894,9 @@ protein_causality_NoV <- function(
   graph_computation = NULL,
   evaluation = NULL,
   analysis = NULL, # !pc_solve_conflicts
+  linkcommunities = FALSE,
+  linkcommunities_k = NULL,
+  linkcommunities_base_colors = NULL,
   stages = NULL, # c("orig", "sub"), "sub"
   print_analysis = FALSE,
   plot_analysis = TRUE,
@@ -915,7 +948,10 @@ protein_causality_NoV <- function(
   argList$other = other
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
-  argList$analysis = analysis
+  argList$analysis = analysis   
+  argList$linkcommunities = linkcommunities
+  argList$linkcommunities_k = linkcommunities_k
+  argList$linkcommunities_base_colors = linkcommunities_base_colors
   argList$stages = stages
   argList$print_analysis = print_analysis
   argList$plot_analysis = plot_analysis
