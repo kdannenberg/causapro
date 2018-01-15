@@ -263,7 +263,7 @@ protein_causality <- function(
     }
     
     if (linkcommunities) {
-      cols <- compute_link_communities(results_p38g$pc@graph, k = linkcommunities_k, plot_bar_plot = FALSE,
+      cols <- compute_link_communities(results$pc@graph, k = linkcommunities_k, plot_bar_plot = FALSE,
                                        classify_nodes = TRUE, pie_nodes = FALSE, color_edges = TRUE,
                                        round_categories = 1, base_colors = linkcommunities_base_colors , protein = protein,
                                        outpath = outpath)
