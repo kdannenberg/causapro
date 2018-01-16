@@ -1,9 +1,12 @@
-setwd("~/Documents/Uni/Viren/R/Code")
+# setwd("~/Documents/Uni/Viren/R/Code")
+source("~/.configuration_code.R")
 
-source("compute_DAG_numerical.R")
-source("general_functions.R")
+source("functions_compute_DAG_numerical.R")
+source("functions_general.R")
 source("evaluate_DAG.R")
 source("optimize_parameters.R")
+
+source("configuration_data.R")
 
 # delta-G - no good results
 # type_of_data = "DG"

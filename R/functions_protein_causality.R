@@ -358,7 +358,7 @@ protein_causality_G <- function(
   graph_computation = NULL,
   evaluation = NULL,
   analysis = NULL,
-  linkcommunities = TRUE,   
+  linkcommunities = NULL,   
   linkcommunities_k = NULL,
   linkcommunities_base_colors = NULL,
   stages = NULL,
@@ -532,7 +532,7 @@ protein_causality_S <- function(
   graph_computation = NULL,
   evaluation = NULL,
   analysis = NULL, 
-  linkcommunities = TRUE,   
+  linkcommunities = NULL,   
   linkcommunities_k = NULL,
   linkcommunities_base_colors = NULL,
   stages = NULL,
@@ -894,7 +894,7 @@ protein_causality_NoV <- function(
   graph_computation = NULL,
   evaluation = NULL,
   analysis = NULL, # !pc_solve_conflicts
-  linkcommunities = FALSE,
+  linkcommunities = NULL,
   linkcommunities_k = NULL,
   linkcommunities_base_colors = NULL,
   stages = NULL, # c("orig", "sub"), "sub"

@@ -19,7 +19,7 @@ source("configuration_data.R")
 # debug(analyse_set_of_graphs)
 # debug(determine_set_of_graphs)
 # debug(causal_effects_ida)
-debug(score_for_effects)
+# debug(score_for_effects)
 
 new_whole = TRUE
 save_whole = FALSE
@@ -41,9 +41,9 @@ alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09
 # alphas <- c(1e-10, 1e-5, 0.0001)
 min_pos_vars = c(0.0001, 0.001, 0.01)
 
-measures <- c("DDG-5")
-alphas <- c(1e-20)
-min_pos_vars <- c(0.01)
+# measures <- c("DDG-5")
+# alphas <- c(1e-20)
+# min_pos_vars <- c(0.01)
 
 if (new_whole && file.exists("RData/all_effects-ida-reset.RData")) {
   all_effects <- list()
