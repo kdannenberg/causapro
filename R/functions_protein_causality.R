@@ -335,7 +335,7 @@ protein_causality_G <- function(
   # analysis parameters
   min_pos_var = 0,
   show_variance_cutoff_plot = NULL,
-  ranked = TRUE,
+  ranked = FALSE,
   # analysis parameters: pc
   alpha = NULL,
   pc_solve_conflicts = NULL,
