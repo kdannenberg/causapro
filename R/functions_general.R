@@ -362,7 +362,7 @@ ancestorgraph_of_interesting_positions <- function(graph_dagitty, positions = NU
 interesting_positions <- function(protein, position_numbering = "crystal", for_coloring = FALSE, coloring = "", colors = "", counts) {
   if (is.null(coloring) || coloring == "none") {
     list <- list()
-  } else if (grepl("pymol", tolower(coloring))) {
+  # } else if (grepl("pymol", tolower(coloring))) {
     # something like:
     # rainbow_colors <- rainbow(length(which(names(node_clustering) == "")))
     # names(node_clustering)[names(node_clustering) == ""] <- rainbow_colors

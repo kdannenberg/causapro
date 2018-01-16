@@ -22,7 +22,7 @@ source("configuration_data.R")
 # debug(score_for_effects)
 
 new_whole = TRUE
-save_whole = FALSE
+save_whole = TRUE
 
 new_single_runs = FALSE
 save_single_runs = TRUE
@@ -34,8 +34,8 @@ save_single_runs = TRUE
 # measures <- c("DDDG-5", "DDDG-all")
 
 # richtige Reihenfolge von -5, -10 und -all:
-# measures <- c("DDS", "DDG-5", "DDG-10", "DDG-all", "DDDG-5", "DDDG-10", "DDDG-all")
-measures <- c("DDG-5")
+measures <- c("DDS", "DDG-5", "DDG-10", "DDG-all", "DDDG-5", "DDDG-10", "DDDG-all")
+# measures <- c("DDG-5")
 # alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
 alphas <- c(0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
 # alphas = c(0.001, 0.01, 0.05, 0.1)
