@@ -292,7 +292,7 @@ plot_paths_in_pymol <- function(protein, pdb_file, graph, outpath, paths, no_col
 
 # names of positions_with_colors_by_effect are positions, values effect-adjusted colors
 # if original_effects given, and no_colors (otherwise), the negatively influenced positions are colored in red.
-plot_total_effects_in_pymol <- function(positions_with_colors_by_effect, perturbated_position, protein, outpath, label = TRUE, ranked = TRUE,
+plot_total_effects_in_pymol <- function(positions_with_colors_by_effect, perturbed_position, protein, outpath, label = TRUE, ranked = TRUE,
                                         amplification_exponent = 10, amplification_factor = FALSE, index = "", no_colors = FALSE, bg_color = "black", orig_effects) {
   # out_file <- paste0(outpath, "-total_effects")
   
@@ -320,8 +320,8 @@ plot_total_effects_in_pymol <- function(positions_with_colors_by_effect, perturb
       # cat("label sector_", i, ", resi\n", sep = "")
     }
     
-    if (!no_colors || (pos == as.integer(perturbated_position))) {
-      if ((no_colors)) {  ## (&& (pos == as.integer(perturbated_position) )
+    if (!no_colors || (pos == as.integer(perturbed_position))) {
+      if ((no_colors)) {  ## (&& (pos == as.integer(perturbed_position) )
         color <- col2rgb("#69A019")
       } else {
         color <- col2rgb(positions_with_colors_by_effect[i])

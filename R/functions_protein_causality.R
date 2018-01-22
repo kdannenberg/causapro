@@ -36,6 +36,7 @@ protein_causality <- function(
   # 
   alpha = 0.01,
   ranked = FALSE,
+  rank_obs_per_pos = FALSE,
   # 
   # pc_solve_conflicts = FALSE,
   # pc_u2pd = "retry",
@@ -139,7 +140,7 @@ protein_causality <- function(
   
   # filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
   data_orig <- read_data(data_description, transpose = transpose_data)
-  data <- adjust_data(data = data_orig, rank = ranked, only_cols = only_cols, min_var = min_pos_var, mute_plot = !show_variance_cutoff_plot)
+  data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos, only_cols = only_cols, min_var = min_pos_var, mute_plot = !show_variance_cutoff_plot)
   data_description <- adjust_data_description(data_description = data_description, ranked = ranked)
   
   removed_cols <- setdiff(colnames(data_orig), colnames(data))
@@ -280,8 +281,10 @@ protein_causality <- function(
   # Analysis
   # if ("analysis" %in% steps) {
   if (analysis) {
+    plot.new()  # TODO: Muss das sein?!
+    # if (perturb_)
     if (conflict_edges(results$pc@graph)$conflict == 0) {
-      results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+      results <- causal_effects_ida(data = data, perturbed_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
                                   protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
                                   amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
                                   pymol_bg_color = "grey",
@@ -336,6 +339,7 @@ protein_causality_G <- function(
   min_pos_var = 0,
   show_variance_cutoff_plot = NULL,
   ranked = FALSE,
+  rank_obs_per_pos = FALSE,
   # analysis parameters: pc
   alpha = NULL,
   pc_solve_conflicts = NULL,
@@ -390,6 +394,7 @@ protein_causality_G <- function(
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
   argList$ranked = ranked
+  argList$rank_obs_per_pos = rank_obs_per_pos
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative
@@ -510,6 +515,7 @@ protein_causality_S <- function(
   min_pos_var = 0,
   show_variance_cutoff_plot = NULL,
   ranked = FALSE,
+  rank_obs_per_pos = FALSE,
   ## analysis parameters: pc
   alpha = NULL,
   pc_solve_conflicts = NULL,
@@ -551,7 +557,7 @@ protein_causality_S <- function(
   file_separator = NULL
   ) {
 
-    argList <-  as.list(match.call(expand.dots = TRUE)[-1])
+  argList <-  as.list(match.call(expand.dots = TRUE)[-1])
   # Enforce inclusion of non-optional arguments
   argList$numerical <- numerical
   argList$protein = protein
@@ -565,6 +571,7 @@ protein_causality_S <- function(
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
   argList$ranked = ranked
+  argList$rank_obs_per_pos = rank_obs_per_pos
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative
@@ -686,6 +693,7 @@ protein_causality_p38g <- function(
   min_pos_var = 0,
   show_variance_cutoff_plot = NULL,
   ranked = TRUE,
+  rank_obs_per_pos = TRUE,
   # analysis parameters: pc
   alpha = NULL,
   pc_solve_conflicts = NULL,
@@ -742,6 +750,7 @@ protein_causality_p38g <- function(
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
   argList$ranked = ranked
+  argList$rank_obs_per_pos = rank_obs_per_pos
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative
@@ -871,6 +880,7 @@ protein_causality_NoV <- function(
   only_cols_label = "",
   alpha = 0.05,
   ranked = FALSE,
+  rank_obs_per_pos = FALSE,
   pc_solve_conflicts = NULL,
   pc_u2pd = NULL,
   pc_conservative = NULL,
@@ -931,6 +941,7 @@ protein_causality_NoV <- function(
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
   argList$ranked = ranked
+  argList$rank_obs_per_pos = rank_obs_per_pos
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative

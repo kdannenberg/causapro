@@ -50,7 +50,7 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
 
 # rank_obs_per_pos: should the ranking be done the other way round? 
 #   That is, per position, over all observations?
-adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, only_cols = NULL, 
+adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = TRUE, only_cols = NULL, 
                         only_cols_grep = FALSE, 
                         remove_low_variance = FALSE, zero_var_fct, min_var = 0.01, mute_plot = TRUE) {
   
@@ -412,7 +412,7 @@ print_pc_results_to_info_file <- function(outpath, pc) {
   sink()
 }
 
-outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr, neg_effects, perturbated_position, amplification_exponent, 
+outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr, neg_effects, perturbed_position, amplification_exponent, 
                             amplification_factor, no_colors, rank_effects, effect_to_color_mode) {
   outpath <- paste0(outpath, "-total_effects_(", neg_effects, ")")
   
@@ -421,7 +421,7 @@ outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr,
     out_file <- paste0(out_file, "_#", option_nr)
   }
   
-  out_file <- paste0(out_file, "_", direction, "_pos_", perturbated_position)
+  out_file <- paste0(out_file, "_", direction, "_pos_", perturbed_position)
   
   if (effect_to_color_mode == "opacity") {
     out_file <- paste0(out_file, "-opac")
