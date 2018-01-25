@@ -539,8 +539,6 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
           }
           
           list <- classify_nodes(counts, round_categories = round_categories, mix = TRUE, base_colors = colnames(counts))
-          print("HI")
-          print(list)
         }
       }
     } else {
@@ -820,7 +818,6 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
   
   nAttrs <- list()
   nAttrs$fillcolor <- fillcolor
-
   # what happens if edgecolor is NULL
   eAttrs <- list()
   eAttrs$color <- edgecolor
@@ -1169,7 +1166,18 @@ reorder_list_of_lists <- function(list, ordering, mix_mode = "mix_offset_between
               mixed_connected_components[[length(mixed_connected_components) + 1]] <- list[[index_in_conn_comp]]
               # mixed_connected_components <- append(mixed_connected_components, connected_components[[index_in_conn_comp]])
             }
-          }
+          }## for(i in 1:length(list)) {
+##              for(j in 1:length(connected_components)) {
+##  if(list[i] %in% connected_components[[j]]) 
+## names(list)[i] = colors[j]
+##              }
+          ##              }
+##           for (i in 1:length(connected_components)) {
+## for (j in 1:length(connected_components[[i]])) {
+
+##           nAttrs$fillcolor[connected_components[[i]][j]] = colors[i]
+## }
+## }
         }
       } else {
         # there are at least mix_offest + 1 blcoks (+ one block with the rest of the division).

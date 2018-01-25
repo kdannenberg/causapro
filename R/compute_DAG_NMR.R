@@ -23,7 +23,7 @@ results_p38g <- protein_causality_p38g(data_set = "inact",
                                       alpha = 0.1, min_pos_var = 0, # show_variance_cutoff_plot = TRUE,
                                       ranked = FALSE, plot_no_isolated_nodes = FALSE, plot_with_graphviz = TRUE, 
                                       pymol_sort_connected_components_by_length = FALSE, pymol_mix_connected_components = TRUE,
-                                      print_connected_components = TRUE, coloring = "pymol", linkcommunities_k = 4,
+                                      print_connected_components = TRUE, linkcommunities_k = 4,
                                       # data_set = "inact", only_cols = c("26", "78", "89", "109", "112", "170", "116", "119", "161"), only_cols_label = "Fig.7a.1"
                                       # data_set = "inact", only_cols = c("77", "78", "81", "89", "149", "343", "109", "112", "116", "170"), only_cols_label = "Fig.7a.2"
                                       # data_set = "inact", only_cols = c("77", "78", "81", "149", "174", "182", "186", "187", "201", "333"), only_cols_label = "Fig.7a.3"
