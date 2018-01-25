@@ -50,7 +50,7 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
 
 # rank_obs_per_pos: should the ranking be done the other way round? 
 #   That is, per position, over all observations?
-adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = TRUE, only_cols = NULL, 
+adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, only_cols = NULL, 
                         only_cols_grep = FALSE, 
                         remove_low_variance = FALSE, zero_var_fct, min_var = 0.01, mute_plot = TRUE) {
   
@@ -273,9 +273,11 @@ get_old_outpath <- function(outpath, suffix) {
   return(NULL)
 }
 
+# loaded_object_ok_fun -> fun_loaded_object_ok, dabei einmal invertieren! 
+# (Jetzt wirklich checken, ob es ok ist, nicht, ob es nicht ok ist!!)
 # TODO: old_outpath an geänderte get_old_outpath-Funktion anpassen
 compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_anew = FALSE, 
-                                    loaded_object_ok_fun = function(obj) return(TRUE), 
+                                    fun_loaded_object_ok = function(obj) return(TRUE), 
                                     try_old_outpath = TRUE) {
   filename <- paste(filename, ".RData", sep = "")
   if (file.exists(filename) && !compute_anew) {
@@ -283,7 +285,7 @@ compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_an
     try(load(filename))
     if (!exists(obj_name)) {
       warning(paste("File not loadable or did not contain an object of name", obj_name, "!"))
-    } else if (loaded_object_ok_fun(get(obj_name))) {
+    } else if (!fun_loaded_object_ok(get(obj_name))) {
       warning("The loaded object did not fit!")
     } else {
       print(paste(obj_name, " object loaded from ", filename, ".", sep = ""))

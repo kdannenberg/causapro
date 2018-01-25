@@ -27,9 +27,9 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   parameters_to_info_file(parameters_for_info_file, outpath)
   
   pc_func <- function_set_parameters(pc_fun, parameters = list(outpath = outpath))
-  loaded_object_ok_fun <- function(pc) {return(length(pc@graph@nodes) != dim(data)[2])}
+  loaded_object_ok_fun <- function(pc) {return(length(pc@graph@nodes) == dim(data)[2])}
   results$pc <- compute_if_not_existent(filename = paste0(outpath, "-pc"), FUN = pc_func, obj_name = "pc", 
-                                        compute_anew = compute_pc_anew, loaded_object_ok_fun = loaded_object_ok_fun)
+                                        compute_anew = compute_pc_anew, fun_loaded_object_ok = loaded_object_ok_fun)
   # results$pc <- get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file, data = data)
   
   # garbage <- graphics.off()
@@ -53,7 +53,7 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   return(results)
 } 
 
-
+# TODO: singuläre Cluster entfernen!
 protein_graph_clustering <- function(results, protein, position_numbering, coloring, colors, outpath,output_formats, file_separator, mute_all_plots, caption,
                                      cluster_methods, add_cluster_of_conserved_positions, 
                                      removed_cols, more_levels_of_conservedness = FALSE, sort_clusters = length) {

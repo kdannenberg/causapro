@@ -5,6 +5,9 @@
 
 library(colorspace)  # for mixcolor, hex
 
+
+
+
 # parameter barplot = TRUE remove, use mute_allplots = FALSE instead
 causal_effects_ida <- function(data, perturbed_position, direction = "both", weight_effects_on_by = "mean_abs_effect",
                 results = results, protein, coloring = "all", effect_hue_by = "effect", #effect_hue_by = "variance",
@@ -182,7 +185,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
     } 
     
     if (!(grepl("on", dir) && ("of" %in% direction)) && !mute_all_plots) {
-      while (lines > 8) {
+      while (lines > 6) { # früher: 8
         lines = lines / 2
       }
       par(mfrow=c(ceiling(lines), columns))
