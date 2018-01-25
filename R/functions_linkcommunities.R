@@ -74,7 +74,7 @@ compute_link_communities <- function(graph, k, base_colors, plot_bar_plot = FALS
   # graph <- results$orig$graph$NEL
   edge_list <- as_edgelist(igraph.from.graphNEL(graph))
   rownames(edge_list) <- paste(edge_list[,1], edge_list[,2], sep = "-")
-  link_comm <- getLinkCommunities(edge_list, plot = FALSE)
+  link_comm <- getLinkCommunities(edge_list, hcmethod = "ward", plot = TRUE)
   # print(get_meaningful_names_for_clustering(link_comm$clusters))
   # clusters_cut_cutDendrogram <- cutDendrogramAt(link_comm$hclust, lc = link_comm, cutat = 0.9982)
   if (!(missing(k) || is.null(k))) {

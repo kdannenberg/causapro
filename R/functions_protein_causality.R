@@ -36,6 +36,7 @@ protein_causality <- function(
   # 
   alpha = 0.01,
   ranked = FALSE,
+  rank_obs_per_pos = FALSE,
   # 
   # pc_solve_conflicts = FALSE,
   # pc_u2pd = "retry",
@@ -83,12 +84,13 @@ protein_causality <- function(
   # steps = c("evaluation", "analysis"),
   graph_computation = TRUE,
   evaluation = FALSE,
+  intervention_position = "372",
   analysis = FALSE,#!pc_solve_conflicts,
   linkcommunities = FALSE,
   linkcommunities_k = NULL,
   # linkcommunities_base_colors = ifelse(k==4, c("#FFD700", "#1874CD", "#CC0000",  "#69A019"), rainbow(linkcommunities_k)),
   linkcommunities_base_colors = NULL,
-  stages = c("orig"), #c("orig", "sub"), # "sub"
+  stages = c("orig"), # c("orig", "sub"), # "sub"
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
@@ -139,7 +141,7 @@ protein_causality <- function(
   
   # filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
   data_orig <- read_data(data_description, transpose = transpose_data)
-  data <- adjust_data(data = data_orig, rank = ranked, only_cols = only_cols, min_var = min_pos_var, mute_plot = !show_variance_cutoff_plot)
+  data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos, only_cols = only_cols, min_var = min_pos_var, mute_plot = !show_variance_cutoff_plot)
   data_description <- adjust_data_description(data_description = data_description, ranked = ranked)
   
   removed_cols <- setdiff(colnames(data_orig), colnames(data))
@@ -280,18 +282,95 @@ protein_causality <- function(
   # Analysis
   # if ("analysis" %in% steps) {
   if (analysis) {
-    if (conflict_edges(results$pc@graph)$conflict == 0) {
-      results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
-                                  protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
-                                  amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
-                                  pymol_bg_color = "grey",
-                                  mute_all_plots = FALSE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = ida_percentile)
+    ida_function <- function_set_parameters(causal_effects_ida, parameters = list(data = data, direction = "of", weight_effects_on_by = weight_effects_on_by,
+                                                                                  protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
+                                                                                  amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
+                                                                                  pymol_bg_color = "grey",
+                                                                                  mute_all_plots = FALSE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = ida_percentile))
+    
+    plot.new()  # TODO: Muss das sein?!
+    if (intervention_position == "all") {
+      if (conflict_edges(results$pc@graph)$conflict == 0) {
+        
+        
+        FUN <- function() {
+          all_effects_function <- function(position) {
+            effects <- ida_function(perturbed_position = position)$ida[[as.character(position)]]$of$effects
+            # return(apply(effects, 1, mean))
+            effects_m <- as.matrix(effects)
+            
+            colnames(effects_m) <- paste(position, seq(1:dim(effects)[2]), sep = "-")
+            
+            return(effects_m)
+          }
+          
+          do.call(cbind, sapply(colnames(data), all_effects_function, USE.NAMES = TRUE))
+        }
+        
+        all_pairwise_effects <- compute_if_not_existent(filename = paste(outpath, "pairwise_effects", sep="-"), 
+                                FUN = FUN,
+                                obj_name = "all_pairwise_effects", 
+                                fun_loaded_object_ok = function(all_pairwise_effects) {return(dim(all_pairwise_effects)[1] == dim(data)[2])})
+        
+        k=3
+        k_m <- kmeans(t(all_pairwise_effects), k)
+        lapply(seq(1:k), function (i) {dim(all_pairwise_effects[,names(which(k_m$cluster == i))])})
+        
+        # apply(all_pairwise_effects[,names(which(k_m$cluster == 1))], 2, barplot);
+        
+        results$all_pairwise_effects <- all_pairwise_effects
+        
+        clustering_with_duplicates <- k_m$cluster
+        
+        cl <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = clustering_with_duplicates)
+        
+        print(cl)
+        
+        type <- "effects-km-rounded" 
+        names(cl) <- NULL
+        plot_clusters_in_pymol(node_clustering = cl, protein = protein, outpath = outpath, 
+                               file_separator = file_separator, type_of_clustering = type) 
+        
+        
+        d <- dist(t(all_pairwise_effects))
+        
+        hc <- hclust(d)
+        
+        plot(hc)
+        
+        hc_cut <- cutree(hc, 5)
+        
+        hc_cut
+        
+        clustering_with_duplicates <- hc_cut
+        
+        cl <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = clustering_with_duplicates)
+        
+        print(cl)
+        
+        type <- "effects-hc-rounded" 
+        names(cl) <- NULL
+        plot_clusters_in_pymol(node_clustering = cl, protein = protein, outpath = outpath, 
+                               file_separator = file_separator, type_of_clustering = type)  
+        
+      } else {
+        # und jetzt?
+        # results_copy <- results
+        # results_copy$data <- data  
+        # results_copy$caption = caption
+        # results_copy$outpath = outpath
+        # analyse_set_of_graphs(results = results_copy, protein = "PDZ")
+      }
     } else {
-      results_copy <- results
-      results_copy$data <- data  
-      results_copy$caption = caption
-      results_copy$outpath = outpath
-      analyse_set_of_graphs(results = results_copy, protein = "PDZ")
+      if (conflict_edges(results$pc@graph)$conflict == 0) {
+        results <- ida_function(perturbed_position = intervention_position)
+      } else {
+        results_copy <- results
+        results_copy$data <- data  
+        results_copy$caption = caption
+        results_copy$outpath = outpath
+        analyse_set_of_graphs(results = results_copy, protein = "PDZ")
+      }
     }
   }
   
@@ -335,7 +414,8 @@ protein_causality_G <- function(
   # analysis parameters
   min_pos_var = 0,
   show_variance_cutoff_plot = NULL,
-  ranked = TRUE,
+  ranked = FALSE,
+  rank_obs_per_pos = FALSE,
   # analysis parameters: pc
   alpha = NULL,
   pc_solve_conflicts = NULL,
@@ -343,6 +423,7 @@ protein_causality_G <- function(
   pc_conservative = NULL,
   pc_maj_rule = NULL,
   # analysis parameters: ida
+  intervention_position = "372",
   plot_ida = FALSE,
   weight_effects_on_by = NULL, # "var", "mean", ""
   # general graphical parameters
@@ -390,6 +471,7 @@ protein_causality_G <- function(
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
   argList$ranked = ranked
+  argList$rank_obs_per_pos = rank_obs_per_pos
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative
@@ -407,7 +489,8 @@ protein_causality_G <- function(
   argList$other = other
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
-  argList$analysis = analysis   
+  argList$analysis = analysis  
+  argList$intervention_position = intervention_position 
   argList$linkcommunities = linkcommunities   
   argList$linkcommunities_k = linkcommunities_k
   argList$linkcommunities_base_colors = linkcommunities_base_colors
@@ -510,6 +593,7 @@ protein_causality_S <- function(
   min_pos_var = 0,
   show_variance_cutoff_plot = NULL,
   ranked = FALSE,
+  rank_obs_per_pos = FALSE,
   ## analysis parameters: pc
   alpha = NULL,
   pc_solve_conflicts = NULL,
@@ -517,6 +601,7 @@ protein_causality_S <- function(
   pc_conservative = NULL,
   pc_maj_rule = NULL,
   ## analysis parameters: ida
+  analysis = "all", 
   plot_ida = FALSE,
   weight_effects_on_by = NULL, # "var", "mean", ""
   ## general graphical parameters
@@ -531,7 +616,7 @@ protein_causality_S <- function(
   # technical parameters
   graph_computation = NULL,
   evaluation = NULL,
-  analysis = NULL, 
+  intervention_position = "all",
   linkcommunities = NULL,   
   linkcommunities_k = NULL,
   linkcommunities_base_colors = NULL,
@@ -551,7 +636,7 @@ protein_causality_S <- function(
   file_separator = NULL
   ) {
 
-    argList <-  as.list(match.call(expand.dots = TRUE)[-1])
+  argList <-  as.list(match.call(expand.dots = TRUE)[-1])
   # Enforce inclusion of non-optional arguments
   argList$numerical <- numerical
   argList$protein = protein
@@ -565,6 +650,7 @@ protein_causality_S <- function(
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
   argList$ranked = ranked
+  argList$rank_obs_per_pos = rank_obs_per_pos
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative
@@ -582,7 +668,8 @@ protein_causality_S <- function(
   argList$other = other
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
-  argList$analysis = analysis   
+  argList$analysis = analysis  
+  argList$intervention_position = intervention_position 
   argList$linkcommunities = linkcommunities   
   argList$linkcommunities_k = linkcommunities_k
   argList$linkcommunities_base_colors = linkcommunities_base_colors
@@ -686,6 +773,7 @@ protein_causality_p38g <- function(
   min_pos_var = 0,
   show_variance_cutoff_plot = NULL,
   ranked = TRUE,
+  rank_obs_per_pos = TRUE,
   # analysis parameters: pc
   alpha = NULL,
   pc_solve_conflicts = NULL,
@@ -693,6 +781,7 @@ protein_causality_p38g <- function(
   pc_conservative = NULL,
   pc_maj_rule = NULL,
   # analysis parameters: ida
+  analysis = NULL,
   plot_ida = FALSE,
   weight_effects_on_by = NULL, # "var", "mean", ""
   # general graphical parameters
@@ -707,7 +796,7 @@ protein_causality_p38g <- function(
   # technical parameters
   graph_computation = NULL,
   evaluation = NULL,
-  analysis = NULL,
+  intervention_position = "all",
   linkcommunities = TRUE,   
   linkcommunities_k = 4,
   linkcommunities_base_colors = c("#FFD700", "#1874CD", "#CC0000",  "#69A019"),
@@ -742,6 +831,7 @@ protein_causality_p38g <- function(
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
   argList$ranked = ranked
+  argList$rank_obs_per_pos = rank_obs_per_pos
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative
@@ -760,6 +850,7 @@ protein_causality_p38g <- function(
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
   argList$analysis = analysis
+  argList$intervention_position = intervention_position
   argList$linkcommunities = linkcommunities   
   argList$linkcommunities_k = linkcommunities_k
   argList$linkcommunities_base_colors = linkcommunities_base_colors
@@ -871,6 +962,7 @@ protein_causality_NoV <- function(
   only_cols_label = "",
   alpha = 0.05,
   ranked = FALSE,
+  rank_obs_per_pos = FALSE,
   pc_solve_conflicts = NULL,
   pc_u2pd = NULL,
   pc_conservative = NULL,
@@ -894,6 +986,7 @@ protein_causality_NoV <- function(
   graph_computation = NULL,
   evaluation = NULL,
   analysis = NULL, # !pc_solve_conflicts
+  intervention_position = "all",
   linkcommunities = NULL,
   linkcommunities_k = NULL,
   linkcommunities_base_colors = NULL,
@@ -931,6 +1024,7 @@ protein_causality_NoV <- function(
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
   argList$ranked = ranked
+  argList$rank_obs_per_pos = rank_obs_per_pos
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative
@@ -948,7 +1042,8 @@ protein_causality_NoV <- function(
   argList$other = other
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
-  argList$analysis = analysis   
+  argList$analysis = analysis  
+  argList$intervention_position = intervention_position
   argList$linkcommunities = linkcommunities
   argList$linkcommunities_k = linkcommunities_k
   argList$linkcommunities_base_colors = linkcommunities_base_colors

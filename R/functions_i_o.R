@@ -273,9 +273,11 @@ get_old_outpath <- function(outpath, suffix) {
   return(NULL)
 }
 
+# loaded_object_ok_fun -> fun_loaded_object_ok, dabei einmal invertieren! 
+# (Jetzt wirklich checken, ob es ok ist, nicht, ob es nicht ok ist!!)
 # TODO: old_outpath an geänderte get_old_outpath-Funktion anpassen
 compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_anew = FALSE, 
-                                    loaded_object_ok_fun = function(obj) return(TRUE), 
+                                    fun_loaded_object_ok = function(obj) return(TRUE), 
                                     try_old_outpath = TRUE) {
   filename <- paste(filename, ".RData", sep = "")
   if (file.exists(filename) && !compute_anew) {
@@ -283,7 +285,7 @@ compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_an
     try(load(filename))
     if (!exists(obj_name)) {
       warning(paste("File not loadable or did not contain an object of name", obj_name, "!"))
-    } else if (loaded_object_ok_fun(get(obj_name))) {
+    } else if (!fun_loaded_object_ok(get(obj_name))) {
       warning("The loaded object did not fit!")
     } else {
       print(paste(obj_name, " object loaded from ", filename, ".", sep = ""))
@@ -412,7 +414,7 @@ print_pc_results_to_info_file <- function(outpath, pc) {
   sink()
 }
 
-outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr, neg_effects, perturbated_position, amplification_exponent, 
+outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr, neg_effects, perturbed_position, amplification_exponent, 
                             amplification_factor, no_colors, rank_effects, effect_to_color_mode) {
   outpath <- paste0(outpath, "-total_effects_(", neg_effects, ")")
   
@@ -421,7 +423,7 @@ outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr,
     out_file <- paste0(out_file, "_#", option_nr)
   }
   
-  out_file <- paste0(out_file, "_", direction, "_pos_", perturbated_position)
+  out_file <- paste0(out_file, "_", direction, "_pos_", perturbed_position)
   
   if (effect_to_color_mode == "opacity") {
     out_file <- paste0(out_file, "-opac")

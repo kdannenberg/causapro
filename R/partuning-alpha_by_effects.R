@@ -14,7 +14,7 @@ print_best_scenarios = TRUE
 with_graphs = FALSE
 for_all_best_alphas = FALSE
 
-analyse_development_of_effects_with_alpha = TRUE
+analyse_development_of_effects_with_alpha = FALSE
 
 file = "RData/all_effects-ida-reset.RData"
 
