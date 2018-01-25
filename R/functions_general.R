@@ -1211,15 +1211,32 @@ reorder_list_of_lists <- function(list, ordering, mix_mode = "mix_offset_between
 
 position_clustering_from_clustering_with_duplicates <- function(clustering_with_duplicates) {
   positions <- unique(sapply(names(clustering_with_duplicates), function(long_name) return(gsub("-.*","",long_name))))
+  k = max(clustering_with_duplicates)
+
   
+  ## averaged_clusters <- sapply(positions, function(position) {
+  ##  position_clustering <- clustering_with_duplicates[which(grepl(position, names(clustering_with_duplicates)))]
+  ##  mean_cluster <- mean(position_clustering)
+  ## names(mean_cluster) <- position
+  ##  return(mean_cluster)
+  ##})
+  
+  ## averaged_clusters <- round(averaged_clusters)
+  rb_cols = rainbow(k)
   averaged_clusters <- sapply(positions, function(position) {
     position_clustering <- clustering_with_duplicates[which(grepl(position, names(clustering_with_duplicates)))]
-    mean_cluster <- mean(position_clustering)
-    # names(mean_cluster) <- position
-    return(mean_cluster)
-  })
-  
-  averaged_clusters <- round(averaged_clusters)
+    cols <- rb_cols[position_clustering]
+
+    if(length(cols) > 1) {
+      mean_col <- mixcolors(cols)
+    } else {
+      mean_col = cols[[1]]
+    }
+    ## weird stuff
+    names(mean_col) = NULL
+    ##  names(mean_col) <- position
+    return(mean_col)
+    })
   
   cl <- clusterlist_from_membershiplist(averaged_clusters)
   
