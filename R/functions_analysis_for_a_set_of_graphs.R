@@ -74,13 +74,13 @@ analyse_set_of_graphs <- function(
                                                                                       min_pos_var = min_pos_var, alpha = alpha, mute_all_plots = TRUE,
                                                                                       for_combined_plot = TRUE, plot_clusters = FALSE)),
   # ida_function = function(results) {
-  #   causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+  #   causal_effects_ida(data = data, perturbed_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
   #                      protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
   #                      amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
   #                      pymol_bg_color = "grey", caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, 
   #                      percentile = ida_percentile, mute_all_plots = for_combined_plot)
   # },
-  # ida_function = f_causal_effects_ida_results(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+  # ida_function = f_causal_effects_ida_results(data = data, perturbed_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
   #                                             protein = protein, coloring = "all", no_colors = FALSE, outpath = outpath,
   #                                             amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
   #                                             pymol_bg_color = "grey", caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE,
@@ -93,7 +93,7 @@ analyse_set_of_graphs <- function(
   amplification_factor = TRUE,
   rank_effects = FALSE,
   no_colors_in_pymol_ida = FALSE,
-  ida_function = function_set_parameters(causal_effects_ida, parameters = list(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+  ida_function = function_set_parameters(causal_effects_ida, parameters = list(data = data, perturbed_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
                                               protein = protein, coloring = coloring, no_colors = no_colors_in_pymol_ida, outpath = outpath,
                                               amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, 
                                               rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode,
@@ -206,7 +206,7 @@ analyse_set_of_graphs <- function(
     for (i in best_graphs) {
       # i= 28
       cat(paste0("BEST GRAPH #", which(best_graphs == i), ": ", i))
-      causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+      causal_effects_ida(data = data, perturbed_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
                          protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
                          amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
                          pymol_bg_color = "grey", barplot = TRUE,
@@ -266,7 +266,7 @@ pymol_mean_effects <- function(effects_over_all_graphs_on_of, protein, int_pos, 
     effects <- as.matrix(effects_over_all_graphs_on_of[[slot]])
     
     pymol_outpath <- outpath_for_ida(outpath = outpath, direction = dir, option_nr = "", neg_effects = neg_effects_in_scaling, 
-                                       perturbated_position = perturbed_position, amplification_exponent = amplification_exponent, 
+                                       perturbed_position = perturbed_position, amplification_exponent = amplification_exponent, 
                                        amplification_factor = amplification_factor, 
                                        no_colors = no_colors, rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode)
     
@@ -297,7 +297,7 @@ pymol_mean_effects <- function(effects_over_all_graphs_on_of, protein, int_pos, 
     colors_by_effect <- color_by_effect(as.matrix(current_effect_hue_by), int_pos, mode = effect_to_color_mode) 
     
     
-    plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbated_position = perturbed_position, 
+    plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbed_position = perturbed_position, 
                                 protein = protein, outpath = pymol_outpath, amplification_exponent = amplification_exponent, 
                                 amplification_factor = amplification_factor, ranked = rank_effects,
                                 index = "", no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = effects)
@@ -942,7 +942,7 @@ graph_to_results <- function(graph, ida_function) {
   # }
   pc <- new("pcAlgo", graph = graph)
   results$pc <- pc
-  # results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+  # results <- causal_effects_ida(data = data, perturbed_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
   #                               protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
   #                               amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
   #                               pymol_bg_color = "grey",

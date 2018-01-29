@@ -4,7 +4,7 @@ s = 10
 t_before <- Sys.time()
 for (i in 1:s) {
   print(paste("DURCHLAUF", i))
-  causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+  causal_effects_ida(data = data, perturbed_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
                      protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
                      amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
                      pymol_bg_color = "grey",

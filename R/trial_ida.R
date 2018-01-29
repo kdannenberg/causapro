@@ -28,10 +28,10 @@ ranks[sapply(int_pos, function(x) which(rownames(ranks) == x))]
 
 
 
-ida <- function(data, perturbated_position,  protein, coloring = "all", outpath, amplification_exponent) {
-  effects <- idaFast(which(colnames(data) == perturbated_position), 1:92, cov(data), results$pc@graph)
+ida <- function(data, perturbed_position,  protein, coloring = "all", outpath, amplification_exponent) {
+  effects <- idaFast(which(colnames(data) == perturbed_position), 1:92, cov(data), results$pc@graph)
   rownames(effects) <- colnames(data)
   int_pos <- interesting_positions(protein = protein, coloring = coloring)
   colors_by_effect <- hue_by_effect(effects, int_pos)
-  plot_total_effects_in_pymol(colors_by_effect, perturbated_position = perturbated_position, protein = protein, outpath = outpath, amplification_exponent = amplification_exponent)
+  plot_total_effects_in_pymol(colors_by_effect, perturbed_position = perturbed_position, protein = protein, outpath = outpath, amplification_exponent = amplification_exponent)
 }

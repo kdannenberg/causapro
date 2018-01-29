@@ -90,6 +90,10 @@ protein_causality <- function(
   linkcommunities_k = NULL,
   # linkcommunities_base_colors = ifelse(k==4, c("#FFD700", "#1874CD", "#CC0000",  "#69A019"), rainbow(linkcommunities_k)),
   linkcommunities_base_colors = NULL,
+  effects_cluster_k = 3,
+  effects_cluster_method = "ward.D2",  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
+  effects_dist_method = "euclidean",
+  effects_pv_nboot = 10000,
   stages = c("orig"), # c("orig", "sub"), # "sub"
   print_analysis = FALSE,
   plot_analysis = TRUE,
@@ -120,7 +124,7 @@ protein_causality <- function(
   # ida_percentile = 0.75, # top 75%
   #
   file_separator = "/",
-  cluster_methods = c("edge_betweenness", "infomap"),
+  graph_graph_cluster_methods = c("edge_betweenness", "infomap"),
   add_cluster_of_conserved_positions = TRUE
 ) {
   # INIT
@@ -129,7 +133,7 @@ protein_causality <- function(
   
     if (!((plot_analysis && analysis) || (plot_ida && evaluation))) {
       if (plot_clusters) {
-        cols <- length(cluster_methods) + 1
+        cols <- length(graph_graph_cluster_methods) + 1
       } else {
         cols <- 1
       }
@@ -241,7 +245,7 @@ protein_causality <- function(
     # if (!is.null(clustering)) {
     if (plot_clusters) {
       protein_graph_clustering(results = results, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, outpath = outpath, output_formats = graph_output_formats, file_separator = file_separator,
-                               caption = caption, mute_all_plots = mute_all_plots, cluster_methods = cluster_methods,
+                               caption = caption, mute_all_plots = mute_all_plots, graph_cluster_methods = graph_cluster_methods,
                                add_cluster_of_conserved_positions = add_cluster_of_conserved_positions, removed_cols = removed_cols)
     }
     
@@ -312,9 +316,10 @@ protein_causality <- function(
                                 obj_name = "all_pairwise_effects", 
                                 fun_loaded_object_ok = function(all_pairwise_effects) {return(dim(all_pairwise_effects)[1] == dim(data)[2])})
         
-        k=3
-        k_m <- kmeans(t(all_pairwise_effects), k)
-        lapply(seq(1:k), function (i) {dim(all_pairwise_effects[,names(which(k_m$cluster == i))])})
+        
+        #k means
+        k_m <- kmeans(t(all_pairwise_effects), effects_cluster_k)
+        lapply(seq(1:effects_cluster_k), function (i) {dim(all_pairwise_effects[,names(which(k_m$cluster == i))])})
         
         # apply(all_pairwise_effects[,names(which(k_m$cluster == 1))], 2, barplot);
         
@@ -326,32 +331,74 @@ protein_causality <- function(
         
         print(cl)
         
-        type <- "effects-km-rounded" 
-        names(cl) <- NULL
+        type <- "effects-km" 
+        # names(cl) <- NULL
         plot_clusters_in_pymol(node_clustering = cl, protein = protein, outpath = outpath, 
                                file_separator = file_separator, type_of_clustering = type) 
         
         
-        d <- dist(t(all_pairwise_effects))
         
-        hc <- hclust(d)
+        #hierarchical clustering
+        # d <- dist(t(all_pairwise_effects))
+        # 
+        # hc <- hclust(d, method = effects_cluster_method)
+        # 
+        # plot.new()
+        # plot(hc)
+        # 
+        # hc_cut <- cutree(hc, 5)
+        # 
+        # hc_cut
+        # 
+        # clustering_with_duplicates <- hc_cut
+        # 
+        # cl <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = clustering_with_duplicates)
+        # 
+        # print(cl)
+        # 
+        # type <- "effects-hc" 
+        # # names(cl) <- NULL
+        # plot_clusters_in_pymol(node_clustering = cl, protein = protein, outpath = outpath, 
+        #                        file_separator = file_separator, type_of_clustering = type)  
+        # 
+        # pvclust
+        # library(pvclust)
         
-        plot(hc)
         
-        hc_cut <- cutree(hc, 5)
         
-        hc_cut
+        FUN_pv <- function_set_parameters(pvclust, parameters = list(data = all_pairwise_effects, 
+                                                                  method.hclust = effects_cluster_method,
+                                                                  method.dist=effects_dist_method, nboot = effects_pv_nboot))
         
-        clustering_with_duplicates <- hc_cut
+        effects_pv <- compute_if_not_existent(filename = paste(outpath, "pv", effects_cluster_method, 
+                                                        substr(effects_dist_method, 0, 3), effects_pv_nboot, sep="-"),
+                                                        FUN = FUN_pv,
+                                                        obj_name = "effects_pv",
+                                                        fun_loaded_object_ok = function(effects_pv) {return(colnames(all_pairwise_effects) == effects_pv$hclust$labels)}
+                                              )
         
-        cl <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = clustering_with_duplicates)
+        # fit <- pvclust(data = all_pairwise_effects, method.hclust="ward",
+        #                method.dist="euclidean", nboot = 1000)
         
-        print(cl)
+        plot.new()
+        plot(effects_pv) # dendogram with p values
+        # add rectangles around groups highly supported by the data
+        pvrect(effects_pv, alpha=.95)
         
-        type <- "effects-hc-rounded" 
-        names(cl) <- NULL
-        plot_clusters_in_pymol(node_clustering = cl, protein = protein, outpath = outpath, 
+        high_clusterlist <- pvpick(effects_pv)$clusters
+        
+        high <- membershiplist_from_clusterlist(high_clusterlist)
+        
+        cl_pv <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = high)
+        
+        print(cl_pv)
+        
+        
+        type <- paste("effects-pv", effects_cluster_method, substr(effects_dist_method, 0, 3), effects_pv_nboot, sep="-")
+        # names(cl) <- NULL
+        plot_clusters_in_pymol(node_clustering = cl_pv, protein = protein, outpath = outpath, 
                                file_separator = file_separator, type_of_clustering = type)  
+        
         
       } else {
         # und jetzt?
@@ -426,6 +473,11 @@ protein_causality_G <- function(
   intervention_position = "372",
   plot_ida = FALSE,
   weight_effects_on_by = NULL, # "var", "mean", ""
+  # analysis parameters: clustering of effects
+  effects_cluster_k = NULL,
+  effects_cluster_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
+  effects_dist_method = NULL,
+  effects_pv_nboot = NULL,
   # general graphical parameters
   for_combined_plot = NULL,
   mute_all_plots = NULL,
@@ -477,6 +529,10 @@ protein_causality_G <- function(
   argList$pc_conservative = pc_conservative
   argList$pc_maj_rule = pc_maj_rule
   argList$weight_effects_on_by = weight_effects_on_by
+  argList$effects_cluster_k = effects_cluster_k
+  argList$effects_cluster_method = effects_cluster_method
+  argList$effects_dist_method = effects_dist_method
+  argList$effects_pv_nboot = effects_pv_nboot
   argList$graph_output_formats = graph_output_formats
   argList$graph_layout = graph_layout
   argList$graph_layout_igraph = graph_layout_igraph
@@ -604,6 +660,11 @@ protein_causality_S <- function(
   analysis = "all", 
   plot_ida = FALSE,
   weight_effects_on_by = NULL, # "var", "mean", ""
+  # analysis parameters: clustering of effects
+  effects_cluster_k = NULL,
+  effects_cluster_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
+  effects_dist_method = NULL,
+  effects_pv_nboot = NULL,
   ## general graphical parameters
   for_combined_plot = NULL,
   mute_all_plots = NULL,
@@ -656,6 +717,10 @@ protein_causality_S <- function(
   argList$pc_conservative = pc_conservative
   argList$pc_maj_rule = pc_maj_rule
   argList$weight_effects_on_by = weight_effects_on_by
+  argList$effects_cluster_k = effects_cluster_k
+  argList$effects_cluster_method = effects_cluster_method
+  argList$effects_dist_method = effects_dist_method
+  argList$effects_pv_nboot = effects_pv_nboot
   argList$graph_output_formats = graph_output_formats
   argList$graph_layout = graph_layout
   argList$graph_layout_igraph = graph_layout_igraph
@@ -783,7 +848,12 @@ protein_causality_p38g <- function(
   # analysis parameters: ida
   analysis = NULL,
   plot_ida = FALSE,
-  weight_effects_on_by = NULL, # "var", "mean", ""
+  weight_effects_on_by = NULL, # "var", "mean", "" 
+  # analysis parameters: clustering of effects
+  effects_cluster_k = NULL,
+  effects_cluster_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
+  effects_dist_method = NULL,
+  effects_pv_nboot = NULL,
   # general graphical parameters
   for_combined_plot = NULL,
   mute_all_plots = NULL,
@@ -837,6 +907,10 @@ protein_causality_p38g <- function(
   argList$pc_conservative = pc_conservative
   argList$pc_maj_rule = pc_maj_rule
   argList$weight_effects_on_by = weight_effects_on_by
+  argList$effects_cluster_k = effects_cluster_k
+  argList$effects_cluster_method = effects_cluster_method
+  argList$effects_dist_method = effects_dist_method
+  argList$effects_pv_nboot = effects_pv_nboot
   argList$graph_output_formats = graph_output_formats
   argList$graph_layout = graph_layout
   argList$graph_layout_igraph = graph_layout_igraph
@@ -968,6 +1042,11 @@ protein_causality_NoV <- function(
   pc_conservative = NULL,
   pc_maj_rule = NULL,
   weight_effects_on_by = NULL, # "var", "mean", ""
+  # analysis parameters: clustering of effects
+  effects_cluster_k = NULL,
+  effects_cluster_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
+  effects_dist_method = NULL,
+  effects_pv_nboot = NULL,
   # graphical parameters
   graph_output_formats = "pdf",
   graph_layout = NULL,
@@ -1030,6 +1109,10 @@ protein_causality_NoV <- function(
   argList$pc_conservative = pc_conservative
   argList$pc_maj_rule = pc_maj_rule
   argList$weight_effects_on_by = weight_effects_on_by
+  argList$effects_cluster_k = effects_cluster_k
+  argList$effects_cluster_method = effects_cluster_method
+  argList$effects_dist_method = effects_dist_method
+  argList$effects_pv_nboot = effects_pv_nboot
   argList$graph_output_formats = graph_output_formats
   argList$graph_layout = graph_layout
   argList$graph_layout_igraph = graph_layout_igraph

@@ -66,6 +66,13 @@ clusterlist_from_membershiplist <- function(membershiplist, cluster_names) {
   return(clusters)
 }
 
+membershiplist_from_clusterlist <- function(clusterlist) {
+  elements <- sort(unique(unlist(clusterlist)))
+  membershiplist <- sapply(elements, function(element) {
+    return(which(sapply(clusterlist, function(cluster){element %in% cluster})))})
+  return(membershiplist)
+}
+
 # if cut_k, the dendrogram is cut in such a way that k clusters arise (otherwise, k is ignored)
 compute_link_communities <- function(graph, k, base_colors, plot_bar_plot = FALSE, 
                                      plot_colored_graph = TRUE, classify_nodes = TRUE, round_categories = 2,

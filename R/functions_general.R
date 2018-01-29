@@ -1222,7 +1222,7 @@ position_clustering_from_clustering_with_duplicates <- function(clustering_with_
   ##})
   
   ## averaged_clusters <- round(averaged_clusters)
-  rb_cols = rainbow(k)
+  rb_cols = substr(rainbow(k), 1, 7)
   averaged_clusters <- sapply(positions, function(position) {
     position_clustering <- clustering_with_duplicates[which(grepl(position, names(clustering_with_duplicates)))]
     cols <- rb_cols[position_clustering]

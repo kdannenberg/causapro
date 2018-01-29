@@ -15,7 +15,7 @@ source("compute_DAG_G.R")
 
 protein = "PDZ"
 int_pos <- interesting_positions(protein = protein, coloring = "")
-perturbated_position <- "372"
+perturbed_position <- "372"
 
 alpha = 0.01
 min_pos_var = 0
@@ -67,7 +67,7 @@ find_good_graph_among <- function(graphs, plot){
     # i= 28
     if (plot == "best graph") {
       cat(paste0("BEST GRAPH #", which(best_graphs == i), ": ", i))
-      causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+      causal_effects_ida(data = data, perturbed_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
                          protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
                          amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
                          pymol_bg_color = "grey", barplot = TRUE,
@@ -105,7 +105,7 @@ graph_to_results <- function(graph) {
   results <- list()
   pc <- new("pcAlgo", graph = graph)
   results$pc <- pc
-  results <- causal_effects_ida(data = data, perturbated_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+  results <- causal_effects_ida(data = data, perturbed_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
                      protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
                      amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
                      pymol_bg_color = "grey",
@@ -117,5 +117,5 @@ graph_to_results <- function(graph) {
 dev_from_mean <- deviat_from_mean(all_results, weight_effects_on_by = weight_effects_on_by, plot = plot)
 
 # print("hallo")
-# idaFast(which(as.character(colnames(data)) == perturbated_position), 
+# idaFast(which(as.character(colnames(data)) == perturbed_position), 
 #         +         1:dim(data)[2], cov(data), graphs[[1]])
