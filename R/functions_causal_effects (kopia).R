@@ -420,6 +420,7 @@ set_effects_of_unconnected_positions_to_zero <- function(effects, graph, perturb
   return(effects)
 }
 
+
 cluster_pairwise_effects <- function(pairwise_effects, k, method, iterations_pv) {
   #k means
   k_m <- kmeans(t(pairwise_effects), k)
@@ -502,5 +503,5 @@ cluster_pairwise_effects <- function(pairwise_effects, k, method, iterations_pv)
   # names(cl) <- NULL
   plot_clusters_in_pymol(node_clustering = cl_pv, protein = protein, outpath = outpath, 
                          file_separator = file_separator, type_of_clustering = type)  
-  
+
 }

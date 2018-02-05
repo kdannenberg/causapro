@@ -25,7 +25,7 @@ source("configuration_data.R")
 
 # DDDG-10.0.08.1e-04
 results_G <- protein_causality_G(type_of_data = "DDS", subtype_of_data = "", min_pos_var = 0, 
-                                 alpha = 0.01, analysis = TRUE, pc_maj_rule = TRUE, intervention_position = "all",
+                                 alpha = 0.1, analysis = FALSE, pc_maj_rule = TRUE, intervention_position = "all",
                                  plot_no_isolated_nodes = TRUE, plot_clusters = FALSE, plot_ida = FALSE,
                                  effects_cluster_method = "ward.D",#"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
                                  effects_pv_nboot = 10000)
