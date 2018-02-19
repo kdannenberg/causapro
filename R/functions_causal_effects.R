@@ -420,27 +420,29 @@ set_effects_of_unconnected_positions_to_zero <- function(effects, graph, perturb
   return(effects)
 }
 
-cluster_pairwise_effects <- function(pairwise_effects, k, method, iterations_pv) {
-  #k means
-  k_m <- kmeans(t(pairwise_effects), k)
-  lapply(seq(1:k), function (i) {dim(pairwise_effects[,names(which(k_m$cluster == i))])})
-  
-  # apply(pairwise_effects[,names(which(k_m$cluster == 1))], 2, barplot);
-  
-  results$pairwise_effects <- pairwise_effects
-  
-  clustering_with_duplicates <- k_m$cluster
-  
-  cl <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = clustering_with_duplicates)
-  
-  print(cl)
-  
-  type <- "effects-km" 
-  # names(cl) <- NULL
-  plot_clusters_in_pymol(node_clustering = cl, protein = protein, outpath = outpath, 
-                         file_separator = file_separator, type_of_clustering = type) 
-  
-  
+cluster_pairwise_effects <- function(results, pairwise_effects, k, cluster_method,
+                                     hclust_method, dist_measure,
+                                     iterations_pv, protein, outpath, file_separator) {
+  #k-means
+  if (grepl(pattern = "k", cluster_method) && grepl(pattern = "means", cluster_method)) {
+    k_m <- kmeans(t(pairwise_effects), k)
+    lapply(seq(1:k), function (i) {dim(pairwise_effects[,names(which(k_m$cluster == i))])})
+    
+    # apply(pairwise_effects[,names(which(k_m$cluster == 1))], 2, barplot);
+    
+    results$pairwise_effects <- pairwise_effects
+    
+    clustering_with_duplicates <- k_m$cluster
+    
+    cl <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = clustering_with_duplicates)
+    
+    print(cl)
+    
+    type <- "effects-km" 
+    # names(cl) <- NULL
+    plot_clusters_in_pymol(node_clustering = cl, protein = protein, outpath = outpath, 
+                           file_separator = file_separator, type_of_clustering = type) 
+  }
   
   #hierarchical clustering
   # d <- dist(t(pairwise_effects))
@@ -469,38 +471,39 @@ cluster_pairwise_effects <- function(pairwise_effects, k, method, iterations_pv)
   # library(pvclust)
   
   
-  
-  FUN_pv <- function_set_parameters(pvclust, parameters = list(data = pairwise_effects, 
-                                                               method.hclust = method,
-                                                               method.dist=effects_dist_method, nboot = iterations_pv))
-  
-  effects_pv <- compute_if_not_existent(filename = paste(outpath, "pv", method, 
-                                                         substr(effects_dist_method, 0, 3), iterations_pv, sep="-"),
-                                        FUN = FUN_pv,
-                                        obj_name = "effects_pv",
-                                        fun_loaded_object_ok = function(effects_pv) {return(colnames(pairwise_effects) == effects_pv$hclust$labels)}
-  )
-  
-  # fit <- pvclust(data = pairwise_effects, method.hclust="ward",
-  #                method.dist="euclidean", nboot = 1000)
-  
-  plot.new()
-  plot(effects_pv) # dendogram with p values
-  # add rectangles around groups highly supported by the data
-  pvrect(effects_pv, alpha=.95)
-  
-  high_clusterlist <- pvpick(effects_pv)$clusters
-  
-  high <- membershiplist_from_clusterlist(high_clusterlist)
-  
-  cl_pv <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = high)
-  
-  print(cl_pv)
-  
-  
-  type <- paste("effects-pv", method, substr(effects_dist_method, 0, 3), iterations_pv, sep="-")
-  # names(cl) <- NULL
-  plot_clusters_in_pymol(node_clustering = cl_pv, protein = protein, outpath = outpath, 
-                         file_separator = file_separator, type_of_clustering = type)  
-  
+  else {
+    FUN_pv <- function_set_parameters(pvclust, parameters = list(data = pairwise_effects, 
+                                                                 method.hclust = hclust_method,
+                                                                 method.dist=dist_measure, nboot = iterations_pv))
+    
+    effects_pv <- compute_if_not_existent(filename = paste(outpath, "pv", hclust_method, 
+                                                           substr(dist_measure, 0, 3), iterations_pv, sep="-"),
+                                          FUN = FUN_pv,
+                                          obj_name = "effects_pv",
+                                          fun_loaded_object_ok = function(effects_pv) {return(colnames(pairwise_effects) == effects_pv$hclust$labels)}
+    )
+    
+    # fit <- pvclust(data = pairwise_effects, method.hclust="ward",
+    #                method.dist="euclidean", nboot = 1000)
+    
+    plot.new()
+    plot(effects_pv) # dendogram with p values
+    # add rectangles around groups highly supported by the data
+    pvrect(effects_pv, alpha=.95)
+    
+    high_clusterlist <- pvpick(effects_pv)$clusters
+    
+    high <- membershiplist_from_clusterlist(high_clusterlist)
+    
+    cl_pv <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = high)
+    
+    print(cl_pv)
+    
+    
+    type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, sep="-")
+    # names(cl) <- NULL
+    plot_clusters_in_pymol(node_clustering = cl_pv, protein = protein, outpath = outpath, 
+                           file_separator = file_separator, type_of_clustering = type) 
+    }
+  return(results)
 }

@@ -1,4 +1,5 @@
 
+#
 analyse_set_of_graphs <- function(
   type_of_graph_set = "conflict", # "retry" or "conflict"
   results,
@@ -152,7 +153,6 @@ analyse_set_of_graphs <- function(
                                            s = s, new = new, save = save, outpath = outpath,
                                            pc_maj_rule_conflict = pc_maj_rule_conflict, pc_conservative_conflict = pc_conservative_conflict)
   if (is.null(set_of_graphs)) {
-    
     if (caption_as_subcaption) {
       caption = caption
       # main_caption = NULL  # soll missing sein
@@ -178,7 +178,7 @@ analyse_set_of_graphs <- function(
   all_one_effects[,] <- 1
   colors_for_barplot <- color_by_effect(all_one_effects, int_pos, mode = "#FFFFFF")
   
-  # check wether any graphs in the set are equal
+  # check wether any two graphs in the set are equal
   if (check_graph_equality) {
     equal <- compare_all_graphs(all_graphs)
     main_diagonal <- matrix(as.logical(diag(nrow = dim(equal)[1])), ncol = dim(equal)[2])

@@ -93,7 +93,8 @@ protein_causality <- function(
   # linkcommunities_base_colors = ifelse(k==4, c("#FFD700", "#1874CD", "#CC0000",  "#69A019"), rainbow(linkcommunities_k)),
   linkcommunities_base_colors = NULL,
   effects_cluster_k = 3,
-  effects_cluster_method = "ward.D2",  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
+  effects_cluster_method = "pv",
+  effects_hclust_method = "ward.D2",  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = "euclidean",
   effects_pv_nboot = 10000,
   stages = c("orig"), # c("orig", "sub"), # "sub"
@@ -109,7 +110,7 @@ protein_causality <- function(
   pymol_sort_connected_components_by_length = TRUE, # NEW!
   pymol_mix_connected_components = FALSE,           # NEW!
   #
-  print_connected_components = FALSE,                # NEW!
+  print_connected_components = FALSE,               # NEW!
   #
   compute_pc_anew = FALSE,
   compute_localTests_anew = FALSE,
@@ -316,10 +317,30 @@ protein_causality <- function(
                                 obj_name = "all_pairwise_effects", 
                                 fun_loaded_object_ok = function(all_pairwise_effects) {return(dim(all_pairwise_effects)[1] == dim(data)[2])})
         
-        cluster_pairwise_effects(pairwise_effects = all_pairwise_effects, k = effects_cluster_k, method = effects_cluster_method,
-                                 iterations_pv = effects_pv_nboot)
+        cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects, k = effects_cluster_k, 
+                                 cluster_method = effects_cluster_method, hclust_method = effects_hclust_method, 
+                                 dist_measure = effects_dist_method, iterations_pv = effects_pv_nboot,
+                                 protein = protein, outpath = outpath, file_separator = file_separator)
         
       } else {
+        set_of_graphs <- determine_set_of_graphs(results = results, data = data, type_of_graph_set = "conflict", 
+                                                 pc_function = pc_function, ida_function = ida_function, 
+                                                 s = s, new = FALSE, save = TRUE, outpath = outpath,
+                                                 pc_maj_rule_conflict = pc_maj_rule_conflict, 
+                                                 pc_conservative_conflict = pc_conservative_conflict)
+        
+        all_graphs <- set_of_graphs$graphs
+        all_results <- set_of_graphs$results
+        
+        
+        
+        all_pairwise_effects_over_all_graphs <- 
+          compute_over_all_graphs(all_results = all_results, weight_effects_on_by = weight_effects_on_by, 
+                                  use_scaled_effects_for_sum = use_scaled_effects_for_each_graph,   
+                                  function_over_all_graphs = function_over_all_graphs, direction = direction, 
+                                  scale_effects_on = scale_effects_on_so_372_equals_1)
+        
+        
         # und jetzt?
         # results_copy <- results
         # results_copy$data <- data  
@@ -335,7 +356,11 @@ protein_causality <- function(
         results_copy$data <- data  
         results_copy$caption = caption
         results_copy$outpath = outpath
-        analyse_set_of_graphs(results = results_copy, protein = "PDZ")
+        results$effects <- analyse_set_of_graphs(results = results_copy, type_of_data = type_of_data, 
+                                                 subtype_of_data = subtype_of_data,
+                                                 measure = substr(type_of_data, nchar(type_of_data), nchar(type_of_data)), 
+                                                 protein = "PDZ", perturbed_position = perturbed_position,
+                                                 weight_effects_on_by = weight_effects_on_by)
       }
     }
   }
@@ -394,7 +419,8 @@ protein_causality_G <- function(
   weight_effects_on_by = NULL, # "var", "mean", ""
   # analysis parameters: clustering of effects
   effects_cluster_k = NULL,
-  effects_cluster_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
+  effects_cluster_method = NULL,
+  effects_hclust_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = NULL,
   effects_pv_nboot = NULL,
   # general graphical parameters
@@ -450,6 +476,7 @@ protein_causality_G <- function(
   argList$weight_effects_on_by = weight_effects_on_by
   argList$effects_cluster_k = effects_cluster_k
   argList$effects_cluster_method = effects_cluster_method
+  argList$effects_hclust_method = effects_hclust_method
   argList$effects_dist_method = effects_dist_method
   argList$effects_pv_nboot = effects_pv_nboot
   argList$graph_output_formats = graph_output_formats
@@ -581,7 +608,8 @@ protein_causality_S <- function(
   weight_effects_on_by = NULL, # "var", "mean", ""
   # analysis parameters: clustering of effects
   effects_cluster_k = NULL,
-  effects_cluster_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
+  effects_cluster_method = NULL,
+  effects_hclust_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = NULL,
   effects_pv_nboot = NULL,
   ## general graphical parameters
@@ -637,7 +665,8 @@ protein_causality_S <- function(
   argList$pc_maj_rule = pc_maj_rule
   argList$weight_effects_on_by = weight_effects_on_by
   argList$effects_cluster_k = effects_cluster_k
-  argList$effects_cluster_method = effects_cluster_method
+  argList$effects_cluster_method = effects_cluster_method   
+  argList$effects_hclust_method = effects_hclust_method
   argList$effects_dist_method = effects_dist_method
   argList$effects_pv_nboot = effects_pv_nboot
   argList$graph_output_formats = graph_output_formats
@@ -770,7 +799,8 @@ protein_causality_p38g <- function(
   weight_effects_on_by = NULL, # "var", "mean", "" 
   # analysis parameters: clustering of effects
   effects_cluster_k = NULL,
-  effects_cluster_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
+  effects_cluster_method = NULL,  
+  effects_hclust_method = NULL, #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = NULL,
   effects_pv_nboot = NULL,
   # general graphical parameters
@@ -827,7 +857,8 @@ protein_causality_p38g <- function(
   argList$pc_maj_rule = pc_maj_rule
   argList$weight_effects_on_by = weight_effects_on_by
   argList$effects_cluster_k = effects_cluster_k
-  argList$effects_cluster_method = effects_cluster_method
+  argList$effects_cluster_method = effects_cluster_method   
+  argList$effects_hclust_method = effects_hclust_method
   argList$effects_dist_method = effects_dist_method
   argList$effects_pv_nboot = effects_pv_nboot
   argList$graph_output_formats = graph_output_formats
@@ -963,7 +994,8 @@ protein_causality_NoV <- function(
   weight_effects_on_by = NULL, # "var", "mean", ""
   # analysis parameters: clustering of effects
   effects_cluster_k = NULL,
-  effects_cluster_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
+  effects_cluster_method = NULL, 
+  effects_hclust_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = NULL,
   effects_pv_nboot = NULL,
   # graphical parameters
@@ -1029,7 +1061,8 @@ protein_causality_NoV <- function(
   argList$pc_maj_rule = pc_maj_rule
   argList$weight_effects_on_by = weight_effects_on_by
   argList$effects_cluster_k = effects_cluster_k
-  argList$effects_cluster_method = effects_cluster_method
+  argList$effects_cluster_method = effects_cluster_method   
+  argList$effects_hclust_method = effects_hclust_method
   argList$effects_dist_method = effects_dist_method
   argList$effects_pv_nboot = effects_pv_nboot
   argList$graph_output_formats = graph_output_formats
