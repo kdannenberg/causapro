@@ -377,7 +377,7 @@ quality_of_effects_classifier <- function(effects, int_pos, percentile = 1 - (le
   return((max(c(length(fp), length(fn)))) / length(setdiff(int_pos, perturbed_position)))
 }
 
-score_for_effects <- function(effects, int_pos, perturbed_position = 372, effect_quality_height, false_pos_neg, 
+score_for_effects <- function(effects, int_pos, perturbed_position = "372", effect_quality_height, false_pos_neg, 
                               percentile = 1 - (length(int_pos) / length(effects))) {
   if (missing(effect_quality_height)) {
     effect_quality_height <- quality_of_effects_distibution(effects = effects, int_pos = int_pos, perturbed_position = perturbed_position)

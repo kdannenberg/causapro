@@ -215,8 +215,9 @@ analyse_set_of_graphs <- function(
     }
   } else if (plot == "over_all_graphs") {
     # cat("\n")
-    effects_over_all_graphs_on_of <- compute_over_all_graphs(all_results = all_results, weight_effects_on_by = weight_effects_on_by, 
-                                                             use_scaled_effects_for_sum = use_scaled_effects_for_each_graph,   
+    effects_over_all_graphs_on_of <- compute_over_all_graphs(all_results = all_results, position = perturbed_position,
+                                                             weight_effects_on_by = weight_effects_on_by, 
+                                                             use_scaled_effects_for_sum = FALSE,   
                                                              function_over_all_graphs = function_over_all_graphs, direction = direction, 
                                                              scale_effects_on = scale_effects_on_so_372_equals_1)
     
@@ -306,12 +307,24 @@ pymol_mean_effects <- function(effects_over_all_graphs_on_of, protein, int_pos, 
 
 # data is only necessary to check wether a loades graph has the right number of nodes
 determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_function, ida_function, s, new, save, outpath,
-                                    pc_maj_rule_conflict, pc_conservative_conflict, suffix_graphs = "graphs", 
-                                    suffix_results = "results-ida-reset") {
+                                    pc_maj_rule_conflict, pc_conservative_conflict, suffix_effects_type = "",
+                                    suffix_graphs = "graphs", 
+                                    suffix_results = "results-ida-reset", no_results = FALSE) {
   start_new <- new
   if (type_of_graph_set == "retry") {
-    outpath_where_graphs_exist <- get_old_outpath(outpath, suffix = "-pc-retry_", suffix_graphs, ".RData")
-    outpath_where_results_exist <- get_old_outpath(outpath, suffix = "-pc-retry_", suffix_results, ".RData")
+    suffix_retry_conflict = "-pc-retry_"
+    suffix_results = pastes(suffix_effects_type, suffix_results, sep = "_")
+    # infix <- pastes("-pc-retry", suffix_effects_type, sep = "_")
+    # infix <- paste0(infix, "_")
+    filename_graphs <- paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData")
+    filename_results <- filename_results 
+    # if (suffix_effects_type == "" || suffix_effects_type == "372") {
+      outpath_where_graphs_exist <- get_old_outpath(outpath, suffix = suffix_retry_conflict, suffix_graphs, ".RData")
+      outpath_where_results_exist <- get_old_outpath(outpath, suffix = suffix_retry_conflict, suffix_results, ".RData")
+    # } else {
+    #   outpath_where_graphs_exist <- NULL
+    #   outpath_where_results_exist <- NULL
+    # }
     if (is.null(outpath_where_graphs_exist) || is.null(outpath_where_results_exist)) {
       start_new <- TRUE
     }
@@ -336,11 +349,14 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
         }
       }
       if (save) {
-        save(all_graphs, file = paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))
+        save(all_graphs, file = filename_graphs)
       }
       
+      if (no_results) {
+        return(all_graphs)
+      }
       
-      #### save(all_results, file = paste0(outpath, "-pc-retry_", suffix_results, ".RData"))
+      #### save(all_results, file = filename_results)
       
       
       #### all_results saved
@@ -349,34 +365,49 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
         all_results[[i]] <- ida_function(results)
       }
       if (save) {
-        save(all_results, file = paste0(outpath, "-pc-retry_", suffix_results, ".RData"))
+        save(all_results, file = filename_results)
       }
     } else {
       load(file = outpath_where_graphs_exist)
-      if (!file.exists(paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))) {
-        save(all_graphs, file = paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))
+      if (!file.exists(filename_graphs)) {
+        save(all_graphs, file = filename_graphs)
+      }
+      
+      if (no_results) {
+        return(all_graphs)
       }
       
       load(file = outpath_where_results_exist)
-      if (!file.exists(paste0(outpath, "-pc-retry_", suffix_results, ".RData"))) {
-        save(all_results, file = paste0(outpath, "-pc-retry_", suffix_results, ".RData"))
+      if (!file.exists(filename_results)) {
+        save(all_results, file = filename_results)
       }
       
-      # if (file.exists(file = paste0(outpath, "-pc-retry_", suffix_results, ".RData")) 
-      #     && file.exists(file = paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))) {
-      #   load(file = paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))
-      #   load(file = paste0(outpath, "-pc-retry_", suffix_results, ".RData"))
+      # if (file.exists(file = filename_results) 
+      #     && file.exists(file = paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData"))) {
+      #   load(file = paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData"))
+      #   load(file = filename_results)
       # } else {
-      #   load(file = paste0(get_old_outpath(outpath), "-pc-retry_", suffix_graphs, ".RData"))
-      #   save(all_graphs, file = paste0(outpath, "-pc-retry_", suffix_graphs, ".RData"))
-      #   load(file = paste0(get_old_outpath(outpath), "-pc-retry_", suffix_results, ".RData"))
-      #   save(all_results, file = paste0(outpath, "-pc-retry_", suffix_results, ".RData"))
+      #   load(file = paste0(get_old_outpath(outpath), suffix_retry_conflict, suffix_graphs, ".RData"))
+      #   save(all_graphs, file = paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData"))
+      #   load(file = paste0(get_old_outpath(outpath), suffix_retry_conflict, suffix_results, ".RData"))
+      #   save(all_results, file = filename_results)
       # }
     }
     # TODO: rename: -rel_conflict_graph_set
   } else if (type_of_graph_set == "conflict") {
-    outpath_where_graphs_exist <- get_old_outpath(outpath, suffix = paste0("-all_confl_comb_", suffix_graphs, ".RData"))
-    outpath_where_results_exist <- get_old_outpath(outpath, suffix = paste0("-all_confl_comb_", suffix_results, ".RData"))
+    suffix_retry_conflict = "-all_confl_comb_"
+    suffix_results = pastes(suffix_effects_type, suffix_results, sep = "_")
+    # infix <- pastes("-pc-retry", suffix_effects_type, sep = "_")
+    # infix <- paste0(infix, "_")
+    filename_graphs <- paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData")
+    filename_results <- paste0(outpath, suffix_retry_conflict, suffix_results, ".RData") 
+    # if (suffix_effects_type == "" || suffix_effects_type == "372") {
+      outpath_where_graphs_exist <- get_old_outpath(outpath, suffix = paste0(suffix_retry_conflict, suffix_graphs, ".RData"))
+      outpath_where_results_exist <- get_old_outpath(outpath, suffix = paste0(suffix_retry_conflict, suffix_results, ".RData"))
+    # } else {
+    #   outpath_where_graphs_exist <- NULL # TODO: so wird es ws. NIE geladen
+    #   outpath_where_results_exist <- NULL
+    # }
     if (is.null(outpath_where_graphs_exist) || is.null(outpath_where_results_exist)) {
       start_new <- TRUE
     }
@@ -384,7 +415,7 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
     if (start_new) {
       if (!new && !is.null(outpath_where_graphs_exist)) {
         try(load(file = outpath_where_graphs_exist))
-        # if (outpath_where_graphs_exist != paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData")) oder
+        # if (outpath_where_graphs_exist != paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData")) oder
         if (!exists("all_graphs")) {
           warning(paste("File not loadable or did not contain an object of name all_graphs!"))
           outpath_where_graphs_exist <- NULL
@@ -392,8 +423,11 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
           warning(paste0("Loaded graph did not have the right number of nodes: ", outpath_where_graphs_exist, "."))
           outpath_where_graphs_exist <- NULL
         } else {
-          if (!file.exists(paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))) {
-            save(all_graphs, file = paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))
+          if (!file.exists(filename_graphs)) {
+            save(all_graphs, file = filename_graphs)
+          }
+          if (no_results) {
+            return(all_graphs)
           }
         }
       }
@@ -409,7 +443,7 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
         
         if (edges$conflict >= 15) {
           all_graphs = NULL
-          save(all_graphs, file = paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))
+          save(all_graphs, file = filename_graphs)
           return(NULL)
           # stop("More than 15 conflict edges.")
         }
@@ -418,10 +452,11 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
         all_graphs <- enumerate_graphs(results$pc@graph) # in Zeile 1 berechnet
         cat(" Done. \n")
         if (save) {
-          save(all_graphs, file = paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))
+          save(all_graphs, file = filename_graphs)
         }
-      } else {
-        
+        if (no_results) {
+          return(all_graphs)
+        }
       }
         
       if (is.null(all_graphs)) {
@@ -435,24 +470,27 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
         all_results[[i]] <- graph_to_results(all_graphs[[i]], ida_function = ida_function)
       }
       if (save) {
-        save(all_results, file = paste0(outpath, "-all_confl_comb_", suffix_results, ".RData"))
+        save(all_results, file = filename_results)
       }
     } else {
       load(file = outpath_where_graphs_exist)
-      # if (outpath_where_graphs_exist != paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData")) oder
-      if (!file.exists(paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))) {
-        save(all_graphs, file = paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData"))
+      # if (outpath_where_graphs_exist != filename_graphs) oder
+      if (!file.exists(filename_graphs)) {
+        save(all_graphs, file = filefilename_graphsname)
       }
       
       load(file = outpath_where_results_exist)
-      # if (outpath_where_graphs_exist != paste0(outpath, "-all_confl_comb_", suffix_graphs, ".RData")) oder
-      if (!file.exists(paste0(outpath, "-all_confl_comb_", suffix_results, ".RData"))) {
-        save(all_results, file = paste0(outpath, "-all_confl_comb_", suffix_results, ".RData"))
+      # if (outpath_where_graphs_exist != filename) oder
+      if (!file.exists(filename_results)) {
+        save(all_results, file = filename_results)
       }
     }
   }
-  
-  return(list(graphs = all_graphs, results = all_results))
+  if (no_results) {
+    return(all_graphs)
+  } else {
+    return(list(graphs = all_graphs, results = all_results))
+  }
 }
 
 find_graphs_with_highest_int_pos <- function(all_results, obj_fct = list, dir = c("on", "of")) {
@@ -542,25 +580,26 @@ element_in_most_of_the_6_sets <- function(max_pos_75, max_pos_85, max_pos_95,
 
 
 
-# select for a results object the mean results on and of position 372, respectively and return both as a list
+# select for a results object the mean results on and of position 372, respectively 
+# and return both as a list
 # mean of min and max?
-mean_effects_min_max <- function(results, weight_effects_on_by, scaled_effects = FALSE) {
+mean_effects_min_max <- function(results, position, weight_effects_on_by, scaled_effects = FALSE) {
   on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
   
   if (scaled_effects) {
-    of_effects <- results$ida$`372`$of$scaled_effects
+    of_effects <- results$ida[[position]]$of$scaled_effects
   } else {
-    of_effects <- results$ida$`372`$of$effects
+    of_effects <- results$ida[[position]]$of$effects
   }
   of_max <- apply(of_effects, 1, max)
   of_min <- apply(of_effects, 1, min)
   
   if (scaled_effects) {
-    on_max <- results$ida$`372`[[on]]$scaled_effects[, 1]
-    on_min <- results$ida$`372`[[on]]$scaled_effects[, 2]
+    on_max <- results$ida[[position]][[on]]$scaled_effects[, 1]
+    on_min <- results$ida[[position]][[on]]$scaled_effects[, 2]
   } else {
-    on_max <- results$ida$`372`[[on]]$effects[, 1]
-    on_min <- results$ida$`372`[[on]]$effects[, 2]
+    on_max <- results$ida[[position]][[on]]$effects[, 1]
+    on_min <- results$ida[[position]][[on]]$effects[, 2]
   }
   
   ret_list <- list()
@@ -571,11 +610,16 @@ mean_effects_min_max <- function(results, weight_effects_on_by, scaled_effects =
 
 # sum all effects:
 # should rather be devided by 100, thus mean
-compute_over_all_graphs <- function(all_results, weight_effects_on_by, use_scaled_effects_for_sum = FALSE, scale_in_the_end = FALSE, 
+compute_over_all_graphs <- function(all_results, position, weight_effects_on_by, use_scaled_effects_for_sum = FALSE, scale_in_the_end = FALSE, 
                                     function_over_all_graphs = "mean", direction = c("on", "of"), 
                                     scale_effects_on = "372" %in% rownames(all_results[[1]]$ida$`372`$of$effects)) {
-  
-  min_max_mean_effects_on_of <- lapply(all_results, mean_effects_min_max, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum)
+  if (!missing(position) &&  !is.na(as.numeric(position))) {
+    mean_effects_min_max_FUN <- function_set_parameters(mean_effects_min_max, parameters = list(position = position))
+  } else {
+    #TODO: Jetzt was schlaues machen
+    mean_effects_min_max_FUN <- mean_effects_min_max
+  }
+  min_max_mean_effects_on_of <- lapply(all_results, mean_effects_min_max_FUN, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum)
   min_max_mean_effects_of <- do.call(cbind, (lapply(min_max_mean_effects_on_of, function(list) return(list$of))))
   effect_over_all_graphs_of <- apply(min_max_mean_effects_of, 1, function_over_all_graphs)
   on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
@@ -589,7 +633,7 @@ compute_over_all_graphs <- function(all_results, weight_effects_on_by, use_scale
   min_max_mean_effects_on <- do.call(cbind, (lapply(min_max_mean_effects_on_of, function(list) return(list[[on]]))))
   effect_over_all_graphs_on <- apply(min_max_mean_effects_on, 1, function_over_all_graphs) 
   if (scale_effects_on) {
-    effect_over_all_graphs_on <- effect_over_all_graphs_on / effect_over_all_graphs_on["372"]
+    effect_over_all_graphs_on <- effect_over_all_graphs_on / effect_over_all_graphs_on[as.character(position)]
   }
   
   effects_over_all_graphs_on_of <- list(overAllGraphs_of = effect_over_all_graphs_of, overAllGraphs_on = effect_over_all_graphs_on)

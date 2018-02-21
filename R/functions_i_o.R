@@ -279,6 +279,7 @@ get_old_outpath <- function(outpath, suffix) {
 compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_anew = FALSE, 
                                     fun_loaded_object_ok = function(obj) return(TRUE), 
                                     try_old_outpath = TRUE) {
+  # debug(FUN)
   filename <- paste(filename, ".RData", sep = "")
   if (file.exists(filename) && !compute_anew) {
     # rm(list = ls()[which(ls() == obj_name)])

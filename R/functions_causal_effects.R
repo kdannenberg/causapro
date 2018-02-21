@@ -16,6 +16,14 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
                 show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75, mute_all_plots = FALSE,
                 causal_effects_function = "IDA-reset") {
   
+  
+  if (all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
+    graph = results
+  } else {
+    graph = results$pc@graph
+  }
+  
+  
   lines <- 1 # lines in plot_space
   
   if (direction == "both") {
@@ -37,31 +45,31 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
     if (dir == "of" || dir == "by" || dir == "from") {
       if (grepl(pattern = "ida", tolower(causal_effects_function))) {
         # IDA
-        # effects <- idaFast(which(as.character(colnames(data)) == perturbed_position), 1:dim(data)[2], data, results$pc@graph)
-        effects <- idaFast(which(as.character(colnames(data)) == perturbed_position), 1:dim(data)[2], cov(data), results$pc@graph)
+        # effects <- idaFast(which(as.character(colnames(data)) == perturbed_position), 1:dim(data)[2], data, graph)
+        effects <- idaFast(which(as.character(colnames(data)) == perturbed_position), 1:dim(data)[2], cov(data), graph)
         if (grepl(pattern = "reset", tolower(causal_effects_function))) {
         # GGF. danach Effekte von nicht verbundenen Knoten auf null setzten
-        effects <- set_effects_of_unconnected_positions_to_zero(effects, graph = results$pc@graph, perturbed_position = perturbed_position, dir = dir)
+        effects <- set_effects_of_unconnected_positions_to_zero(effects, graph = graph, perturbed_position = perturbed_position, dir = dir)
         }
       } else if (grepl(pattern = "causaleffect", tolower(causal_effects_function)) || grepl(pattern = "causal_effect", tolower(causal_effects_function))) {
         # CAUSALEFFECTS
         effects <- pseudo_idaFast_by_causalEffect(which(as.character(colnames(data)) == perturbed_position), 1:dim(data)[2], 
-                                                cov(data), results$pc@graph, outpath = outpath)
+                                                cov(data), graph, outpath = outpath)
       }
     } else if (dir == "on") {
       if (grepl(pattern = "ida", tolower(causal_effects_function))) {
         # IDA
         ida_rev <- function(pos) {
-          # eff <- pcalg::ida(pos, which(as.character(colnames(data)) == perturbed_position), data, results$pc@graph))
-          eff <- pcalg::ida(pos, which(as.character(colnames(data)) == perturbed_position), cov(data), results$pc@graph)
+          # eff <- pcalg::ida(pos, which(as.character(colnames(data)) == perturbed_position), data, graph))
+          eff <- pcalg::ida(pos, which(as.character(colnames(data)) == perturbed_position), cov(data), graph)
           return(eff)
         }
         # if (grepl(pattern = "reset", tolower(causal_effects_function))) {
         #   ida_rev <- function(pos) {
-        #     # eff <- pcalg::ida(pos, which(as.character(colnames(data)) == perturbed_position), data, results$pc@graph))
-        #     eff <- pcalg::ida(pos, which(as.character(colnames(data)) == perturbed_position), cov(data), results$pc@graph)
+        #     # eff <- pcalg::ida(pos, which(as.character(colnames(data)) == perturbed_position), data, graph))
+        #     eff <- pcalg::ida(pos, which(as.character(colnames(data)) == perturbed_position), cov(data), graph)
         #     # GGF. danach Effekte von nicht verbundenen Knoten auf null setzten
-        #     eff <- set_effects_of_unconnected_positions_to_zero(eff, graph = results$pc@graph, perturbed_position = perturbed_position, dir = dir)
+        #     eff <- set_effects_of_unconnected_positions_to_zero(eff, graph = graph, perturbed_position = perturbed_position, dir = dir)
         #     return(eff)
         #   }
         # }
@@ -69,7 +77,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
         # CAUSALEFFECTS
         ida_rev <- function(pos) {
           eff <- pseudo_ida_by_causalEffect(pos, which(as.character(colnames(data)) == perturbed_position), 
-                                            cov(data), results$pc@graph, outpath = outpath)
+                                            cov(data), graph, outpath = outpath)
           return(eff)
         }
       }
@@ -83,7 +91,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
       
       if (grepl(pattern = "reset", tolower(causal_effects_function))) {
         effects <- apply(X = effects, MARGIN = 2, FUN = set_effects_of_unconnected_positions_to_zero, 
-                         graph = results$pc@graph, perturbed_position = perturbed_position, dir = dir)
+                         graph = graph, perturbed_position = perturbed_position, dir = dir)
       }
       
       if (grepl("mean", weight_effects_on_by)) { # (weight_effects_on_by == "mean_abs_effect") {
@@ -91,52 +99,52 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
         
         if (grepl(pattern = "ida", tolower(causal_effects_function))) {
           # IDA
-          # means <- sapply(1:dim(data)[2], function(pos) {mean(abs(idaFast(pos, 1:dim(data)[2], data, results$pc@graph)))})
+          # means <- sapply(1:dim(data)[2], function(pos) {mean(abs(idaFast(pos, 1:dim(data)[2], data, graph)))})
           means <- sapply(1:dim(data)[2], function(pos) {
-           eff <- mean(abs(idaFast(pos, 1:dim(data)[2], cov(data), results$pc@graph)))
+           eff <- mean(abs(idaFast(pos, 1:dim(data)[2], cov(data), graph)))
            return(eff)
            })
           # if (grepl(pattern = "reset", tolower(causal_effects_function))) {
           #   # IDA
           #   means <- sapply(1:dim(data)[2], function(pos) {
-          #    eff <- idaFast(pos, 1:dim(data)[2], cov(data), results$pc@graph)
+          #    eff <- idaFast(pos, 1:dim(data)[2], cov(data), graph)
           #    # GGF. danach Effekte von nicht verbundenen Knoten auf null setzten
-          #    eff <- set_effects_of_unconnected_positions_to_zero(eff, graph = results$pc@graph, perturbed_position = perturbed_position, dir = dir)
+          #    eff <- set_effects_of_unconnected_positions_to_zero(eff, graph = graph, perturbed_position = perturbed_position, dir = dir)
           #    return(mean(abs(eff)))
           #    })
           # }
         } else if (grepl(pattern = "causaleffect", tolower(causal_effects_function)) || grepl(pattern = "causal_effect", tolower(causal_effects_function))) {
           # CAUSALEFFECTS
           means <- sapply(1:dim(data)[2], function(pos) {mean(abs(pseudo_idaFast_by_causalEffect(pos, 1:dim(data)[2], 
-                                                                                                 cov(data), results$pc@graph, outpath = outpath)))})
+                                                                                                 cov(data), graph, outpath = outpath)))})
         }
         if (grepl(pattern = "reset", tolower(causal_effects_function))) {
           means <- apply(X = means, MARGIN = 2, FUN = set_effects_of_unconnected_positions_to_zero, 
-                           graph = results$pc@graph, perturbed_position = perturbed_position, dir = dir)
+                           graph = graph, perturbed_position = perturbed_position, dir = dir)
         }
         effects <- effects / means
       } else if (grepl("median", weight_effects_on_by)) { # if (weight_effects_on_by == "median_abs_effect") {
         dir <- "on-rel-to-median"
         if (grepl(pattern = "ida", tolower(causal_effects_function))) {
           # IDA
-          # medians <- sapply(1:dim(data)[2], function(pos) {median(abs(idaFast(pos, 1:dim(data)[2], data, results$pc@graph)))})
+          # medians <- sapply(1:dim(data)[2], function(pos) {median(abs(idaFast(pos, 1:dim(data)[2], data, graph)))})
           medians <- sapply(1:dim(data)[2], function(pos) {
-            eff <- median(abs(idaFast(pos, 1:dim(data)[2], cov(data), results$pc@graph)))
+            eff <- median(abs(idaFast(pos, 1:dim(data)[2], cov(data), graph)))
             return(eff)
           })
           # if (grepl(pattern = "reset", tolower(causal_effects_function))) {
           #   # IDA
           #   medians <- sapply(1:dim(data)[2], function(pos) {
-          #     eff <- idaFast(pos, 1:dim(data)[2], cov(data), results$pc@graph)
+          #     eff <- idaFast(pos, 1:dim(data)[2], cov(data), graph)
           #     # GGF. danach Effekte von nicht verbundenen Knoten auf null setzten
-          #     eff <- set_effects_of_unconnected_positions_to_zero(eff, graph = results$pc@graph, perturbed_position = perturbed_position, dir = dir)
+          #     eff <- set_effects_of_unconnected_positions_to_zero(eff, graph = graph, perturbed_position = perturbed_position, dir = dir)
           #     return(median(abs(eff)))
           #   })
           # }
         } else if (grepl(pattern = "causaleffect", tolower(causal_effects_function)) || grepl(pattern = "causal_effect", tolower(causal_effects_function))) {
           # CAUSALEFFECTS
           medians <- sapply(1:dim(data)[2], function(pos) {median(abs(pseudo_idaFast_by_causalEffect(pos, 1:dim(data)[2], 
-                                                                                                 cov(data), results$pc@graph, outpath = outpath)))})
+                                                                                                 cov(data), graph, outpath = outpath)))})
         }
         
         names(medians) <- colnames(data)
@@ -146,7 +154,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
           medians_m <- as.matrix(medians)
           rownames(medians_m) <- colnames(data)
           medians <- apply(X = medians_m, MARGIN = 2, FUN = set_effects_of_unconnected_positions_to_zero, 
-                         graph = results$pc@graph, perturbed_position = perturbed_position, dir = dir)
+                         graph = graph, perturbed_position = perturbed_position, dir = dir)
         }
         # effects <- effects / medians
         effects <- apply(effects, 2, function(effects) return(effects/medians))
@@ -271,6 +279,9 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
     # results$ida <- list(list(effects = effects, scaled_effects = scaled_effects, pos_colors = colors_by_effect))
     # names(results$ida) <- perturbed_position
     
+    if (all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
+          results <- list()
+    }
     results$ida[[perturbed_position]][[dir]] <- list(effects = effects, scaled_effects = scaled_effects, pos_colors = colors_by_effect)
     
     # print(cbind(effects, current_scaled_effects, colors_by_effect))
@@ -335,7 +346,7 @@ statistics_of_influenced_positions <- function(effects, percentile, interesting_
 
 # only to store code
 first_tests <- function(data, results) {
-  effects_of_76 <- idaFast(which(colnames(data) == "372"), 1:92, cov(data), results$pc@graph)
+  effects_of_76 <- idaFast(which(colnames(data) == "372"), 1:92, cov(data), graph)
   rownames(effects_of_76) <- colnames(data)
   effects_of_76[order(effects_of_76), , drop = FALSE]     # sort and keep rownames
   

@@ -5,6 +5,7 @@ library(pcalg)
 
 set_parameters <- function(FUN, parameters) {
   # return(function(...) return(do.call(FUN, parameters, ...)))
+  # return(function(...) {return(do.call(FUN, list(parameters, list(...))))})  # previously: return(do.call(FUN, c(parameters, list(...)))) (problematic when arguemts are matrices)
   return(function(...) {return(do.call(FUN, c(parameters, list(...))))})
 }
 
