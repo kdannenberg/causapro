@@ -17,7 +17,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
                 causal_effects_function = "IDA-reset") {
   
   
-  if (all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
+  if (!is.null(slotNames(results)) && all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
     graph = results
   } else {
     graph = results$pc@graph
@@ -432,8 +432,9 @@ set_effects_of_unconnected_positions_to_zero <- function(effects, graph, perturb
 }
 
 cluster_pairwise_effects <- function(results, pairwise_effects, k, cluster_method,
-                                     hclust_method, dist_measure,
+                                     hclust_method, dist_measure, alpha = 0.95,
                                      iterations_pv, protein, outpath, file_separator) {
+  results$effects_clustering <- list()
   #k-means
   if (grepl(pattern = "k", cluster_method) && grepl(pattern = "means", cluster_method)) {
     k_m <- kmeans(t(pairwise_effects), k)
@@ -448,6 +449,7 @@ cluster_pairwise_effects <- function(results, pairwise_effects, k, cluster_metho
     cl <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = clustering_with_duplicates)
     
     print(cl)
+    results$effects_clustering$k_means <- cl
     
     type <- "effects-km" 
     # names(cl) <- NULL
@@ -499,10 +501,20 @@ cluster_pairwise_effects <- function(results, pairwise_effects, k, cluster_metho
     
     plot.new()
     plot(effects_pv) # dendogram with p values
-    # add rectangles around groups highly supported by the data
-    pvrect(effects_pv, alpha=.95)
     
-    high_clusterlist <- pvpick(effects_pv)$clusters
+    high_clusterlist <- pvpick(effects_pv, alpha = alpha)$clusters
+    alpha_changed = FALSE
+    while (is.null(high_clusterlist[[1]])){
+      alpha = alpha - 0.1
+      high_clusterlist <- pvpick(effects_pv, alpha = alpha)$clusters
+      alpha_changed = TRUE
+    }
+    if (alpha_changed) {
+      warning(paste("Alpha was reduced to", alpha, "because no clusters could be found otherwise." ))
+    } 
+    
+    # add rectangles around groups highly supported by the data
+    pvrect(effects_pv, alpha = alpha)
     
     high <- membershiplist_from_clusterlist(high_clusterlist)
     
@@ -510,9 +522,10 @@ cluster_pairwise_effects <- function(results, pairwise_effects, k, cluster_metho
     
     print(cl_pv)
     
+    type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-alpha=", alpha), sep="-")
+    results$effects_clustering$pv[[type]] <- cl_pv
     
-    type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, sep="-")
-    # names(cl) <- NULL
+     # names(cl) <- NULL
     plot_clusters_in_pymol(node_clustering = cl_pv, protein = protein, outpath = outpath, 
                            file_separator = file_separator, type_of_clustering = type) 
     }

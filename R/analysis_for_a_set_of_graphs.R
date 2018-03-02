@@ -18,6 +18,7 @@ source("configuration_data.R")
 
 # debug(analyse_set_of_graphs)
 # debug(determine_set_of_graphs)
+# debug(compute_over_all_graphs)
 # debug(causal_effects_ida)
 # debug(score_for_effects)
 

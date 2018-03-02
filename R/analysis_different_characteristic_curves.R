@@ -39,8 +39,8 @@ results <- protein_causality_G(min_pos_var = min_pos_var,
                                graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
                                data_in_results = TRUE, output_parameters_in_results = TRUE)
 data <- results$data
-caption <- results$caption
-outpath <- results$outpath
+caption <- results$summary$caption
+outpath <- results$summary$outpath
 directories <- strsplit(outpath, file_separator)
 outpath <- paste(directories[[1]][1:(length(directories[[1]])-2)], collapse = "/", sep = "/")
 #TODO: letztes Verzeichnis entfernen

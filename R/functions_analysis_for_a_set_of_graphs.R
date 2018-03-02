@@ -39,7 +39,7 @@ analyse_set_of_graphs <- function(
   # weight_effects_on_by = "var",
   # weight_effects_on_by = "mean",
   weight_effects_on_by = "median",  # sieht (in der Summe) am besten aus
-  perturbed_position = 372,
+  perturbed_position = "372",
   scale_effects_on_so_372_equals_1 = TRUE,
   # if dir == "on": only effects on
   # if dir == "of": only effects of
@@ -110,8 +110,8 @@ analyse_set_of_graphs <- function(
     type_of_graph_set == "conflict"
     pc_u2pd = "relaxed"
     data <- results$data
-    caption <- results$caption
-    outpath <- results$outpath
+    caption <- results$summary$caption
+    outpath <- results$summary$outpath
   } else {
     if (type_of_graph_set == "conflict") {
       pc_u2pd = "relaxed"
@@ -125,11 +125,11 @@ analyse_set_of_graphs <- function(
                                         pc_maj_rule = ifelse(type_of_graph_set == "retry", FALSE, pc_maj_rule_conflict),
                                         pc_conservative = ifelse(type_of_graph_set == "retry", FALSE, pc_conservative_conflict),
                                         graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
-                                        data_in_results = TRUE, output_parameters_in_results = TRUE, 
+                                        data_in_results = TRUE,
                                         mute_all_plots = TRUE, for_combined_plot = TRUE)
     data <- temp_results$data
-    caption <- temp_results$caption
-    outpath <- temp_results$outpath
+    caption <- temp_results$summary$caption
+    outpath <- temp_results$summary$outpath
   }
   
   # TODO: besser, oder?
@@ -576,53 +576,60 @@ element_in_most_of_the_6_sets <- function(max_pos_75, max_pos_85, max_pos_95,
 }
 
 
-
-
-
-
 # select for a results object the mean results on and of position 372, respectively 
 # and return both as a list
 # mean of min and max?
-mean_effects_min_max <- function(results, position, weight_effects_on_by, scaled_effects = FALSE) {
-  on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
-  
-  if (scaled_effects) {
-    of_effects <- results$ida[[position]]$of$scaled_effects
-  } else {
-    of_effects <- results$ida[[position]]$of$effects
-  }
-  of_max <- apply(of_effects, 1, max)
-  of_min <- apply(of_effects, 1, min)
-  
-  if (scaled_effects) {
-    on_max <- results$ida[[position]][[on]]$scaled_effects[, 1]
-    on_min <- results$ida[[position]][[on]]$scaled_effects[, 2]
-  } else {
-    on_max <- results$ida[[position]][[on]]$effects[, 1]
-    on_min <- results$ida[[position]][[on]]$effects[, 2]
-  }
-  
+# TODO: remove weight_effects_on_by, read from dir instead
+mean_effects_min_max <- function(results, position, weight_effects_on_by, scaled_effects = FALSE, dir = c("on", "of")) {
   ret_list <- list()
-  ret_list$of <- apply(cbind(of_max, of_min), 1, mean)
-  ret_list[[on]] <- apply(cbind(on_max, on_min), 1, mean)
+  if ("of" %in% dir) {
+    if (scaled_effects) {
+      of_effects <- results$ida[[position]]$of$scaled_effects
+    } else {
+      of_effects <- results$ida[[position]]$of$effects
+    }
+    of_max <- apply(of_effects, 1, max)
+    of_min <- apply(of_effects, 1, min)
+    ret_list$of <- apply(cbind(of_max, of_min), 1, mean)
+  }
+  
+  if ("on" %in% dir) { # bzw. etwas, das "on " enthält -> grepl
+    on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
+    if (scaled_effects) {
+      on_max <- results$ida[[position]][[on]]$scaled_effects[, 1]
+      on_min <- results$ida[[position]][[on]]$scaled_effects[, 2]
+    } else {
+      on_max <- results$ida[[position]][[on]]$effects[, 1]
+      on_min <- results$ida[[position]][[on]]$effects[, 2]
+    }
+    ret_list[[on]] <- apply(cbind(on_max, on_min), 1, mean)
+  }
+  
   return(ret_list)
 }
 
 # sum all effects:
 # should rather be devided by 100, thus mean
+# computes the mean of the effects computed for each graph
 compute_over_all_graphs <- function(all_results, position, weight_effects_on_by, use_scaled_effects_for_sum = FALSE, scale_in_the_end = FALSE, 
-                                    function_over_all_graphs = "mean", direction = c("on", "of"), 
+                                    function_over_all_graphs = "mean", direction_type = c("on", "of"), 
                                     scale_effects_on = "372" %in% rownames(all_results[[1]]$ida$`372`$of$effects)) {
-  if (!missing(position) &&  !is.na(as.numeric(position))) {
-    mean_effects_min_max_FUN <- function_set_parameters(mean_effects_min_max, parameters = list(position = position))
-  } else {
-    #TODO: Jetzt was schlaues machen
-    mean_effects_min_max_FUN <- mean_effects_min_max
+  # debug(mean_effects_min_max)
+  if (length(direction_type) == 1 && !grepl("on|of", direction_type)) {
+    direction_type = c("on", "of")
   }
-  min_max_mean_effects_on_of <- lapply(all_results, mean_effects_min_max_FUN, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum)
-  min_max_mean_effects_of <- do.call(cbind, (lapply(min_max_mean_effects_on_of, function(list) return(list$of))))
-  effect_over_all_graphs_of <- apply(min_max_mean_effects_of, 1, function_over_all_graphs)
-  on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
+  effects_over_all_graphs_on_of <- list()
+  if (!missing(position) &&  !is.na(as.numeric(position))) {
+    # mean_effects_min_max_FUN <- function_set_parameters(mean_effects_min_max, parameters = list(position = position))
+    min_max_mean_effects_on_of <- lapply(all_results, mean_effects_min_max, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum, dir = direction_type, position = position)
+  } else {
+    warning("No position given in compute_over_all_graphs!")
+  }
+  if ("of" %in% direction_type) {
+    min_max_mean_effects_of <- do.call(cbind, (lapply(min_max_mean_effects_on_of, function(list) return(list$of))))
+    effect_over_all_graphs_of <- apply(min_max_mean_effects_of, 1, function_over_all_graphs)
+    effects_over_all_graphs_on_of <- c(effects_over_all_graphs_on_of, list(overAllGraphs_of = effect_over_all_graphs_of))
+  }
   # if (grepl("mean", weight_effects_on_by)) { # (weight_effects_on_by == "mean_abs_effect") {
   #   on <- "on-rel-to-mean"
   # } else if (grepl("median", weight_effects_on_by)) { # if (weight_effects_on_by == "median_abs_effect") {
@@ -630,13 +637,16 @@ compute_over_all_graphs <- function(all_results, position, weight_effects_on_by,
   # } else if (weight_effects_on_by == "var" || weight_effects_on_by == "vars") {
   #   on <- "on-rel-to-var"
   # }
-  min_max_mean_effects_on <- do.call(cbind, (lapply(min_max_mean_effects_on_of, function(list) return(list[[on]]))))
-  effect_over_all_graphs_on <- apply(min_max_mean_effects_on, 1, function_over_all_graphs) 
-  if (scale_effects_on) {
-    effect_over_all_graphs_on <- effect_over_all_graphs_on / effect_over_all_graphs_on[as.character(position)]
+  if ("on" %in% direction_type) { # bzw. etwas, das "on " enthält -> grepl
+    on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
+    min_max_mean_effects_on <- do.call(cbind, (lapply(min_max_mean_effects_on_of, function(list) return(list[[on]]))))
+    effect_over_all_graphs_on <- apply(min_max_mean_effects_on, 1, function_over_all_graphs) 
+    if (scale_effects_on) {
+      effect_over_all_graphs_on <- effect_over_all_graphs_on / effect_over_all_graphs_on[as.character(position)]
+    }
+    effects_over_all_graphs_on_of <- c(effects_over_all_graphs_on_of, list(overAllGraphs_on = effect_over_all_graphs_on))
   }
-  
-  effects_over_all_graphs_on_of <- list(overAllGraphs_of = effect_over_all_graphs_of, overAllGraphs_on = effect_over_all_graphs_on)
+  # effects_over_all_graphs_on_of <- list(overAllGraphs_of = effect_over_all_graphs_of, overAllGraphs_on = effect_over_all_graphs_on)
   
   return(effects_over_all_graphs_on_of) #, all_mean = all_mean_effects))
 }
@@ -909,7 +919,7 @@ deviation_from_mean <- function(all_results, dir, weight_effects_on_by, plot_gra
     dir <- pastes("on", weight_effects_on_by, sep = "-rel-to-")  
   }
   
-  all_mean_effects_all <- lapply(all_results, mean_effects_min_max, weight_effects_on_by = weight_effects_on_by)
+  all_mean_effects_all <- lapply(all_results, mean_effects_min_max, weight_effects_on_by = weight_effects_on_by, dir = dir)
   all_mean_effects <- do.call(cbind, (lapply(all_mean_effects_all, function(list) return(list[[dir]]))))
   mean_effect <- apply(all_mean_effects, 1, sum) / length(all_results)
   

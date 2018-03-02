@@ -97,6 +97,7 @@ protein_causality <- function(
   effects_hclust_method = "ward.D2",  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = "euclidean",
   effects_pv_nboot = 10000,
+  effects_cluster_alpha = 0.95,
   stages = c("orig"), # c("orig", "sub"), # "sub"
   print_analysis = FALSE,
   plot_analysis = TRUE,
@@ -121,7 +122,7 @@ protein_causality <- function(
   print_r_to_console = TRUE,
   lines_in_abbr_of_r = 10,
   data_in_results = FALSE,
-  output_parameters_in_results = FALSE,
+  # output_parameters_in_results = FALSE,
   # 
   ida_direction = "of",
   ida_percentile = "11", # top 11
@@ -204,23 +205,25 @@ protein_causality <- function(
   graph_computation <- graph_computation || evaluation || analysis
   # Computation of the Graph
   results <- list()
+  results$summary <- list() 
 
   if (data_in_results) {
     results$data <- data  
   }
+  results$summary$data_dim <- dim(data)
   
   # TODO: alle Eingabeparameter in results$pars$<parametername> schreiben
   # if (parameters_in_results) {
   #   
   # }
   
-  if (output_parameters_in_results) {
-    results$caption = caption
-    results$outpath = outpath
-  }
+  # if (output_parameters_in_results) {
+    results$summary$caption <- caption
+    results$summary$outpath <- outpath
+  # }
   
   if (graph_computation) {
-    results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
+    results <- protein_causal_graph(results = results, data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
                                     output_dir = output_dir, filename = filename, outpath = outpath, parameters_for_info_file = parameters_for_info_file,
                                     alpha = alpha, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
                                     caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
@@ -333,7 +336,15 @@ protein_causality <- function(
         # debug(all_effects_function)
         if (results_format) {
           ret <- sapply(colnames(data), all_effects_function, USE.NAMES = FALSE)
-          return(ret)
+          
+          # merged leider alles durch
+          # merge_list <- function(...) by(v<-unlist(c(...), recursive = FALSE),names(v),base::c)
+          # debug(merge_list)
+          # ret <- merge_list(ret)
+          # delete the ida level in the list
+          # ret <- unlist(setNames(ret[which(names(ret) == "ida")], NULL), recursive = FALSE) # equivalent but longer
+          ret <- unlist(setNames(ret, NULL), recursive = FALSE)
+          return(list(ida=ret))
         } else {
           do.call(cbind, sapply(colnames(data), all_effects_function, USE.NAMES = TRUE))
         }
@@ -341,12 +352,12 @@ protein_causality <- function(
       # debug(compute_all_pairwise_effects)
       
       
-      # all_pairwise_effects_FUN <- function_set_parameters(compute_if_not_existent, parameters = c(filename = paste(outpath, "pairwise_effects", sep="-"), 
-      #                                                                             # FUN = function_set_parameters(FUN, parameters = c(results = results)), 
-      #                                                                             FUN = FUN, 
-      #                                                                             obj_name = "all_pairwise_effects", 
-      #                                                                             fun_loaded_object_ok = function(all_pairwise_effects) 
-      #                                                                             {return(dim(all_pairwise_effects)[1] == dim(data)[2])}))
+      all_pairwise_effects_FUN <- function_set_parameters(compute_if_not_existent, parameters = c(filename = paste(outpath, "pairwise_effects", sep="-"),
+                                                                                  # FUN = function_set_parameters(FUN, parameters = c(results = results)),
+                                                                                  FUN = FUN,
+                                                                                  obj_name = "all_pairwise_effects",
+                                                                                  fun_loaded_object_ok = function(all_pairwise_effects)
+                                                                                  {return(dim(all_pairwise_effects)[1] == dim(data)[2])}))
       # 
       if (conflict_edges(results$pc@graph)$conflict == 0) {
         
@@ -359,9 +370,9 @@ protein_causality <- function(
                                                         {return(dim(all_pairwise_effects)[1] == dim(data)[2])})
                                                         # {return(FALSE)})
         
-        cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects, k = effects_cluster_k, 
+        results <-cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects, k = effects_cluster_k, 
                                  cluster_method = effects_cluster_method, hclust_method = effects_hclust_method, 
-                                 dist_measure = effects_dist_method, iterations_pv = effects_pv_nboot,
+                                 dist_measure = effects_dist_method, iterations_pv = effects_pv_nboot, alpha = effects_cluster_alpha,
                                  protein = protein, outpath = outpath, file_separator = file_separator)
         
       } else {
@@ -381,16 +392,22 @@ protein_causality <- function(
         
         # all_results <- pblapply(all_graphs, graph_to_results, ida_function = ida_function_w_o_results)   ## schneller (?) # library("pbapply")
         all_results <- list()
-        # for (i in 1:length(all_graphs)) {
-        for (i in 1:2) {
+        for (i in 1:length(all_graphs)) {
+        # for (i in 1:2) {
           print(paste("GRAPH", i, "VON", length(all_graphs)))            ## mit Angabe des aktuellen Durchlaufs
           # all_results[[i]] <- list()
           # all_results[[i]]$pc <- list()
           # all_results[[i]]$pc@graph <- all_graphs[[i]] 
           ida_function_w_o_pos <- function_set_parameters(ida_function_w_o_pos_and_results, parameters = list(results = all_graphs[[i]]))
-          # all_pairwise_effects_G <- 
-          # all_results[[i]]$`ida`$[[intervention_position]][[ida_direction]]$`effects`
-          all_results[[i]] <- compute_if_not_existent(filename = paste(outpath, "pairwise_effects-G", i, sep="-"), 
+          # all_pairwise_effects_G <-
+          all_results[[i]] <- list()
+          # all_results[[i]]$`ida` <- list()
+          # all_results[[i]]$`ida`[[intervention_position]] <- list()
+          # all_results[[i]]$`ida`[[intervention_position]][[ida_direction]] <- list()
+          # 
+          # all_results[[i]]$`ida`[[intervention_position]][[ida_direction]]$`effects` <- 
+          all_results[[i]] <-
+          compute_if_not_existent(filename = paste(outpath, "pairwise_effects-G", i, sep="-"), 
                                                           # FUN = function_set_parameters(FUN, parameters = c(results = results)),
                                                           FUN = function_set_parameters(compute_all_pairwise_effects, 
                                                             parameters = list(data = data, ida_function_w_o_pos = ida_function_w_o_pos,
@@ -399,24 +416,33 @@ protein_causality <- function(
                                                           obj_name = "all_pairwise_effects",
                                                           fun_loaded_object_ok = function(all_pairwise_effects)
                                                           # {return(dim(all_pairwise_effects)[1] == dim(data)[2])})
-                                                          {return(TRUE)})
+                                                          {return(TRUE)}, compute_anew = FALSE)
           
         }
         
-        print("hallo")
         
+        # all_pairwise_effects_over_all_graphs <- list()
+        all_pairwise_effects_over_all_graphs <- matrix(ncol = 0, nrow = length(all_results[[1]]$ida))
+        for (position in names(all_results[[1]]$ida)) {
+          all_pairwise_effects_over_all_graphs <- cbind(all_pairwise_effects_over_all_graphs,
+            unlist(compute_over_all_graphs(all_results = all_results, position = position,
+                                    weight_effects_on_by = weight_effects_on_by, 
+                                    use_scaled_effects_for_sum = FALSE,   
+                                    #function_over_all_graphs = all_pairwise_effects_FUN, 
+                                    direction = "of", 
+                                    scale_effects_on = scale_effects_on_so_372_equals_1)))
+          # mean_effects_min_max_FUN <- function_set_parameters(mean_effects_min_max, parameters = list(position = position, dir = direction))
+          # min_max_mean_effects_on_of <- lapply(all_results, mean_effects_min_max_FUN, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum)
+          
+        }
+        colnames(all_pairwise_effects_over_all_graphs) <- names(all_results[[1]]$ida)
+        rownames(all_pairwise_effects_over_all_graphs) <- names(all_results[[1]]$ida)
         
-        all_pairwise_effects_over_all_graphs <- 
-          compute_over_all_graphs(all_results = all_results, position = "all",
-                                  weight_effects_on_by = weight_effects_on_by, 
-                                  use_scaled_effects_for_sum = FALSE,   
-                                  function_over_all_graphs = all_pairwise_effects_FUN, direction = direction, 
-                                  scale_effects_on = scale_effects_on_so_372_equals_1)
+        results$all_pairwise_effects <- all_pairwise_effects_over_all_graphs
         
-        
-        cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects_over_all_graphs, k = effects_cluster_k, 
+        results <- cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects_over_all_graphs, k = effects_cluster_k, 
                                  cluster_method = effects_cluster_method, hclust_method = effects_hclust_method, 
-                                 dist_measure = effects_dist_method, iterations_pv = effects_pv_nboot,
+                                 dist_measure = effects_dist_method, iterations_pv = effects_pv_nboot, alpha = effects_cluster_alpha,
                                  protein = protein, outpath = outpath, file_separator = file_separator)
         
         # und jetzt?
@@ -501,6 +527,7 @@ protein_causality_G <- function(
   effects_hclust_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = NULL,
   effects_pv_nboot = NULL,
+  effects_cluster_alpha = NULL,
   # general graphical parameters
   for_combined_plot = NULL,
   mute_all_plots = NULL,
@@ -557,6 +584,7 @@ protein_causality_G <- function(
   argList$effects_hclust_method = effects_hclust_method
   argList$effects_dist_method = effects_dist_method
   argList$effects_pv_nboot = effects_pv_nboot
+  argList$effects_cluster_alpha = effects_cluster_alpha
   argList$graph_output_formats = graph_output_formats
   argList$graph_layout = graph_layout
   argList$graph_layout_igraph = graph_layout_igraph
@@ -597,54 +625,6 @@ protein_causality_G <- function(
   argList$file_separator = file_separator
   
   do.call(protein_causality, argList)
-  ## return(protein_causality(numerical = numerical,
-  ##                          protein = protein,
-  ##                          type_of_data = type_of_data,
-  ##                          subtype_of_data = subtype_of_data,
-  ##                          data_set = data_set,
-  ##                          position_numbering = position_numbering,
-  ##                          min_pos_var = min_pos_var,
-  ##                          only_cols = only_cols,
-  ##                          only_cols_label = only_cols_label,
-  ##                          alpha = alpha,
-  ##                          ranked = ranked,
-  ##                          pc_solve_conflicts = pc_solve_conflicts,
-  ##                          pc_u2pd = pc_u2pd,
-  ##                          pc_conservative = pc_conservative,
-  ##                          pc_maj_rule = pc_maj_rule,
-  ##                          weight_effects_on_by = weight_effects_on_by,
-  ##                          graph_output_formats = graph_output_formats,
-  ##                          graph_layout = graph_layout,
-  ##                          coloring = coloring,
-  ##                          colors = colors,
-  ##                          plot_as_subgraphs = plot_as_subgraphs,
-  ##                          plot_only_subgraphs = plot_only_subgraphs,
-  ##                          for_combined_plot = for_combined_plot,
-  ##                          mute_all_plots = mute_all_plots,
-  ##                          other = other,
-  ##                          graph_computation = graph_computation,
-  ##                          evaluation = evaluation,
-  ##                          analysis = analysis,
-  ##                          stages = stages,
-  ##                          print_analysis = print_analysis,
-  ##                          plot_analysis = plot_analysis,
-  ##                          plot_types = plot_types,
-  ##                          plot_ida = plot_ida,
-  ##                          plot_clusters = plot_clusters,
-  ##                          plot_no_isolated_nodes = plot_no_isolated_nodes,
-  ##                          plot_with_graphviz = plot_with_graphviz,
-  ##                          graph_layout_igraph = graph_layout_igraph,
-  ##                          compute_pc_anew = compute_pc_anew,
-  ##                          compute_localTests_anew = compute_localTests_anew,
-  ##                          unabbrev_r_to_info = unabbrev_r_to_info,
-  ##                          print_r_to_console = print_r_to_console,
-  ##                          lines_in_abbr_of_r = lines_in_abbr_of_r,
-  ##                          data_in_results = data_in_results,
-  ##                          output_parameters_in_results = output_parameters_in_results,
-  ##                          ida_percentile = ida_percentile,
-  ##                          file_separator = file_separator
-  ## )
-  ## )
 }
 
 protein_causality_S <- function(
@@ -690,6 +670,7 @@ protein_causality_S <- function(
   effects_hclust_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = NULL,
   effects_pv_nboot = NULL,
+  effects_cluster_alpha = NULL,
   ## general graphical parameters
   for_combined_plot = NULL,
   mute_all_plots = NULL,
@@ -747,6 +728,7 @@ protein_causality_S <- function(
   argList$effects_hclust_method = effects_hclust_method
   argList$effects_dist_method = effects_dist_method
   argList$effects_pv_nboot = effects_pv_nboot
+  argList$effects_cluster_alpha = effects_cluster_alpha
   argList$graph_output_formats = graph_output_formats
   argList$graph_layout = graph_layout
   argList$graph_layout_igraph = graph_layout_igraph
@@ -787,54 +769,6 @@ protein_causality_S <- function(
   argList$file_separator = file_separator
   
   do.call(protein_causality, argList)
-  ## return(protein_causality(numerical = numerical,
-  ##                          protein = protein,
-  ##                          type_of_data = type_of_data,
-  ##                          subtype_of_data = subtype_of_data,
-  ##                          data_set = data_set,
-  ##                          position_numbering = position_numbering,
-  ##                          min_pos_var = min_pos_var,
-  ##                          only_cols = only_cols,
-  ##                          only_cols_label = only_cols_label,
-  ##                          alpha = alpha,
-  ##                          ranked = ranked,
-  ##                          pc_solve_conflicts = pc_solve_conflicts,
-  ##                          pc_u2pd = pc_u2pd,
-  ##                          pc_conservative = pc_conservative,
-  ##                          pc_maj_rule = pc_maj_rule,
-  ##                          weight_effects_on_by = weight_effects_on_by,
-  ##                          graph_output_formats = graph_output_formats,
-  ##                          graph_layout = graph_layout,
-  ##                          graph_layout_igraph = graph_layout_igraph,
-  ##                          coloring = coloring,
-  ##                          colors = colors,
-  ##                          plot_as_subgraphs = plot_as_subgraphs,
-  ##                          plot_only_subgraphs = plot_only_subgraphs,
-  ##                          for_combined_plot = for_combined_plot,
-  ##                          mute_all_plots = mute_all_plots,
-  ##                          other = other,
-  ##                          graph_computation = graph_computation,
-  ##                          evaluation = evaluation,
-  ##                          analysis = analysis,
-  ##                          stages = stages,
-  ##                          print_analysis = print_analysis,
-  ##                          plot_analysis = plot_analysis,
-  ##                          plot_types = plot_types,
-  ##                          plot_ida = plot_ida,
-  ##                          plot_clusters = plot_clusters,
-  ##                          plot_with_graphviz = plot_with_graphviz,
-  ##                          compute_pc_anew = compute_pc_anew,
-  ##                          compute_localTests_anew = compute_localTests_anew,
-  ##                          unabbrev_r_to_info = unabbrev_r_to_info,
-  ##                          print_r_to_console = print_r_to_console,
-  ##                          lines_in_abbr_of_r = lines_in_abbr_of_r,
-  ##                          data_in_results = data_in_results,
-  ##                          output_parameters_in_results = output_parameters_in_results,
-  ##                          ida_percentile = ida_percentile,
-  ##                          file_separator = file_separator
-  ## )
-  ## )
-  
 }
 
 protein_causality_p38g <- function(
@@ -881,6 +815,7 @@ protein_causality_p38g <- function(
   effects_hclust_method = NULL, #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = NULL,
   effects_pv_nboot = NULL,
+  effects_cluster_alpha = NULL,
   # general graphical parameters
   for_combined_plot = NULL,
   mute_all_plots = NULL,
@@ -939,6 +874,7 @@ protein_causality_p38g <- function(
   argList$effects_hclust_method = effects_hclust_method
   argList$effects_dist_method = effects_dist_method
   argList$effects_pv_nboot = effects_pv_nboot
+  argList$effects_cluster_alpha = effects_cluster_alpha
   argList$graph_output_formats = graph_output_formats
   argList$graph_layout = graph_layout
   argList$graph_layout_igraph = graph_layout_igraph
@@ -979,59 +915,6 @@ protein_causality_p38g <- function(
   argList$file_separator = file_separator
   
   do.call(protein_causality, argList)
-  # return(protein_causality(numerical = numerical,
-  #                          protein = protein,
-  #                          type_of_data = type_of_data,
-  #                          subtype_of_data = subtype_of_data,
-  #                          data_set = data_set,
-  #                          position_numbering = position_numbering,
-  #                          min_pos_var = min_pos_var,
-  #                          only_cols = only_cols,
-  #                          only_cols_label = only_cols_label,
-  #                          alpha = alpha,
-  #                          ranked = ranked,
-  #                          pc_solve_conflicts = pc_solve_conflicts,
-  #                          pc_u2pd = pc_u2pd,
-  #                          pc_conservative = pc_conservative,
-  #                          pc_maj_rule = pc_maj_rule,
-  #                          weight_effects_on_by = weight_effects_on_by,
-  #                          graph_output_formats = graph_output_formats,
-  #                          graph_layout = graph_layout,
-  #                          graph_layout_igraph = graph_layout_igraph,
-  #                          coloring = coloring,
-  #                          colors = colors,
-  #                          plot_as_subgraphs = plot_as_subgraphs,
-  #                          plot_only_subgraphs = plot_only_subgraphs,
-  #                          for_combined_plot = for_combined_plot,
-  #                          mute_all_plots = mute_all_plots,
-  #                          other = other,
-  #                          graph_computation = graph_computation,
-  #                          evaluation = evaluation,
-  #                          analysis = analysis,
-  #                          stages = stages,
-  #                          print_analysis = print_analysis,
-  #                          plot_analysis = plot_analysis,
-  #                          plot_types = plot_types,
-  #                          plot_ida = plot_ida,                                  # NEW!
-  #                          plot_clusters = plot_clusters,                              # NEW!
-  #                          plot_no_isolated_nodes = plot_no_isolated_nodes,  # NEW!
-  #                          plot_with_graphviz = plot_with_graphviz,
-  #                          pymol_show_int_pos = pymol_show_int_pos,compute_pc_anew,    # NEW!
-  #                          pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length, # NEW!
-  #                          pymol_mix_connected_components = pymol_mix_connected_components,  # NEW!
-  #                          print_connected_components = print_connected_components,    # NEW!
-  #                          compute_pc_anew = compute_pc_anew,
-  #                          compute_localTests_anew = compute_localTests_anew,
-  #                          unabbrev_r_to_info = unabbrev_r_to_info,
-  #                          print_r_to_console = print_r_to_console,
-  #                          lines_in_abbr_of_r = lines_in_abbr_of_r,
-  #                          data_in_results = data_in_results,
-  #                          output_parameters_in_results = output_parameters_in_results,
-  #                          ida_percentile = ida_percentile,
-  #                          file_separator = file_separator
-  # )
-  # )
-  
 }
 
 protein_causality_NoV <- function(
@@ -1076,6 +959,7 @@ protein_causality_NoV <- function(
   effects_hclust_method = NULL,  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = NULL,
   effects_pv_nboot = NULL,
+  effects_cluster_alpha = NULL,
   # graphical parameters
   graph_output_formats = "pdf",
   graph_layout = NULL,
@@ -1143,6 +1027,7 @@ protein_causality_NoV <- function(
   argList$effects_hclust_method = effects_hclust_method
   argList$effects_dist_method = effects_dist_method
   argList$effects_pv_nboot = effects_pv_nboot
+  argList$effects_cluster_alpha = effects_cluster_alpha
   argList$graph_output_formats = graph_output_formats
   argList$graph_layout = graph_layout
   argList$graph_layout_igraph = graph_layout_igraph
@@ -1183,58 +1068,4 @@ protein_causality_NoV <- function(
   argList$file_separator = file_separator
   
   do.call(protein_causality, argList)
-  
-  # return(protein_causality(numerical = numerical,
-  #                          protein = protein,
-  #                          type_of_data = type_of_data,
-  #                          subtype_of_data = subtype_of_data,
-  #                          data_set = data_set,
-  #                          position_numbering = position_numbering,
-  #                          min_pos_var = min_pos_var,
-  #                          only_cols = only_cols,
-  #                          only_cols_label = only_cols_label,
-  #                          alpha = alpha,
-  #                          ranked = ranked,
-  #                          pc_solve_conflicts = pc_solve_conflicts,
-  #                          pc_u2pd = pc_u2pd,
-  #                          pc_conservative = pc_conservative,
-  #                          pc_maj_rule = pc_maj_rule,
-  #                          weight_effects_on_by = weight_effects_on_by,
-  #                          graph_output_formats = graph_output_formats,
-  #                          graph_layout = graph_layout,
-  #                          graph_layout_igraph = graph_layout_igraph,
-  #                          coloring = coloring,
-  #                          colors = colors,
-  #                          plot_as_subgraphs = plot_as_subgraphs,
-  #                          plot_only_subgraphs = plot_only_subgraphs,
-  #                          for_combined_plot = for_combined_plot,
-  #                          mute_all_plots = mute_all_plots,
-  #                          other = other,
-  #                          graph_computation = graph_computation,
-  #                          evaluation = evaluation,
-  #                          analysis = analysis,
-  #                          stages = stages,
-  #                          print_analysis = print_analysis,
-  #                          plot_analysis = plot_analysis,
-  #                          plot_types = plot_types,
-  #                          plot_ida = plot_ida,                                  # NEW!
-  #                          plot_clusters = plot_clusters,                              # NEW!
-  #                          plot_no_isolated_nodes = plot_no_isolated_nodes,  # NEW!
-  #                          plot_with_graphviz = plot_with_graphviz,
-  #                          pymol_show_int_pos = pymol_show_int_pos,compute_pc_anew,    # NEW!
-  #                          pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length, # NEW!
-  #                          pymol_mix_connected_components = pymol_mix_connected_components,  # NEW!
-  #                          print_connected_components = print_connected_components,    # NEW!
-  #                          compute_pc_anew = compute_pc_anew,
-  #                          compute_localTests_anew = compute_localTests_anew,
-  #                          unabbrev_r_to_info = unabbrev_r_to_info,
-  #                          print_r_to_console = print_r_to_console,
-  #                          lines_in_abbr_of_r = lines_in_abbr_of_r,
-  #                          data_in_results = data_in_results,
-  #                          output_parameters_in_results = output_parameters_in_results,
-  #                          ida_percentile = ida_percentile,
-  #                          file_separator = file_separator
-  # )
-  # )
-  
 }

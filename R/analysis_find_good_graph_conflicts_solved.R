@@ -33,8 +33,8 @@ results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
                                graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
                                data_in_results = TRUE, output_parameters_in_results = TRUE)
 data <- results$data
-caption <- results$caption
-outpath <- results$outpath
+caption <- results$summary$caption
+outpath <- results$summary$outpath
 
 top_11_percentile <- 1 - (11 / dim(data)[2])
 ida_percentile <- top_11_percentile

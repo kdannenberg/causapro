@@ -1,4 +1,4 @@
-protein_causal_graph <- function(data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
+protein_causal_graph <- function(results = list(),data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
                                  parameters_for_info_file, alpha, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule,
                                  caption, analysis, stages, plot_types, coloring, colors, 
                                  graph_layout = "dot", graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs, 
@@ -22,8 +22,6 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
                                             conservative = pc_conservative, maj_rule = pc_maj_rule))
   }
   
-  results <- list()
-  
   parameters_to_info_file(parameters_for_info_file, outpath)
   
   pc_func <- function_set_parameters(pc_fun, parameters = list(outpath = outpath))
@@ -39,6 +37,20 @@ protein_causal_graph <- function(data, protein, type_of_data, source_of_data, po
   } else {
     graph <- results$pc@graph
   }
+  
+  #### some statistics
+  number_of_edges <- sum(unlist(conflict_edges(graph)))
+  number_of_nodes <- length(graph@nodes)
+  
+  results$summary$nodes$sum <- number_of_nodes
+  results$summary$nodes$avg_deg <- number_of_edges/number_of_nodes
+  results$summary$nodes$labels <- graph@nodes
+  
+  results$summary$edges$sum <- number_of_edges
+  results$summary$edges <- c(results$summary$edges, conflict_edges(graph))
+  ### end
+  
+  results$general$int_pos <- interesting_positions(protein, position_numbering, for_coloring = FALSE, coloring = coloring, colors = colors)
 
   if(plot_with_graphviz) {
     plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout,
