@@ -359,8 +359,25 @@ ancestorgraph_of_interesting_positions <- function(graph_dagitty, positions = NU
 
 
 # for_coloring -> output hierarchical (list with different sorts of interesting positions as vectors), otherwise one vector
+# the for_coloring result of this function can be converted to the other one by conv_for_coloring 
+# (which is what happens internally if for_coloring is not set), so this result is more useful in general
 # std-Reihenfolge: grün-gelb-rot-blau
 interesting_positions <- function(protein, position_numbering = "crystal", for_coloring = FALSE, coloring = "", colors = "", counts) {
+  if (!is.null(names(protein))) {
+    # if ("int_pos" %in% names(protein$general)) {
+    #   if (!for_coloring) {
+    #     return(protein$general$int_pos)
+    #   } else {
+    #     return(conv_for_coloring(protein$general$int_pos))
+    #     # TODO: function for converting between for_coloring and other
+    #   }
+    # }
+    if ("caption" %in% names(protein$summary)) {
+      protein <- strsplit(protein$summary$caption, "_")[[1]][1]
+    } else if ("outpath" %in% names(protein$summary)) {
+      protein <- strsplit(protein$summary$outpath, "/")[[1]][2]
+    }
+  }
   if (is.null(coloring) || coloring == "none") {
     list <- list()
   } else if (grepl("pymol", tolower(coloring))) {
@@ -558,18 +575,21 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
     # names(list) <- unique(names(n))
   } else {
     # do not rename duplicate names
-    return(setNames(unlist(list, use.names = FALSE), rep(names(list), lengths(list))))
+    return(conv_for_coloring(list))
     # return(unlist(list))
   }
 }
 
 ## it seems much easier to convert from the for_coloring version to the other one,
-## so for simplicitys sake I do it that way for now
+## so for simplicity's sake I do it that way for now
 ## that means that the standardized way to pass int_pos would be the for_coloring version
 conv_for_coloring <- function(int_pos) {
-  list <- lapply(unique(names(int)), function(color) {return(unname(int[which(names(int) == color)]))})
-  names(list) <- unique(names(n))
-  return(list)
+  # int and n are undefined in this function. I therefore copied the code from interesting_positions and
+  # replaced ti by this function there
+  # list <- lapply(unique(names(int)), function(color) {return(unname(int[which(names(int) == color)]))})
+  # names(list) <- unique(names(n))
+  # return(list)
+  return(setNames(unlist(int_pos, use.names = FALSE), rep(names(int_pos), lengths(int_pos))))
 }
 
 colors_for_edges <- function(clustering, colors, graph) {
@@ -1031,10 +1051,10 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
   return(effects)
 }
 
-# either ranked or ampl_factor (or exponent) possible
-# prviously: hue_by_effect
-# color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874CD", mode = "mix") {
-color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874CD", mode = "#FFFFFF") {
+# computes a vector of the same length as pos that for each position either contains 
+# color_for_other_positions, or, if the position is in int_pos, its name in int_pos;
+# this vector can e.g. be used as the color vector in plots
+int_pos_to_color_vector <- function(pos, int_pos, color_for_other_positions) {
   base_color <- function(pos) {
     if (pos %in% int_pos) {
       return(names(int_pos)[which(int_pos == pos)])
@@ -1043,7 +1063,13 @@ color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874
       # return("#AAAAAA")
     }
   }
-  
+  return(sapply(pos, base_color))
+}
+
+# either ranked or ampl_factor (or exponent) possible
+# prviously: hue_by_effect
+# color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874CD", mode = "mix") {
+color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874CD", mode = "#FFFFFF") {
   # TODO Marcel: Geht das auch eleganter, so dass effects Zeilen-, Spaltenmatrix oder Vektor sein kann?
   pos <- rownames(effects)
   if (is.null(pos)) {
@@ -1052,10 +1078,9 @@ color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874
     } else {
       pos <- names(effects)
     }
-    
   }
   
-  pos_with_colors <- sapply(pos, base_color)
+  pos_with_colors <- int_pos_to_color_vector(pos = pos, int_pos = int_pos, color_for_other_positions = "#1874CD")
   # pos_with_colors <- sapply(rownames(effects), base_color)
   pos_with_colors <- cbind(pos_with_colors, effects)
   

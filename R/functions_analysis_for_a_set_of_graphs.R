@@ -655,7 +655,8 @@ display_effects <- function(effects, effect_hue_by = "effect", direction = "mean
                             scale_in_the_end = FALSE, weight_effects_on_by = "median", function_over_all_graphs = "mean", 
                             ida_percentile, caption = "", main_caption = "",
                             print = TRUE, plot = TRUE, for_combined_plot = FALSE, plot_effect_quality = TRUE, 
-                            plot_false_pos_neg = TRUE, plot_effect_score = TRUE, barplot_contour_black = TRUE) {
+                            plot_false_pos_neg = TRUE, plot_effect_score = TRUE, barplot_contour_black = TRUE,
+                            plot_to_canvas = TRUE, outpath, output_formats = c()) {
   
   if (missing(ida_percentile)) {
     if (!is.null(dim(effects))) {
@@ -753,7 +754,8 @@ display_effects <- function(effects, effect_hue_by = "effect", direction = "mean
                                                             interesting_positions = int_pos, print = FALSE, return_list = FALSE) #neu belegen, diesmal mit String
       }
       plot_effects(effects_dir, effect_hue_by = effect_hue_by, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption, 
-                   effect_quality = effect_quality, false_pos_neg = false_pos_neg, score = score, barplot_contour_black = barplot_contour_black)
+                   effect_quality = effect_quality, false_pos_neg = false_pos_neg, score = score, barplot_contour_black = barplot_contour_black,
+                   plot_to_canvas = plot_to_canvas, outpath = outpath, output_formats = output_formats)
     }
       
       ############# 
@@ -833,8 +835,10 @@ display_effects <- function(effects, effect_hue_by = "effect", direction = "mean
   return(effects)
 }
 
+
 plot_effects <- function(effects, effect_hue_by = effects, int_pos, scale_in_the_end, caption, effect_quality, 
-                         false_pos_neg, score, effect_to_color_mode = "#FFFFFF", barplot_contour_black) {
+                         false_pos_neg, score, effect_to_color_mode = "#FFFFFF", barplot_contour_black, 
+                         plot_to_canvas = TRUE, outpath, output_formats = c()) {
   
   lines_needed_for_subcaption = 0
   if (!is.null(false_pos_neg)) {
@@ -881,32 +885,74 @@ plot_effects <- function(effects, effect_hue_by = effects, int_pos, scale_in_the
     contour = par("fg")
   }
   
+  if (plot_to_canvas) {
+    if (!scale_in_the_end) {
+      barplot(effects, 
+              main = caption, 
+              col = colors, border = contour, las = 2)
+    } else {
+      scaled_effects <- scale_effects(as.matrix(effects), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
+      barplot(as.vector(scaled_effects), 
+              main = caption, 
+              col = colors, las = 2, 
+              names.arg = rownames(scaled_effects_for_coloring))
+    }
   
-  if (!scale_in_the_end) {
-    barplot(effects, 
-            main = caption, 
-            col = colors, border = contour, las = 2)
-  } else {
-    scaled_effects <- scale_effects(as.matrix(effects), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
-    barplot(as.vector(scaled_effects), 
-            main = caption, 
-            col = colors, las = 2, 
-            names.arg = rownames(scaled_effects_for_coloring))
+    sub = ""
+    
+    if (!missing(false_pos_neg) && !is.null(false_pos_neg)) {
+      sub <- paste0(sub, paste0(false_pos_neg), "\n")
+    }
+    if (!missing(effect_quality) && !is.null(effect_quality)) {
+      sub <- paste0(sub, paste("Quality of effects: ", round(effect_quality, digits = 2), "\n"))
+    }
+    if (!missing(score) && !is.null(score)) {
+      sub <- paste0(sub, paste("Score: ", score, "\n"))
+    }
+    
+    title(sub = sub)
   }
   
-  sub = ""
-  
-  if (!missing(false_pos_neg) && !is.null(false_pos_neg)) {
-    sub <- paste0(sub, paste0(false_pos_neg), "\n")
+  #TODO
+  for (format in output_formats) {
+    if (!nchar(outpath) == 0) {
+      if (format == "pdf") {
+        pdf(paste(outpath, "_effects.pdf", sep = ""))
+      } else if ((format == "ps") || (format == "postscript")) {
+        postscript(paste(outpath, "_effects.ps",  sep = ""), paper="special", width = 10, height = 9)
+      } else if (format == "svg") {
+        svg(paste(outpath, "_effects.svg", sep = ""))
+      }
+      
+      if (!scale_in_the_end) {
+        barplot(effects, 
+                main = caption, 
+                col = colors, border = contour, las = 2)
+      } else {
+        scaled_effects <- scale_effects(as.matrix(effects), rank = FALSE, amplification_factor = 1, neg_effects = "sep")
+        barplot(as.vector(scaled_effects), 
+                main = caption, 
+                col = colors, las = 2, 
+                names.arg = rownames(scaled_effects_for_coloring))
+      }
+      
+      sub = ""
+      
+      if (!missing(false_pos_neg) && !is.null(false_pos_neg)) {
+        sub <- paste0(sub, paste0(false_pos_neg), "\n")
+      }
+      if (!missing(effect_quality) && !is.null(effect_quality)) {
+        sub <- paste0(sub, paste("Quality of effects: ", round(effect_quality, digits = 2), "\n"))
+      }
+      if (!missing(score) && !is.null(score)) {
+        sub <- paste0(sub, paste("Score: ", score, "\n"))
+      }
+      
+      title(sub = sub)
+      
+      dev.off()
+    }
   }
-  if (!missing(effect_quality) && !is.null(effect_quality)) {
-    sub <- paste0(sub, paste("Quality of effects: ", round(effect_quality, digits = 2), "\n"))
-  }
-  if (!missing(score) && !is.null(score)) {
-    sub <- paste0(sub, paste("Score: ", score, "\n"))
-  }
-  
-  title(sub = sub)
 }
 
 # TODO Marcel: for_combined_plot einfügen
