@@ -2,6 +2,20 @@ library(graph)
 library(dagitty)
 library(pcalg)
 
+## gets an alignment as a matrix of characters
+## returns a binary matrix of the same size with the ones corresponding to
+## the columnwise most frequent proteins
+alignment_to_binary_matrix <- function(m) {
+  ## n is the number of columns
+  n <- dim(m)[2]
+  maj <- function(t) {
+    return(names(which.max(table(t))))
+  }
+  ## storing the columnwise most frequent proteins in a vector
+  most_frequent_proteins <- apply(MSA, 2, maj)
+  ## return binary matrix
+  return(t(1*apply(MSA, 1, `==`, most_frequent_proteins)))
+}
 
 set_parameters <- function(FUN, parameters) {
   # return(function(...) return(do.call(FUN, parameters, ...)))
