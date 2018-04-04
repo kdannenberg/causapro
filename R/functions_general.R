@@ -1068,7 +1068,7 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
 # computes a vector of the same length as pos that for each position either contains 
 # color_for_other_positions, or, if the position is in int_pos, its name in int_pos;
 # this vector can e.g. be used as the color vector in plots
-int_pos_to_color_vector <- function(pos, int_pos, color_for_other_positions) {
+int_pos_to_color_vector <- function(pos, int_pos, color_for_other_positions = "#000000") {
   base_color <- function(pos) {
     if (pos %in% int_pos) {
       return(names(int_pos)[which(int_pos == pos)])

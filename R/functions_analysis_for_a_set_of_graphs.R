@@ -32,7 +32,7 @@ analyse_set_of_graphs <- function(
   # effect_hue_by = apply(data, 2, var),
   # results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
   #                           pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
-  #                           graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
+  #                           graph_computation = FALSE, evaluation = FALSE, causal_analysis = FALSE,
   #                           data_in_results = TRUE, output_parameters_in_results = TRUE)
   ida_percentile = 1 - (length(int_pos) / dim(data)[2]), # top 11
   # weight_effects_on_by = "",          # in der Summe ganz schlecht
@@ -40,6 +40,7 @@ analyse_set_of_graphs <- function(
   # weight_effects_on_by = "mean",
   weight_effects_on_by = "median",  # sieht (in der Summe) am besten aus
   perturbed_position = "372",
+  causal_effects_function = "IDA-reset",
   scale_effects_on_so_372_equals_1 = TRUE,
   # if dir == "on": only effects on
   # if dir == "of": only effects of
@@ -60,7 +61,7 @@ analyse_set_of_graphs <- function(
   # pc_function <- function(pc_solve_conflicts, pc_u2pd, pc_maj_rule, pc_conservative, evaluation, analysis) {
   #   protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
   #                       pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_maj_rule = pc_maj_rule, pc_conservative = pc_conservative,
-  #                       evaluation = evaluation, analysis = analysis)
+  #                       evaluation = evaluation, causal_analysis = analysis)
   # }
   
   # pc_function = function(pc_solve_conflicts, pc_u2pd, pc_maj_rule, pc_conservative, evaluation, analysis) {
@@ -99,19 +100,25 @@ analyse_set_of_graphs <- function(
                                               amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, 
                                               rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode,
                                               pymol = FALSE, pymol_bg_color = pymol_bg_color, caption = caption, show_neg_causation = show_neg_causation, 
-                                              neg_effects = neg_effects_in_scaling, analysis = TRUE,
+                                              neg_effects = neg_effects_in_scaling, analysis = TRUE, causal_effects_function = "IDA-reset",
                                               percentile = ida_percentile, mute_all_plots = for_combined_plot)),
   s = 10,    # sample size
   for_combined_plot = FALSE,
   caption_as_subcaption = for_combined_plot,
-  barplot_contour_black = TRUE
+  barplot_contour_black = TRUE,
+  outpath,
+  caption
 ) {
   if (!missing(results)) {
     type_of_graph_set == "conflict"
     pc_u2pd = "relaxed"
     data <- results$data
-    caption <- results$summary$caption
-    outpath <- results$summary$outpath
+    if (missing(caption)) {
+      caption <- results$summary$caption
+    }
+    if (missing(outpath)) {
+      outpath <- results$summary$outpath
+    }
   } else {
     if (type_of_graph_set == "conflict") {
       pc_u2pd = "relaxed"
@@ -124,7 +131,7 @@ analyse_set_of_graphs <- function(
                                         pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
                                         pc_maj_rule = ifelse(type_of_graph_set == "retry", FALSE, pc_maj_rule_conflict),
                                         pc_conservative = ifelse(type_of_graph_set == "retry", FALSE, pc_conservative_conflict),
-                                        graph_computation = FALSE, evaluation = FALSE, analysis = FALSE,
+                                        graph_computation = FALSE, evaluation = FALSE, causal_analysis = FALSE,
                                         data_in_results = TRUE,
                                         mute_all_plots = TRUE, for_combined_plot = TRUE)
     data <- temp_results$data
@@ -174,7 +181,7 @@ analyse_set_of_graphs <- function(
   
   
   # determine default colors for barplot
-  all_one_effects <- as.matrix(all_results[[1]]$ida$`372`$of$effects[,1])
+  all_one_effects <- as.matrix(all_results[[1]]$ida[[perturbed_position]][[1]]$effects[,1])
   all_one_effects[,] <- 1
   colors_for_barplot <- color_by_effect(all_one_effects, int_pos, mode = "#FFFFFF")
   
@@ -206,11 +213,11 @@ analyse_set_of_graphs <- function(
     for (i in best_graphs) {
       # i= 28
       cat(paste0("BEST GRAPH #", which(best_graphs == i), ": ", i))
-      causal_effects_ida(data = data, perturbed_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
+      causal_effects_ida(data = data, perturbed_position = perturbed_position, direction = "both", weight_effects_on_by = weight_effects_on_by,
                          protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
                          amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
                          pymol_bg_color = "grey", barplot = TRUE,
-                         caption = c(paste("Graph", i), caption), show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = ida_percentile)
+                         caption = c(paste("Graph", i), caption), show_neg_causation = TRUE, neg_effects = "sep", causal_analysis = TRUE, percentile = ida_percentile)
       
     }
   } else if (plot == "over_all_graphs") {
@@ -218,7 +225,7 @@ analyse_set_of_graphs <- function(
     effects_over_all_graphs_on_of <- compute_over_all_graphs(all_results = all_results, position = perturbed_position,
                                                              weight_effects_on_by = weight_effects_on_by, 
                                                              use_scaled_effects_for_sum = FALSE,   
-                                                             function_over_all_graphs = function_over_all_graphs, direction = direction, 
+                                                             function_over_all_graphs = function_over_all_graphs, direction_type = direction, 
                                                              scale_effects_on = scale_effects_on_so_372_equals_1)
     
     if (caption_as_subcaption) {
@@ -310,6 +317,7 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
                                     pc_maj_rule_conflict, pc_conservative_conflict, suffix_effects_type = "",
                                     suffix_graphs = "graphs", 
                                     suffix_results = "results-ida-reset", no_results = FALSE) {
+  ida_function
   start_new <- new
   if (type_of_graph_set == "retry") {
     suffix_retry_conflict = "-pc-retry_"
@@ -336,7 +344,7 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
         print(paste("DURCHLAUF", i))
         # source('~/Documents/Uni/Viren/ProteinCausalPaths/R/compute_DAG_G.R')
         results <- pc_function(pc_solve_conflicts = FALSE, pc_u2pd = "retry", pc_maj_rule = FALSE, 
-                               pc_conservative = FALSE, evaluation = FALSE, analysis = FALSE, 
+                               pc_conservative = FALSE, evaluation = FALSE, causal_analysis = FALSE, 
                                mute_all_plots = mute_all_plots)
           # protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
                                        # pc_solve_conflicts = FALSE, pc_u2pd = "retry",
@@ -433,7 +441,7 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
       }
       if (new || is.null(outpath_where_graphs_exist)) {
         if (missing(results)) {
-          results <- pc_function(pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", pc_maj_rule = pc_maj_rule_conflict, pc_conservative = pc_conservative_conflict, evaluation = FALSE, analysis = FALSE)
+          results <- pc_function(pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", pc_maj_rule = pc_maj_rule_conflict, pc_conservative = pc_conservative_conflict, evaluation = FALSE, causal_analysis = FALSE)
         }
         
         edges <- conflict_edges(results$pc@graph)
@@ -588,6 +596,9 @@ mean_effects_min_max <- function(results, position, weight_effects_on_by, scaled
     } else {
       of_effects <- results$ida[[position]]$of$effects
     }
+    if (is.null(of_effects)) {
+      warning("Effects OF not found (in mean_effects_min_max.")
+    }
     of_max <- apply(of_effects, 1, max)
     of_min <- apply(of_effects, 1, min)
     ret_list$of <- apply(cbind(of_max, of_min), 1, mean)
@@ -601,6 +612,9 @@ mean_effects_min_max <- function(results, position, weight_effects_on_by, scaled
     } else {
       on_max <- results$ida[[position]][[on]]$effects[, 1]
       on_min <- results$ida[[position]][[on]]$effects[, 2]
+    }
+    if (is.null(on_min) || is.null(on_max)) {
+      warning("Effects ON not found (in mean_effects_min_max.")
     }
     ret_list[[on]] <- apply(cbind(on_max, on_min), 1, mean)
   }
@@ -1046,7 +1060,7 @@ graph_to_results <- function(graph, ida_function) {
   #                               protein = protein, results = results, coloring = "all", no_colors = FALSE, outpath = outpath,
   #                               amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
   #                               pymol_bg_color = "grey",
-  #                               barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", analysis = TRUE, percentile = ida_percentile)
+  #                               barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", causal_analysis = TRUE, percentile = ida_percentile)
   results <- ida_function(results)
 }
 

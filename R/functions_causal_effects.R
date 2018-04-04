@@ -14,7 +14,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
                 outpath,amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, 
                 effect_to_color_mode = "#FFFFFF", pymol = TRUE, pymol_bg_color = "black", caption, no_colors, 
                 show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75, mute_all_plots = FALSE,
-                causal_effects_function = "IDA-reset") {
+                causal_effects_function) {
   
   
   if (!is.null(slotNames(results)) && all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
@@ -50,6 +50,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
         if (grepl(pattern = "reset", tolower(causal_effects_function))) {
         # GGF. danach Effekte von nicht verbundenen Knoten auf null setzten
         effects <- set_effects_of_unconnected_positions_to_zero(effects, graph = graph, perturbed_position = perturbed_position, dir = dir)
+        outpath <- paste0(outpath, "_ida_reset")
         }
       } else if (grepl(pattern = "causaleffect", tolower(causal_effects_function)) || grepl(pattern = "causal_effect", tolower(causal_effects_function))) {
         # CAUSALEFFECTS
@@ -279,7 +280,8 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
     # results$ida <- list(list(effects = effects, scaled_effects = scaled_effects, pos_colors = colors_by_effect))
     # names(results$ida) <- perturbed_position
     
-    if (all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
+    if (length(slotNames(results)) > 0 && all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))
+        || length(names(results)) > 0 && all(names(results) == "pc")) {
           results <- list()
     }
     results$ida[[perturbed_position]][[dir]] <- list(effects = effects, scaled_effects = scaled_effects, pos_colors = colors_by_effect)
@@ -431,6 +433,41 @@ set_effects_of_unconnected_positions_to_zero <- function(effects, graph, perturb
   return(effects)
 }
 
+compute_all_pairwise_effects <- function(data, ida_function_w_o_pos, 
+                                         # apply_FUN = function_set_parameters(sapply, parameters = list(USE.NAMES = TRUE)),
+                                         results_format = FALSE) {
+  all_effects_function <- function(position) {
+    # effects <- ida_function(results = results, perturbed_position = position)$ida[[as.character(position)]]$of$effects
+    effects_results <- ida_function_w_o_pos(perturbed_position = position)
+    if (results_format) {
+      # name = paste(position, seq(1:dim(effects_results)[2]), sep = "-")
+      return(effects_results)
+    }
+    # return(apply(effects, 1, mean))
+    effects <- effects_results$ida[[as.character(position)]]$of$effects
+    effects_m <- as.matrix(effects)
+    
+    colnames(effects_m) <- paste(position, seq(1:dim(effects)[2]), sep = "-")
+    
+    return(effects_m)
+  }
+  # debug(all_effects_function)
+  if (results_format) {
+    ret <- sapply(colnames(data), all_effects_function, USE.NAMES = FALSE)
+    
+    # merged leider alles durch
+    # merge_list <- function(...) by(v<-unlist(c(...), recursive = FALSE),names(v),base::c)
+    # debug(merge_list)
+    # ret <- merge_list(ret)
+    # delete the ida level in the list
+    # ret <- unlist(setNames(ret[which(names(ret) == "ida")], NULL), recursive = FALSE) # equivalent but longer
+    ret <- unlist(setNames(ret, NULL), recursive = FALSE)
+    return(list(ida=ret))
+  } else {
+    return(t(do.call(cbind, sapply(colnames(data), all_effects_function, USE.NAMES = TRUE))))
+  }
+}
+
 cluster_pairwise_effects <- function(results, pairwise_effects, k, cluster_method,
                                      hclust_method, dist_measure, alpha = 0.95,
                                      iterations_pv, protein, outpath, file_separator) {
@@ -487,7 +524,7 @@ cluster_pairwise_effects <- function(results, pairwise_effects, k, cluster_metho
   else {
     FUN_pv <- function_set_parameters(pvclust, parameters = list(data = pairwise_effects, 
                                                                  method.hclust = hclust_method,
-                                                                 method.dist=dist_measure, nboot = iterations_pv))
+                                                                 method.dist = dist_measure, nboot = iterations_pv))
     
     effects_pv <- compute_if_not_existent(filename = paste(outpath, "pv", hclust_method, 
                                                            substr(dist_measure, 0, 3), iterations_pv, sep="-"),
