@@ -318,6 +318,12 @@ compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_an
   return(get(obj_name))
 }
 
+compute_data_from_alignment <- function(alignment, data_description) {
+  if(grepl("bin_approx", data_description)) {
+    return(alignment_to_binary_matrix(alignment = alignment))
+  }
+}
+
 readAlignment <- function(filename) {
   if (file.exists(paste(filename, ".RData", sep = ""))) {
     filename <- paste(filename, ".RData", sep = "")
@@ -330,7 +336,6 @@ readAlignment <- function(filename) {
   } else {
     filename_fasta <- paste(filename, ".fasta", sep = "")
     print(paste("Loading alignment from ", filename_fasta, ".", sep = ""))
-    # MSA <- readAlignment(filename_fasta)
     MSA <- readAlignment_fasta(filename_fasta)
     colnames(MSA) <- seq(1:dim(MSA)[2])
     save(MSA, file = paste(filename, ".RData", sep = ""))

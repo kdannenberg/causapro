@@ -24,7 +24,7 @@ source("configuration_data.R")
 ## print(conflict_edges(results_G$pc@graph))
 
 # DDDG-10.0.08.1e-04
-results_G <- protein_causality_G(type_of_data = "DDS", subtype_of_data = "", min_pos_var = 0.01, 
+results_G <- protein_causality_G(type_of_data = "DDG", subtype_of_data = "", min_pos_var = 0.01, 
                                  alpha = 0.000001234, analysis = TRUE, pc_maj_rule = TRUE, 
                                  intervention_position = "all",#"372","all",
                                  plot_no_isolated_nodes = TRUE, plot_clusters = FALSE, plot_ida = FALSE,

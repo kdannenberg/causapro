@@ -148,8 +148,20 @@ protein_causality <- function(
   
   data_description <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set)
   
-  # filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
-  data_orig <- read_data(data_description, transpose = transpose_data)
+  ## filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
+  ## include option to read_data from alignment
+  start_with_alignment <- FALSE
+  if(data_set == "bin_approx") {
+    start_with_alignment <- TRUE
+  }
+
+  if (start_with_alignment) {
+    ## further specification of alignments needed
+    alignment <- readAlignment(filename = paste0("Data", file_separator, protein, "_ALN"))
+    data_orig <- compute_data_from_alignment(alignment = alignment, data_description = data_description)
+  } else {
+    data_orig <- read_data(data_description, transpose = transpose_data)
+  }
   data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos, only_cols = only_cols, min_var = min_pos_var, mute_plot = !show_variance_cutoff_plot)
   data_description <- adjust_data_description(data_description = data_description, ranked = ranked)
   
