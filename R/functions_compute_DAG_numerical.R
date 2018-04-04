@@ -9,7 +9,7 @@ library(stringr)
 # setwd("~/Viren/R/Code")
 
 # eqivalent to estimateDAG for numerical, Gauss-distributed data instead of an MSA
-estimate_DAG_from_numerical_data <- function(data, alpha, outpath, solve_conflicts = TRUE, u2pd = "retry", 
+estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath, solve_conflicts = TRUE, u2pd = "retry", 
                                              conservative = FALSE, maj_rule = FALSE) {
   # if (!length(only_cols) == 0) {
   #   data = data[as.character(only_cols)]
@@ -18,7 +18,10 @@ estimate_DAG_from_numerical_data <- function(data, alpha, outpath, solve_conflic
   n <- nrow(data)
   V <- colnames(data)
   
-  suffStat <- list(C = cor(data), n=n, adaptDF = FALSE) #dm = dat$x        ### WHY COR?!
+  if (is.null(cor_FUN) || cor_FUN == "none" || cor_FUN == "") {
+    cor_FUN <- function(x) {return(x)}
+  }
+  suffStat <- list(C = cor_FUN(data), n=n, adaptDF = FALSE) #dm = dat$x        ### WHY COR?!
   
   sink(paste(outpath, "-pc.txt", sep = ""))
     # pc <- pc(suffStat, indepTest = ci_test_cor, alpha = alpha, labels = V, verbose = TRUE) #p=dim(MSA)[2]

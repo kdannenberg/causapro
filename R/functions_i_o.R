@@ -162,7 +162,7 @@ subtype_of_data_after_adjustment <- function(data, subtype_of_data, rank = FALSE
 
 
 get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "", alpha, min_pos_var, only_cols_label = "", 
-                        pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/", 
+                        pc_cor_FUN, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/", 
                         filename_suffix, main_dir = "Outputs") {   ## last two options: only for get_old_outpath
   dir_1 <- protein
   dir_2 <- type_of_data
@@ -192,10 +192,20 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
   if (!missing(filename_suffix)) {
     filename <- paste0(filename, filename_suffix)
   } else {
-    if(only_cols_label != "") {
+    if (only_cols_label != "") {
       filename <- paste0(filename, "_")
     }
     filename <- paste0(filename, only_cols_label)
+    
+    if (typeof(pc_cor_FUN) == "closure") {
+      pc_cor_FUN <- deparse(substitute(pc_cor_FUN))
+    }
+    if (is.null(pc_cor_FUN) || pc_cor_FUN == "") {
+      pc_cor_FUN <- "none"
+    }
+    if (pc_cor_FUN != "cor") {
+      filename <- paste0(filename, "_corFUN-", pc_cor_FUN)
+    } 
     if (pc_solve_conflicts) {
       filename <- paste0(filename, "_sc")
     } 
@@ -208,7 +218,7 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
     if (!(pc_solve_conflicts || pc_conservative)) {
       filename <- paste(filename, substr(pc_u2pd, 1, 3), sep = "_")
     }
-  }
+  } 
   
   
   

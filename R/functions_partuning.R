@@ -262,7 +262,7 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure = "S", type_of_data
                                                      # pc_function = function(pc_solve_conflicts, pc_u2pd, pc_maj_rule, pc_conservative, evaluation, analysis) {
                                                      #   protein_causality_function(type_of_data = eval(type_of_data), subtype_of_data = eval(subtype_of_data), min_pos_var = min_pos_var, alpha = alpha,
                                                      #                              pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_maj_rule = pc_maj_rule, pc_conservative = pc_conservative,
-                                                     #                              evaluation = evaluation, analysis = analysis, mute_all_plots = TRUE)
+                                                     #                              evaluation = evaluation, causal_analysis = analysis, mute_all_plots = TRUE)
                                                      # pc_function = f_protein_causality_pc_parameters_eval_analysis(measure = measure, type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
                                                      #### min_pos_var = min_pos_var, alpha = alpha, 
                                                      # mute_all_plots = TRUE)

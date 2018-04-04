@@ -1,5 +1,5 @@
 protein_causal_graph <- function(results = list(),data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
-                                 parameters_for_info_file, alpha, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule,
+                                 parameters_for_info_file, alpha, pc_cor_FUN = cov, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule,
                                  caption, analysis, stages, plot_types, coloring, colors, 
                                  graph_layout = "dot", graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs, 
                                  plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console, 
@@ -18,6 +18,7 @@ protein_causal_graph <- function(results = list(),data, protein, type_of_data, s
   # Computation of pc 
   pc_fun <- function(outpath) {
     return(estimate_DAG_from_numerical_data(data, alpha = alpha, outpath = outpath, 
+                                            cor_FUN = pc_cor_FUN,
                                             solve_conflicts = pc_solve_conflicts, u2pd = pc_u2pd, 
                                             conservative = pc_conservative, maj_rule = pc_maj_rule))
   }
@@ -50,7 +51,7 @@ protein_causal_graph <- function(results = list(),data, protein, type_of_data, s
   results$summary$edges <- c(results$summary$edges, conflict_edges(graph))
   ### end
   
-  results$general$int_pos <- interesting_positions(protein, position_numbering, for_coloring = FALSE, coloring = coloring, colors = colors)
+  results$general$int_pos <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
 
   if(plot_with_graphviz) {
     plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout,
