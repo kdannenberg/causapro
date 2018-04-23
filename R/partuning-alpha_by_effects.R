@@ -8,6 +8,7 @@ source_all_function_scripts()
 source("configuration_data.R")
 
 # debug(score_for_effects)
+debug(effects_for_distinct_alphas)
 
 new = FALSE
 print_best_scenarios = TRUE
@@ -16,7 +17,11 @@ for_all_best_alphas = FALSE
 
 analyse_development_of_effects_with_alpha = FALSE
 
-file = "RData/all_effects-ida-reset.RData"
+file = "RData/all_effects_corFUN-none_ida-reset_DDS.RData" #"RData/all_effects-ida-reset.RData"
+
+# CAUTION: This mus be a subset of the minposvars used in analysis_for_a_set_of_graphs.R 
+# to compute the file
+min_pos_vars <- c(0, 0.0000001, 0.000001, 0.00001, 0.001, 0.01)
 
 # get all_effects
 # if (!exists("all_effects")) {
@@ -57,7 +62,7 @@ best_alphas <- find_best_alphas(all_q_score)
 # debug(determine_set_of_graphs)
 # debug(analyse_set_of_graphs)
 if (!analyse_development_of_effects_with_alpha) {
-  effects_for_distinct_alphas(best_alphas, with_graphs = with_graphs, for_all_alphas = for_all_best_alphas)
+  effects_for_distinct_alphas(best_alphas, with_graphs = with_graphs, for_all_alphas = for_all_best_alphas, min_pos_vars = min_pos_vars)
   # effects_for_distinct_alphas(best_alphas, with_graphs = FALSE)
 }
   

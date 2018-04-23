@@ -15,12 +15,23 @@ estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath
   #   data = data[as.character(only_cols)]
   # }
   
+  if (cor_FUN == "none") {
+    cor_FUN = function(x) {
+      if (dim(x)[1] != dim(x)[2]) {
+        stop("Data matrix is not quadratic and can thus not be interpreted as a correlation matix.")
+      }
+      rownames(x) <- colnames(x)
+      return(x)
+    }
+  } else if (cor_FUN == "") {
+    cor_FUN <- cor
+  } else {
+    cor_FUN <- get(cor_FUN)
+  }
+  
   n <- nrow(data)
   V <- colnames(data)
   
-  if (is.null(cor_FUN) || cor_FUN == "none" || cor_FUN == "") {
-    cor_FUN <- function(x) {return(x)}
-  }
   suffStat <- list(C = cor_FUN(data), n=n, adaptDF = FALSE) #dm = dat$x        ### WHY COR?!
   
   sink(paste(outpath, "-pc.txt", sep = ""))

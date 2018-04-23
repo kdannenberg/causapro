@@ -42,7 +42,12 @@ protein_causality <- function(
   # 
   # pc_solve_conflicts = FALSE,
   # pc_u2pd = "retry",
-  pc_cor_FUN = cov,
+  cor_cov_FUN = cov,
+  # a STRNG; default: 
+  # cor_cov_FUN = "", i.e. cor in pc, cov in ida
+  # cor_cov_FUN = "cov" -> cov everywhere
+  # cor_cov_FUN = "cor" -> cor everywhere
+  # cor_cov_FUN = "none"
   pc_solve_conflicts = TRUE,
   pc_u2pd = "relaxed",
   pc_conservative = FALSE,
@@ -94,6 +99,7 @@ protein_causality <- function(
   # ida_percentile = 0.75, # top 75%
   #
   causal_analysis = FALSE,#!pc_solve_conflicts,
+  max_conflict_edges = 11,
   linkcommunities = FALSE,
   linkcommunities_k = NULL,
   # linkcommunities_base_colors = ifelse(k==4, c("#FFD700", "#1874CD", "#CC0000",  "#69A019"), rainbow(linkcommunities_k)),
@@ -159,13 +165,26 @@ protein_causality <- function(
 
   if (start_with_alignment) {
     ## further specification of alignments needed
+    if (protein == "PDZ") {
+      position_numbering <- "alignment"
+    }
     alignment <- readAlignment(filename = paste0("Data", file_separator, protein, "_ALN"))
     data_orig <- compute_data_from_alignment(alignment = alignment, data_description = data_description)
   } else {
     data_orig <- read_data(data_description, transpose = transpose_data)
   }
-  data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos, only_cols = only_cols, min_var = min_pos_var, mute_plot = !show_variance_cutoff_plot)
+  data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos, only_cols = only_cols, 
+                      min_var = min_pos_var, keep_quadratic = (cor_cov_FUN == "none"),
+                      mute_plot = !show_variance_cutoff_plot)
+  
+  if (cor_cov_FUN == "none" && (dim(data)[1] != dim(data)[2])) {
+    warning("Data matrix is not quadratic and can thus not be interpreted as a correlation/covariance matix. 
+            Option cor_cov_FUN == \"none\" is ignored.")
+    cor_cov_FUN = ""
+  }
+  
   data_description <- adjust_data_description(data_description = data_description, ranked = ranked)
+  
   
   removed_cols <- setdiff(colnames(data_orig), colnames(data))
   removed_cols <- apply(data_orig[, removed_cols, drop = FALSE], 2, var)
@@ -184,7 +203,7 @@ protein_causality <- function(
   
   outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
                          alpha = alpha, min_pos_var = min_pos_var, only_cols_label = only_cols_label, 
-                         pc_cor_FUN = pc_cor_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, 
+                         cor_cov_FUN = cor_cov_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, 
                          pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule, file_separator = file_separator)
   
   directories <- strsplit(outpath, file_separator)
@@ -240,7 +259,7 @@ protein_causality <- function(
   if (graph_computation) {
     results <- protein_causal_graph(results = results, data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
                                     output_dir = output_dir, filename = filename, outpath = outpath, parameters_for_info_file = parameters_for_info_file,
-                                    alpha = alpha, pc_cor_FUN = pc_cor_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
+                                    alpha = alpha, cor_cov_FUN = cor_cov_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
                                     caption = caption, analysis = causal_analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
                                     graph_layout = graph_layout, graph_layout_igraph = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                                     unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
@@ -319,21 +338,21 @@ protein_causality <- function(
                                                 mute_all_plots = mute_all_plots, caption = caption, 
                                                 show_neg_causation = TRUE, neg_effects = "sep", 
                                                 analysis = TRUE, percentile = ida_percentile, 
-                                                causal_effects_function = "IDA-reset"))
+                                                causal_effects_function = "IDA-reset", cor_cov_FUN = cor_cov_FUN))
     # ida_function_w_o_pos_and_results
     ida_function_w_o_pos <- function_set_parameters(ida_function_w_o_pos_and_results, 
                                                     parameters = list(results = results))
     
     outpath = paste0(outpath, "_", causal_effects_function)
     
-    plot.new()  # TODO: Muss das sein?!
+    # plot.new()  # TODO: Muss das sein?!
     if (intervention_position == "all") {
-      all_pairwise_effects_FUN <- function_set_parameters(compute_if_not_existent, parameters = c(filename = paste(outpath, "pairwise_effects", sep="-"),
-                                                                                  # FUN = function_set_parameters(FUN, parameters = c(results = results)),
-                                                                                  FUN = FUN,
-                                                                                  obj_name = "all_pairwise_effects",
-                                                                                  fun_loaded_object_ok = function(all_pairwise_effects)
-                                                                                  {return(dim(all_pairwise_effects)[1] == dim(data)[2])}))
+      # all_pairwise_effects_FUN <- function_set_parameters(compute_if_not_existent, parameters = c(filename = paste(outpath, "pairwise_effects", sep="-"),
+      #                                                                             # FUN = function_set_parameters(FUN, parameters = c(results = results)),
+      #                                                                             FUN = FUN,
+      #                                                                             obj_name = "all_pairwise_effects",
+      #                                                                             fun_loaded_object_ok = function(all_pairwise_effects)
+      #                                                                             {return(dim(all_pairwise_effects)[1] == dim(data)[2])}))
       # 
       if (conflict_edges(results$pc@graph)$conflict == 0) {
         all_pairwise_effects <- compute_if_not_existent(filename = paste(outpath, "pairwise_effects", sep="-"), 
@@ -357,7 +376,8 @@ protein_causality <- function(
                                                  s = s, new = FALSE, save = TRUE, outpath = outpath,
                                                  pc_maj_rule_conflict = pc_maj_rule_conflict, 
                                                  pc_conservative_conflict = pc_conservative_conflict,
-                                                 suffix_effects_type = paste0("pos-", intervention_position), no_results = TRUE)
+                                                 suffix_effects_type = paste0("pos-", intervention_position), 
+                                                 max_conflict_edges = max_conflict_edges, no_results = TRUE)
         
         all_graphs <- set_of_graphs#$graphs
         # all_results <- set_of_graphs$results
@@ -366,60 +386,65 @@ protein_causality <- function(
         # TODO
         
         # all_results <- pblapply(all_graphs, graph_to_results, ida_function = ida_function_w_o_results)   ## schneller (?) # library("pbapply")
-        all_results <- list()
-        for (i in 1:length(all_graphs)) {
-        # for (i in 1:2) {
-          print(paste("GRAPH", i, "VON", length(all_graphs)))            ## mit Angabe des aktuellen Durchlaufs
-          # all_results[[i]] <- list()
-          # all_results[[i]]$pc <- list()
-          # all_results[[i]]$pc@graph <- all_graphs[[i]] 
-          ida_function_w_o_pos <- function_set_parameters(ida_function_w_o_pos_and_results, parameters = list(results = all_graphs[[i]]))
-          # all_pairwise_effects_G <-
-          all_results[[i]] <- list()
-          # all_results[[i]]$`ida` <- list()
-          # all_results[[i]]$`ida`[[intervention_position]] <- list()
-          # all_results[[i]]$`ida`[[intervention_position]][[ida_direction]] <- list()
-          # 
-          # all_results[[i]]$`ida`[[intervention_position]][[ida_direction]]$`effects` <- 
-          all_results[[i]] <-
-          compute_if_not_existent(filename = paste(outpath, "pairwise_effects-G", i, sep="-"), 
-                                                          # FUN = function_set_parameters(FUN, parameters = c(results = results)),
-                                                          FUN = function_set_parameters(compute_all_pairwise_effects, 
-                                                            parameters = list(data = data, ida_function_w_o_pos = ida_function_w_o_pos,
-                                                                              # apply_FUN = sapply, 
-                                                                              results_format = TRUE)),
-                                                          obj_name = "all_pairwise_effects",
-                                                          fun_loaded_object_ok = function(all_pairwise_effects)
-                                                          # {return(dim(all_pairwise_effects)[1] == dim(data)[2])})
-                                                          {return(TRUE)}, compute_anew = FALSE)
+        if (length(all_graphs) > 0) {
+          all_results <- list()
+          for (i in 1:length(all_graphs)) {
+          # for (i in 1:2) {
+            print(paste("GRAPH", i, "VON", length(all_graphs)))            ## mit Angabe des aktuellen Durchlaufs
+            # all_results[[i]] <- list()
+            # all_results[[i]]$pc <- list()
+            # all_results[[i]]$pc@graph <- all_graphs[[i]] 
+            ida_function_w_o_pos <- function_set_parameters(ida_function_w_o_pos_and_results, parameters = list(results = all_graphs[[i]]))
+            # all_pairwise_effects_G <-
+            all_results[[i]] <- list()
+            # all_results[[i]]$`ida` <- list()
+            # all_results[[i]]$`ida`[[intervention_position]] <- list()
+            # all_results[[i]]$`ida`[[intervention_position]][[ida_direction]] <- list()
+            # 
+            # all_results[[i]]$`ida`[[intervention_position]][[ida_direction]]$`effects` <- 
+            all_results[[i]] <-
+            compute_if_not_existent(filename = paste(outpath, "pairwise_effects-G", i, sep="-"), 
+                                                            # FUN = function_set_parameters(FUN, parameters = c(results = results)),
+                                                            FUN = function_set_parameters(compute_all_pairwise_effects, 
+                                                              parameters = list(data = data, ida_function_w_o_pos = ida_function_w_o_pos,
+                                                                                # apply_FUN = sapply, 
+                                                                                results_format = TRUE)),
+                                                            obj_name = "all_pairwise_effects",
+                                                            fun_loaded_object_ok = function(all_pairwise_effects)
+                                                            # {return(dim(all_pairwise_effects)[1] == dim(data)[2])})
+                                                            {return(TRUE)}, compute_anew = FALSE)
+            
+          }
           
-        }
-        
-        
-        # all_pairwise_effects_over_all_graphs <- list()
-        all_pairwise_effects_over_all_graphs <- matrix(ncol = 0, nrow = length(all_results[[1]]$ida))
-        for (position in names(all_results[[1]]$ida)) {
-          all_pairwise_effects_over_all_graphs <- cbind(all_pairwise_effects_over_all_graphs,
-            unlist(compute_over_all_graphs(all_results = all_results, position = position,
-                                    weight_effects_on_by = weight_effects_on_by, 
-                                    use_scaled_effects_for_sum = FALSE,   
-                                    #function_over_all_graphs = all_pairwise_effects_FUN, 
-                                    direction = "of", 
-                                    scale_effects_on = scale_effects_on_so_372_equals_1)))
-          # mean_effects_min_max_FUN <- function_set_parameters(mean_effects_min_max, parameters = list(position = position, dir = direction))
-          # min_max_mean_effects_on_of <- lapply(all_results, mean_effects_min_max_FUN, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum)
           
+          # all_pairwise_effects_over_all_graphs <- list()
+          all_pairwise_effects_over_all_graphs <- matrix(ncol = 0, nrow = length(all_results[[1]]$ida))
+          for (position in names(all_results[[1]]$ida)) {
+            all_pairwise_effects_over_all_graphs <- cbind(all_pairwise_effects_over_all_graphs,
+              unlist(compute_over_all_graphs(all_results = all_results, position = position,
+                                      weight_effects_on_by = weight_effects_on_by, 
+                                      use_scaled_effects_for_sum = FALSE,   
+                                      #function_over_all_graphs = all_pairwise_effects_FUN, 
+                                      direction = "of", 
+                                      scale_effects_on = scale_effects_on_so_372_equals_1)))
+            # mean_effects_min_max_FUN <- function_set_parameters(mean_effects_min_max, parameters = list(position = position, dir = direction))
+            # min_max_mean_effects_on_of <- lapply(all_results, mean_effects_min_max_FUN, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum)
+            
+          }
+          colnames(all_pairwise_effects_over_all_graphs) <- names(all_results[[1]]$ida)
+          rownames(all_pairwise_effects_over_all_graphs) <- names(all_results[[1]]$ida)
+          
+          results$all_pairwise_effects <- all_pairwise_effects_over_all_graphs
+          
+          results <- cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects_over_all_graphs, k = effects_cluster_k, 
+                                   cluster_method = effects_cluster_method, hclust_method = effects_hclust_method, 
+                                   dist_measure = effects_dist_method, iterations_pv = effects_pv_nboot, alpha = effects_cluster_alpha,
+                                   protein = protein, outpath = outpath, file_separator = file_separator)
+        } else {
+          if (!mute_all_plots) {
+            plot_infeasible(caption = caption)
+          }
         }
-        colnames(all_pairwise_effects_over_all_graphs) <- names(all_results[[1]]$ida)
-        rownames(all_pairwise_effects_over_all_graphs) <- names(all_results[[1]]$ida)
-        
-        results$all_pairwise_effects <- all_pairwise_effects_over_all_graphs
-        
-        results <- cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects_over_all_graphs, k = effects_cluster_k, 
-                                 cluster_method = effects_cluster_method, hclust_method = effects_hclust_method, 
-                                 dist_measure = effects_dist_method, iterations_pv = effects_pv_nboot, alpha = effects_cluster_alpha,
-                                 protein = protein, outpath = outpath, file_separator = file_separator)
-        
         # und jetzt?
         # results_copy <- results
         # results_copy$data <- data  
@@ -427,7 +452,8 @@ protein_causality <- function(
         # results_copy$outpath = outpath
         # analyse_set_of_graphs(results = results_copy, protein = "PDZ")
       }
-      compare_effects_per_position(results)
+      compare_effects_per_position(results, hclust_method = effects_hclust_method,
+                                   dist_measure = effects_dist_method, nboot = effects_pv_nboot)
     } else {
       if (conflict_edges(results$pc@graph)$conflict == 0) {
         results <- ida_function_w_o_pos(perturbed_position = intervention_position)
@@ -493,7 +519,7 @@ protein_causality_G <- function(
   rank_obs_per_pos = FALSE,
   # analysis parameters: pc
   alpha = NULL,
-  pc_cor_FUN = NULL,  
+  cor_cov_FUN = NULL,  
   pc_solve_conflicts = TRUE,
   pc_u2pd = NULL,
   pc_conservative = NULL,
@@ -524,6 +550,7 @@ protein_causality_G <- function(
   graph_computation = NULL,
   evaluation = NULL,
   causal_analysis = NULL,
+  max_conflict_edges = NULL,
   linkcommunities = NULL,   
   linkcommunities_k = NULL,
   linkcommunities_base_colors = NULL,
@@ -557,7 +584,7 @@ protein_causality_G <- function(
   argList$alpha = alpha
   argList$ranked = ranked
   argList$rank_obs_per_pos = rank_obs_per_pos
-  argList$pc_cor_FUN = pc_cor_FUN
+  argList$cor_cov_FUN = cor_cov_FUN
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative
@@ -582,6 +609,7 @@ protein_causality_G <- function(
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
   argList$causal_analysis = causal_analysis  
+  argList$max_conflict_edges = max_conflict_edges
   argList$intervention_position = intervention_position
   argList$causal_effects_function = causal_effects_function
   argList$ida_direction = ida_direction
@@ -642,13 +670,14 @@ protein_causality_S <- function(
   rank_obs_per_pos = FALSE,
   ## analysis parameters: pc
   alpha = NULL,
-  pc_cor_FUN = NULL,   
+  cor_cov_FUN = NULL,   
   pc_solve_conflicts = TRUE,
   pc_u2pd = NULL,
   pc_conservative = NULL,
   pc_maj_rule = NULL,
   ## analysis parameters: ida
-  causal_analysis = "all", 
+  causal_analysis = NULL,
+  max_conflict_edges = NULL,
   plot_ida = FALSE,
   weight_effects_on_by = NULL, # "var", "mean", ""
   # analysis parameters: clustering of effects
@@ -707,7 +736,7 @@ protein_causality_S <- function(
   argList$alpha = alpha
   argList$ranked = ranked
   argList$rank_obs_per_pos = rank_obs_per_pos
-  argList$pc_cor_FUN = pc_cor_FUN
+  argList$cor_cov_FUN = cor_cov_FUN
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative
@@ -732,6 +761,7 @@ protein_causality_S <- function(
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
   argList$causal_analysis = causal_analysis  
+  argList$max_conflict_edges = max_conflict_edges
   argList$intervention_position = intervention_position 
   argList$causal_effects_function = causal_effects_function
   argList$ida_direction = ida_direction
@@ -793,13 +823,14 @@ protein_causality_p38g <- function(
   rank_obs_per_pos = TRUE,
   # analysis parameters: pc
   alpha = NULL,
-  pc_cor_FUN = NULL,   
+  cor_cov_FUN = NULL,   
   pc_solve_conflicts = TRUE,
   pc_u2pd = NULL,
   pc_conservative = NULL,
   pc_maj_rule = NULL,
   # analysis parameters: ida
   causal_analysis = NULL,
+  max_conflict_edges = NULL,
   plot_ida = FALSE,
   weight_effects_on_by = NULL, # "var", "mean", "" 
   # analysis parameters: clustering of effects
@@ -859,7 +890,7 @@ protein_causality_p38g <- function(
   argList$alpha = alpha
   argList$ranked = ranked
   argList$rank_obs_per_pos = rank_obs_per_pos
-  argList$pc_cor_FUN = pc_cor_FUN
+  argList$cor_cov_FUN = cor_cov_FUN
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative
@@ -884,6 +915,7 @@ protein_causality_p38g <- function(
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
   argList$causal_analysis = causal_analysis
+  argList$max_conflict_edges = max_conflict_edges
   argList$intervention_position = intervention_position
   argList$causal_effects_function = causal_effects_function
   argList$ida_direction = ida_direction
@@ -946,7 +978,7 @@ protein_causality_NoV <- function(
   alpha = 0.05,
   ranked = FALSE,
   rank_obs_per_pos = FALSE,
-  pc_cor_FUN = NULL,   
+  cor_cov_FUN = NULL,   
   pc_solve_conflicts = TRUE,
   pc_u2pd = NULL,
   pc_conservative = NULL,
@@ -977,6 +1009,7 @@ protein_causality_NoV <- function(
   graph_computation = NULL,
   evaluation = NULL,
   causal_analysis = NULL,
+  max_conflict_edges = NULL,
   intervention_position = "all",
   causal_effects_function = NULL,
   ida_direction = NULL,
@@ -1018,7 +1051,7 @@ protein_causality_NoV <- function(
   argList$alpha = alpha
   argList$ranked = ranked
   argList$rank_obs_per_pos = rank_obs_per_pos
-  argList$pc_cor_FUN = pc_cor_FUN
+  argList$cor_cov_FUN = cor_cov_FUN
   argList$pc_solve_conflicts = pc_solve_conflicts
   argList$pc_u2pd = pc_u2pd
   argList$pc_conservative = pc_conservative
@@ -1042,7 +1075,8 @@ protein_causality_NoV <- function(
   argList$other = other
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
-  argList$causal_analysis = causal_analysis  
+  argList$causal_analysis = causal_analysis 
+  argList$max_conflict_edges = max_conflict_edges
   argList$intervention_position = intervention_position
   argList$linkcommunities = linkcommunities
   argList$linkcommunities_k = linkcommunities_k

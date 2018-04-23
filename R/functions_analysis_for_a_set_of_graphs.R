@@ -4,14 +4,15 @@ analyse_set_of_graphs <- function(
   type_of_graph_set = "conflict", # "retry" or "conflict"
   results,
   protein = "PDZ",
-  measure = "G",
-  type_of_data = "DDDG",
-  subtype_of_data = "5",
+  measure, # = "G",
+  # type_of_data = "DDDG",
+  # subtype_of_data = "5",
+  # data_set = "",
   # int_pos = interesting_positions(protein = protein, coloring = measure),
   coloring = "",
   int_pos = interesting_positions(protein = protein, coloring = coloring),
   # use_DDG = FALSE,  # einfach den default im Skript umstellen
-  protein_causality_function = get(paste0("protein_causality_", measure)),
+  # protein_causality_function = get(paste0("protein_causality_", measure)),
   alpha = 0.1,
   min_pos_var = 0.01, # TODO: does not work for 0.01 (alpha = 0.01) (idafast for determination of median (effects on))
   # TODO MARCEL: Warum bekomme ich für alpha = 0.01, min_pos_var = 0.01 einen Graphen mit 6 conflict-Kanten, aber VOR remove_dummies 62 (!) Graphen?!
@@ -27,7 +28,7 @@ analyse_set_of_graphs <- function(
   plot_effect_quality = TRUE,
   plot_false_pos_neg = TRUE, 
   plot_effect_score = TRUE,
-  # effect_hue_by = "effects",  
+  # effect_hue_by = "effects",
   effect_hue_by = get_conservation(measure = measure, protein = protein) / max(get_conservation(measure = measure, protein = protein)), # DG/DS
   # effect_hue_by = apply(data, 2, var),
   # results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
@@ -39,7 +40,7 @@ analyse_set_of_graphs <- function(
   # weight_effects_on_by = "var",
   # weight_effects_on_by = "mean",
   weight_effects_on_by = "median",  # sieht (in der Summe) am besten aus
-  perturbed_position = "372",
+  # perturbed_position = "372", # ist in ida_FUN schon gesetzt
   causal_effects_function = "IDA-reset",
   scale_effects_on_so_372_equals_1 = TRUE,
   # if dir == "on": only effects on
@@ -95,13 +96,7 @@ analyse_set_of_graphs <- function(
   amplification_factor = TRUE,
   rank_effects = FALSE,
   no_colors_in_pymol_ida = FALSE,
-  ida_function = function_set_parameters(causal_effects_ida, parameters = list(data = data, perturbed_position = "372", direction = "both", weight_effects_on_by = weight_effects_on_by,
-                                              protein = protein, coloring = coloring, no_colors = no_colors_in_pymol_ida, outpath = outpath,
-                                              amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, 
-                                              rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode,
-                                              pymol = FALSE, pymol_bg_color = pymol_bg_color, caption = caption, show_neg_causation = show_neg_causation, 
-                                              neg_effects = neg_effects_in_scaling, analysis = TRUE, causal_effects_function = "IDA-reset",
-                                              percentile = ida_percentile, mute_all_plots = for_combined_plot)),
+  ida_function = causal_effects_ida,
   s = 10,    # sample size
   for_combined_plot = FALSE,
   caption_as_subcaption = for_combined_plot,
@@ -109,6 +104,15 @@ analyse_set_of_graphs <- function(
   outpath,
   caption
 ) {
+  ida_func <- function_set_parameters(ida_function, 
+                                          parameters = list(data = data, direction = "both", weight_effects_on_by = weight_effects_on_by,
+                                                            protein = protein, coloring = coloring, no_colors = no_colors_in_pymol_ida, outpath = outpath,
+                                                            amplification_exponent = amplification_exponent, amplification_factor = amplification_factor, 
+                                                            rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode,
+                                                            pymol = FALSE, pymol_bg_color = pymol_bg_color, caption = caption, show_neg_causation = show_neg_causation, 
+                                                            neg_effects = neg_effects_in_scaling, analysis = TRUE, causal_effects_function = "IDA-reset",
+                                                            percentile = ida_percentile, mute_all_plots = for_combined_plot))
+  
   if (!missing(results)) {
     type_of_graph_set == "conflict"
     pc_u2pd = "relaxed"
@@ -125,15 +129,26 @@ analyse_set_of_graphs <- function(
     } else if (type_of_graph_set == "retry") {
       pc_u2pd = "retry"
     }
-  
-    temp_results <- protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
-                                        min_pos_var = min_pos_var, alpha = alpha,
-                                        pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
-                                        pc_maj_rule = ifelse(type_of_graph_set == "retry", FALSE, pc_maj_rule_conflict),
-                                        pc_conservative = ifelse(type_of_graph_set == "retry", FALSE, pc_conservative_conflict),
-                                        graph_computation = FALSE, evaluation = FALSE, causal_analysis = FALSE,
-                                        data_in_results = TRUE,
-                                        mute_all_plots = TRUE, for_combined_plot = TRUE)
+    
+    pc_function_dummy_version <- function_set_parameters(pc_function, parameters = list(
+                                      # type_of_data = type_of_data, subtype_of_data = subtype_of_data,
+                                      # min_pos_var = min_pos_var, alpha = alpha,
+                                      pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
+                                      pc_maj_rule = ifelse(type_of_graph_set == "retry", FALSE, pc_maj_rule_conflict),
+                                      pc_conservative = ifelse(type_of_graph_set == "retry", FALSE, pc_conservative_conflict),
+                                      graph_computation = FALSE, 
+                                      evaluation = FALSE, causal_analysis = FALSE, data_in_results = TRUE,
+                                      # mute_all_plots = TRUE, # sollte schon vorher gesetzt sein
+                                      for_combined_plot = TRUE))
+    temp_results <- pc_function_dummy_version()
+    # temp_results <- protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set,
+    #                                     min_pos_var = min_pos_var, alpha = alpha,
+    #                                     pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
+    #                                     pc_maj_rule = ifelse(type_of_graph_set == "retry", FALSE, pc_maj_rule_conflict),
+    #                                     pc_conservative = ifelse(type_of_graph_set == "retry", FALSE, pc_conservative_conflict),
+    #                                     graph_computation = FALSE, evaluation = FALSE, causal_analysis = FALSE,
+    #                                     data_in_results = TRUE,
+    #                                     mute_all_plots = TRUE, for_combined_plot = TRUE)
     data <- temp_results$data
     caption <- temp_results$summary$caption
     outpath <- temp_results$summary$outpath
@@ -156,10 +171,10 @@ analyse_set_of_graphs <- function(
   
   
   
-  set_of_graphs <- determine_set_of_graphs(results = results, data = data, type_of_graph_set = type_of_graph_set, pc_function = pc_function, ida_function = ida_function, 
+  set_of_graphs <- determine_set_of_graphs(results = results, data = data, type_of_graph_set = type_of_graph_set, pc_function = pc_function, ida_function = ida_func, 
                                            s = s, new = new, save = save, outpath = outpath,
                                            pc_maj_rule_conflict = pc_maj_rule_conflict, pc_conservative_conflict = pc_conservative_conflict)
-  if (is.null(set_of_graphs)) {
+  if (is.null(set_of_graphs) && for_combined_plot) {
     if (caption_as_subcaption) {
       caption = caption
       # main_caption = NULL  # soll missing sein
@@ -167,13 +182,7 @@ analyse_set_of_graphs <- function(
       # main_caption = caption
       caption = NULL
     }
-    
-    if (for_combined_plot) {
-      plot(c(0, 1), c(0, 1), xlab = "", ylab = "", bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n', main = caption)
-      text(x = 0.5, y = 0.5, "infeasible", 
-           cex = 1.6, col = "black")
-    }
-    # plot.new()
+    plot_infeasible(caption = caption)
     return(NULL)
   }
   all_graphs <- set_of_graphs$graphs
@@ -315,9 +324,8 @@ pymol_mean_effects <- function(effects_over_all_graphs_on_of, protein, int_pos, 
 # data is only necessary to check wether a loades graph has the right number of nodes
 determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_function, ida_function, s, new, save, outpath,
                                     pc_maj_rule_conflict, pc_conservative_conflict, suffix_effects_type = "",
-                                    suffix_graphs = "graphs", 
-                                    suffix_results = "results-ida-reset", no_results = FALSE) {
-  ida_function
+                                    suffix_graphs = "graphs", suffix_results = "results-ida-reset", 
+                                    max_conflict_edges = 11, no_results = FALSE) {
   start_new <- new
   if (type_of_graph_set == "retry") {
     suffix_retry_conflict = "-pc-retry_"
@@ -449,9 +457,10 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
         
         # Sys.sleep(2)
         
-        if (edges$conflict >= 15) {
-          all_graphs = NULL
-          save(all_graphs, file = filename_graphs)
+        if (edges$conflict > max_conflict_edges) {  # previously: >=15!!
+          # all_graphs = NULL
+          # save(all_graphs, file = filename_graphs)
+          warning(paste("More than", max_conflict_edges, "conflict edges. Regarded infeasible."))
           return(NULL)
           # stop("More than 15 conflict edges.")
         }
@@ -1061,6 +1070,6 @@ graph_to_results <- function(graph, ida_function) {
   #                               amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
   #                               pymol_bg_color = "grey",
   #                               barplot = TRUE, caption = caption, show_neg_causation = TRUE, neg_effects = "sep", causal_analysis = TRUE, percentile = ida_percentile)
-  results <- ida_function(results)
+  results <- ida_function(results = results)
 }
 

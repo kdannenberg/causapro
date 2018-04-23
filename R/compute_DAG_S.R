@@ -11,22 +11,34 @@ source("configuration_data.R")
 ## available data:
 ## TODO
 
-# debug(protein_causality)
+debug(protein_causality)
 # debug(analyse_set_of_graphs)
 # debug(determine_set_of_graphs)
 # debug(pymol_mean_effects)
 # debug(compute_if_not_existent)
 
+
+# debug(estimate_DAG_from_numerical_data)
+
 # undebug(pseudo_ida_by_causalEffect)
 # debug(causal_effects_ida)
+# debug(idaFast)
+# debug(solve)
 # debug(scale_effects)
 # debug(set_effects_of_unconnected_positions_to_zero)
+# debug(compare_effects_per_position)
+# debug(int_pos_to_color_vector)
+# debug(interesting_positions)
 
 ## graphics.off()
 # plot.new()
 # par(mfrow = c(1,4))
-results_S <- protein_causality_S(alpha = 0.08, min_pos_var = 0.01, analysis = TRUE, pc_maj_rule = TRUE, pc_solve_confl = TRUE,
-                                 for_combined_plot = TRUE, data_in_results = TRUE, plot_with_graphviz = TRUE, data_set = "bin_approx")
+results_S <- protein_causality_S(#alpha = 0.25, min_pos_var = 0, #data_set = "bin_approx",
+                                 #alpha = 0.08, min_pos_var = 0.01, 
+                                 alpha = 0.5, min_pos_var = 0.01, pc_cor_FUN = "none",
+                                 show_variance_cutoff_plot = TRUE, max_conflict_edges = 15,
+                                 causal_analysis = TRUE, pc_maj_rule = TRUE, pc_solve_confl = TRUE,
+                                 for_combined_plot = TRUE, data_in_results = TRUE, plot_with_graphviz = TRUE)
 # results_S <- protein_causality_S(type_of_data = "DS", alpha = 0.01, min_pos_var = 0.01, analysis = TRUE, pc_maj_rule = TRUE, pc_solve_confl = TRUE, 
 #                                  for_combined_plot = TRUE, data_in_results = TRUE)
 

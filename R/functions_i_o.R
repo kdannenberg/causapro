@@ -44,7 +44,14 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
   #   }
   #   data <- rbind(data, data_i)
   # }
-  return(data)
+  return(as.matrix(data))
+}
+
+analyse_data <- function(data, int_pos, min_var) {
+  if (!missing(min_var)) {
+    which(apply(data, 2, var)[as.character(int_pos)] > min_var)
+  }
+  min(apply(data, 2, var)[as.character(int_pos)])
 }
 
 
@@ -52,7 +59,7 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
 #   That is, per position, over all observations?
 adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, only_cols = NULL, 
                         only_cols_grep = FALSE, 
-                        remove_low_variance = FALSE, zero_var_fct, min_var = 0.01, mute_plot = TRUE) {
+                        remove_low_variance = FALSE, zero_var_fct, min_var = 0.01, keep_quadratic = FALSE, mute_plot = TRUE) {
   
   if (!length(only_cols) == 0) {
     # grep the right cols
@@ -93,7 +100,11 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   if (length(drop) > 0) {
     # cat("\n")
     print(paste("Removed columns:", paste(colnames(data)[drop], collapse = ", ")))
-    data <- data[, !colnames(data) %in% names(drop)]
+    if (keep_quadratic) {
+      data <- data[!colnames(data) %in% names(drop), !colnames(data) %in% names(drop)]
+    } else {
+      data <- data[, !colnames(data) %in% names(drop)]
+    }
   } else {
     print(paste("No columns removed."))
   }
@@ -122,7 +133,7 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   return(data)
 }
 
-adjust_data_description <- function(data_description, ranked) {
+adjust_data_description <- function(data_description, ranked = FALSE) {
   if (ranked) {
     data_description <- paste0(data_description, "_ranked")
   }
@@ -162,7 +173,7 @@ subtype_of_data_after_adjustment <- function(data, subtype_of_data, rank = FALSE
 
 
 get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "", alpha, min_pos_var, only_cols_label = "", 
-                        pc_cor_FUN, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/", 
+                        cor_cov_FUN, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/", 
                         filename_suffix, main_dir = "Outputs") {   ## last two options: only for get_old_outpath
   dir_1 <- protein
   dir_2 <- type_of_data
@@ -197,14 +208,14 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
     }
     filename <- paste0(filename, only_cols_label)
     
-    if (typeof(pc_cor_FUN) == "closure") {
-      pc_cor_FUN <- deparse(substitute(pc_cor_FUN))
+    if (typeof(cor_cov_FUN) == "closure") {
+      cor_cov_FUN <- deparse(substitute(cor_cov_FUN))
     }
-    if (is.null(pc_cor_FUN) || pc_cor_FUN == "") {
-      pc_cor_FUN <- "none"
+    if (is.null(cor_cov_FUN) || missing(cor_cov_FUN)) {
+      cor_cov_FUN <- ""
     }
-    if (pc_cor_FUN != "cor") {
-      filename <- paste0(filename, "_corFUN-", pc_cor_FUN)
+    if (cor_cov_FUN != "") {
+      filename <- paste0(filename, "_corFUN-", cor_cov_FUN)
     } 
     if (pc_solve_conflicts) {
       filename <- paste0(filename, "_sc")
@@ -476,3 +487,4 @@ get_conservation <- function(measure, protein) {
   
   return(data)
 }
+

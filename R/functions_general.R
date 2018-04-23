@@ -387,8 +387,14 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
     #   }
     # }
     if ("caption" %in% names(protein$summary)) {
+      if (grepl("bin_approx", protein$summary$caption)) {
+        position_numbering <- "alignment"
+      }
       protein <- strsplit(protein$summary$caption, "_")[[1]][1]
     } else if ("outpath" %in% names(protein$summary)) {
+      if (grepl("bin_approx", protein$summary$outpath)) {
+        position_numbering <- "alignment"
+      }
       protein <- strsplit(protein$summary$outpath, "/")[[1]][2]
     }
   }

@@ -177,9 +177,9 @@ effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, wi
     }
     
     if (missing(min_pos_vars)) {
-      current_min_pos_vars <- as.numeric(names(distinct_alphas[[measure_type_sub]]))
+      min_pos_vars <- as.numeric(names(distinct_alphas[[measure_type_sub]]))
     }
-    for (min_pos_var in current_min_pos_vars) {
+    for (min_pos_var in min_pos_vars) {
       alphas <- distinct_alphas[[measure_type_sub]][[as.character(min_pos_var)]]
       
       if (!for_all_alphas && length(alphas) > 1) {
@@ -254,21 +254,30 @@ apply_to_all_effects_in_nested_list <- function(all_effects, FUN, measures = NUL
 
 # TODO: sicherstellen, dass oma nur gesetzt wird, wenn auch eine main_caption (title) geprintet wird
 
-analyse_graphs_for_alphas_and_minposvars <- function(measure = "S", type_of_data = "DDS", subtype_of_data = "", 
+# analyse_graphs_for_alphas_and_minposvars <- function(measure = "S", type_of_data = "DDS", subtype_of_data = "", data_set = "",
+#                                                      alphas = c(0.001, 0.005, 0.01, 0.05, 0.1), min_pos_vars = c(0.0001, 0.001, 0.01),
+#                                                      protein_causality_function = get(paste0("protein_causality_", measure)),
+#                                                      # TODO: DAS FUNKTIONIERT NICHT!! DIE PARAMETER, DIE NCIHT ÜBERGEBEN WERDEN, WERDEN NCIHT JETZT SCHON BELEGT!
+#                                                      # ALLES WIRD ERST BEI AUFRUF AUSGEWERTET
+#                                                      # pc_function = function(pc_solve_conflicts, pc_u2pd, pc_maj_rule, pc_conservative, evaluation, analysis) {
+#                                                      #   protein_causality_function(type_of_data = eval(type_of_data), subtype_of_data = eval(subtype_of_data), min_pos_var = min_pos_var, alpha = alpha,
+#                                                      #                              pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_maj_rule = pc_maj_rule, pc_conservative = pc_conservative,
+#                                                      #                              evaluation = evaluation, causal_analysis = analysis, mute_all_plots = TRUE)
+#                                                      # pc_function = f_protein_causality_pc_parameters_eval_analysis(measure = measure, type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+#                                                      #### min_pos_var = min_pos_var, alpha = alpha, 
+#                                                      # mute_all_plots = TRUE)
+#                                                      ida_function = causal_effects_ida,
+#                                                      pc_function = function_set_parameters(protein_causality_function, 
+#                                                                                            parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+#                                                                                                              mute_all_plots = TRUE)),
+#                                                      new = FALSE, save = TRUE
+# ) {
+analyse_graphs_for_alphas_and_minposvars <- function(measure, # type_of_data, subtype_of_data = "", data_set = "",
                                                      alphas = c(0.001, 0.005, 0.01, 0.05, 0.1), min_pos_vars = c(0.0001, 0.001, 0.01),
                                                      protein_causality_function = get(paste0("protein_causality_", measure)),
-                                                     # TODO: DAS FUNKTIONIERT NICHT!! DIE PARAMETER, DIE NCIHT ÜBERGEBEN WERDEN, WERDEN NCIHT JETZT SCHON BELEGT!
-                                                     # ALLES WIRD ERST BEI AUFRUF AUSGEWERTET
-                                                     # pc_function = function(pc_solve_conflicts, pc_u2pd, pc_maj_rule, pc_conservative, evaluation, analysis) {
-                                                     #   protein_causality_function(type_of_data = eval(type_of_data), subtype_of_data = eval(subtype_of_data), min_pos_var = min_pos_var, alpha = alpha,
-                                                     #                              pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_maj_rule = pc_maj_rule, pc_conservative = pc_conservative,
-                                                     #                              evaluation = evaluation, causal_analysis = analysis, mute_all_plots = TRUE)
-                                                     # pc_function = f_protein_causality_pc_parameters_eval_analysis(measure = measure, type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
-                                                     #### min_pos_var = min_pos_var, alpha = alpha, 
-                                                     # mute_all_plots = TRUE)
-                                                     pc_function = function_set_parameters(protein_causality_function, 
-                                                          parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
-                                                          mute_all_plots = TRUE)),
+                                                     ida_function = causal_effects_ida,
+                                                     # pc_function = function_set_parameters(protein_causality_function, 
+                                                     #      parameters = list(mute_all_plots = TRUE)),
                                                      new = FALSE, save = TRUE
 ) {
   
@@ -331,9 +340,12 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure = "S", type_of_data
       # } else {
       cat("\n")
       cat(paste0("alpha = ", alpha, ", min_pos_var = ", min_pos_var, "\n"))
-      pc_function_ <- function_set_parameters(pc_function, parameters = list(alpha = alpha, min_pos_var = min_pos_var))
-      effects[[as.character(alpha)]][[as.character(min_pos_var)]] <- analyse_set_of_graphs(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
-                                                                                           direction = "mean", measure = measure, pc_function = pc_function_, alpha = alpha, min_pos_var = min_pos_var,
+      pc_function <- function_set_parameters(protein_causality_function, parameters = list(alpha = alpha, min_pos_var = min_pos_var))
+      effects[[as.character(alpha)]][[as.character(min_pos_var)]] <- analyse_set_of_graphs(measure = measure, 
+                                                                                           # type_of_data = type_of_data, subtype_of_data = subtype_of_data,
+                                                                                           # data_set = data_set,
+                                                                                           pc_function = pc_function, direction = "mean",
+                                                                                           alpha = alpha, min_pos_var = min_pos_var, ida_func = ida_function,
                                                                                            for_combined_plot = TRUE, scale_in_the_end = FALSE, new = new, save = save)
       
       # }
@@ -341,10 +353,10 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure = "S", type_of_data
     }
   }
   
-  # title(main = paste0(type_of_data, "-", subtype_of_data),
-  #       sub = "Mean causal effects over all conflict graphs and over the effects on and of position 372", outer = TRUE)
-  title(main = paste0("Mean causal effects over all conflict graphs and over the effects on and of position 372",
-                      "\n", type_of_data, "-", subtype_of_data), outer = TRUE)
+  ### title(main = paste0(type_of_data, "-", subtype_of_data),
+  ###       sub = "Mean causal effects over all conflict graphs and over the effects on and of position 372", outer = TRUE)
+  # title(main = paste0("Mean causal effects over all conflict graphs and over the effects on and of position 372",
+  #                     "\n", type_of_data, "-", subtype_of_data), outer = TRUE)
   return(effects)
 }
 

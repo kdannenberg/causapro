@@ -1,13 +1,34 @@
 library(gplots)
+library(heatmap3)
 
 compare_effects_per_position <- function (results, 
                                           # subset_of_positions = c(1:25), 
-                                          subset_of_positions = c(1:39),
+                                          # subset_of_positions = c(1:39),
+                                          subset_of_positions,
                                           direction_of_effects,
-                                          heatmap = TRUE) {
+                                          heatmap = TRUE,
+                                          hclust_method,
+                                          dist_measure,
+                                          nboot) {
   plot.new()
   
-  all_pairwise_effects <- results$all_pairwise_effects[,subset_of_positions]
+  all_pairwise_effects <- results$all_pairwise_effects
+  
+  if (is.null(all_pairwise_effects)) {
+    warning("No effects there to compare. Results object has no slot all_pairwise_effects.")
+    return(NULL)
+  }
+  
+  if (missing(subset_of_positions)) {
+    subset_of_positions = c(1:dim(results$all_pairwise_effects)[1])
+  }
+  
+  all_pairwise_effects <- all_pairwise_effects[, subset_of_positions]
+  
+  if (is.null(all_pairwise_effects)) {
+    warning(paste0("No effects there to compare. This slot has none of the positions in ", paste(subset_of_positions, collapse = ","), "."))
+    return(NULL)
+  }
   
   outpath = paste0(results$summary$outpath, "_poswise_effects")
   
@@ -91,16 +112,16 @@ compare_effects_per_position <- function (results,
                  ColAxisColors = 1, RowAxisColors = 1,
                  na.rm = FALSE, balanceColor = FALSE)
         
-        
+        #TODO: compute_if_not_existent benutzen
         wrap_FUN_pvclust <- function(method, ...) {
           return(FUN_pv(...)$hclust)
         }
-        FUN_pv <- function_set_parameters(pvclust, parameters = list(data = pairwise_effects, 
+        FUN_pv <- function_set_parameters(pvclust, parameters = list(data = all_pairwise_effects, 
                                                                      method.hclust = hclust_method,
-                                                                     method.dist = dist_measure, nboot = 100))
+                                                                     method.dist = dist_measure, nboot = nboot))
         #TODO: compute_if_not_existent einbauen
         
-        heatmap3(results$all_pairwise_effects, revC = TRUE, symm = FALSE,
+        heatmap3(results$all_pairwise_effects, revC = FALSE, symm = FALSE,
                  col = heat.colors(length(palette.breaks) - 1), #breaks = palette.breaks,
                  hclustfun = wrap_FUN_pvclust,
                  # dendrogram = "col", Rowv = FALSE,

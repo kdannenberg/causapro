@@ -10,11 +10,11 @@ library(colorspace)  # for mixcolor, hex
 
 # parameter barplot = TRUE remove, use mute_allplots = FALSE instead
 causal_effects_ida <- function(data, perturbed_position, direction = "both", weight_effects_on_by = "mean_abs_effect",
-                results = results, protein, coloring = "all", effect_hue_by = "effect", #effect_hue_by = "variance",
+                results, protein, coloring = "all", effect_hue_by = "effect", #effect_hue_by = "variance",
                 outpath,amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, 
                 effect_to_color_mode = "#FFFFFF", pymol = TRUE, pymol_bg_color = "black", caption, no_colors, 
                 show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75, mute_all_plots = FALSE,
-                causal_effects_function) {
+                causal_effects_function, cov_FUN) { #= cov
   
   
   if (!is.null(slotNames(results)) && all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
@@ -46,7 +46,32 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
       if (grepl(pattern = "ida", tolower(causal_effects_function))) {
         # IDA
         # effects <- idaFast(which(as.character(colnames(data)) == perturbed_position), 1:dim(data)[2], data, graph)
-        effects <- idaFast(which(as.character(colnames(data)) == perturbed_position), 1:dim(data)[2], cov(data), graph)
+        if (cov_FUN == "none") {
+          cov_FUN = function(x) {
+            if (dim(x)[1] != dim(x)[2]) {
+              stop("Data matrix is not quadratic and can thus not be interpreted as a covariance matix.")
+            }
+            rownames(x) <- colnames(x)
+            return(x)
+          }
+        } else if (cov_FUN == "") {
+          cov_FUN <- cov
+        } else {
+          cov_FUN <- get(cov_FUN)
+        }
+        # if (is.null(cor_cov_FUN) || is.character(cor_cov_FUN) && (cor_cov_FUN == "none" || cor_cov_FUN == "")) {
+        #   if (dim(data)[1] != dim(data)[2]) {
+        #     warning("Data matrix is not quadratic and can thus not be interpreted as a covariance matix. Covariance of the matrix is computed.")
+        #     cov_FUN = cov
+        #   } else {
+        #     cov_FUN = function(x) {
+        #       rownames(x) <- colnames(x)
+        #       return(as.matrix(x))
+        #     }
+        #   }
+        # }
+        # effects <- idaFast(which(as.character(colnames(data)) == perturbed_position), 1:dim(data)[2], cov(data), graph)
+        effects <- idaFast(which(as.character(colnames(data)) == perturbed_position), 1:dim(data)[2], cov_FUN(data), graph)
         if (grepl(pattern = "reset", tolower(causal_effects_function))) {
         # GGF. danach Effekte von nicht verbundenen Knoten auf null setzten
         effects <- set_effects_of_unconnected_positions_to_zero(effects, graph = graph, perturbed_position = perturbed_position, dir = dir)
@@ -194,7 +219,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
     } 
     
     if (!(grepl("on", dir) && ("of" %in% direction)) && !mute_all_plots) {
-      while (lines > 6) { # früher: 8
+      while (lines > 5) { # früher: 8, dann 6
         lines = lines / 2
       }
       par(mfrow=c(ceiling(lines), columns))

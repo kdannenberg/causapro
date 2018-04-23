@@ -118,3 +118,15 @@ get_subgraphs_igraph <- function(node_clusters, protein) {
   }
   return(node_clusters)
 }
+
+plot_infeasible <- function(caption = "") {
+    # plot(c(0, 1), c(0, 1), xlab = "", ylab = "", bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n', main = caption)
+    # text(x = 0.5, y = 0.5, "infeasible", 
+    #      cex = 1.6, col = "black")
+  plot_text(text = "infeasible", caption = caption)
+}
+
+plot_text <- function(text, caption = "") {
+  plot(c(0, 1), c(0, 1), xlab = "", ylab = "", bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n', main = caption)
+  text(x = 0.5, y = 0.5, text, cex = 1.6, col = "black")
+}
