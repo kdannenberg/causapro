@@ -323,6 +323,13 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
 #'
 #' Returns the labels of the positions for which the effects are highest
 #' @param effects Vector (or matrix) of effects that are to be considered
+#' @param threshold threshold above which effects are considered high
+#' @param percentile percentile of highest positions to be returned
+#'
+#' @details Either \code{threshold} or \code{percentile} must be given.
+#' If both are given, percentile is ignored.
+#'
+#' @return A vector (?) of positions whose effects are above the \code{threshold} or in the top \code{percentile}.
 get_most_influenced_positions <- function(effects, threshold, percentile) {
   if (missing(threshold)) {
     if (missing(percentile)) {
