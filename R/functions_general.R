@@ -210,7 +210,7 @@ direct_unambigous_undirected_edges <- function(am) {
   #     }
   #   }
     # }
-   
+
   return(am)
 }
 
@@ -257,7 +257,7 @@ solve_conflicts <- function(pdag) {
     for (i in seq_len(nrow(ind))) {
       a <- ind[i, 1]
       b <- ind[i, 2]
-      indC <- which((pdag[b, ] == 1 & pdag[, b] == 
+      indC <- which((pdag[b, ] == 1 & pdag[, b] ==
                      1) & (pdag[a, ] == 0 & pdag[, a] == 0))
       if (length(indC) > 0) {
         pdag[b, indC] <- 1
@@ -289,13 +289,13 @@ enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE, dir
       }
     }
   }
-  
+
   if (length(pos) < 27) {
     graphs <- vector("list", 2^length(pos))  # fixed length; non-quadratic running time
   } else {
     stop("Not all graphs enumerable (for all combinations of directions for the conflict edges)") # 2^27 * 8 Byte = 1GB
   }
-  
+
   for(i in 0:(2^length(pos)-1)) {
     for(j in 1:length(pos)) {
       k = pos[j]
@@ -316,7 +316,7 @@ enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE, dir
     #       m[index,index2] = am[index,index2]
     #     }
     #   }
-    
+
     #   if(direct_adjacent_undirected_edges) {
     #     m <- solve_conflicts(m, pos)
     #   }
@@ -336,7 +336,7 @@ enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE, dir
         m[index,index2] = am[index,index2]
       }
     }
-        
+
     colnames(m) <- colnames(am)
     rownames(m) <- rownames(am)
     graphs[[i+1]] <- as(solve_conflicts(m), "graphNEL")
@@ -373,7 +373,7 @@ ancestorgraph_of_interesting_positions <- function(graph_dagitty, positions = NU
 
 
 # for_coloring -> output hierarchical (list with different sorts of interesting positions as vectors), otherwise one vector
-# the for_coloring result of this function can be converted to the other one by conv_for_coloring 
+# the for_coloring result of this function can be converted to the other one by conv_for_coloring
 # (which is what happens internally if for_coloring is not set), so this result is more useful in general
 # std-Reihenfolge: grün-gelb-rot-blau
 interesting_positions <- function(protein, position_numbering = "crystal", for_coloring = FALSE, coloring = "", colors = "", counts) {
@@ -423,7 +423,7 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
           names(list) <- c("#FFD700")
         } else {
           # numbering crystal structure
-          main = c(372) 
+          main = c(372)
           high = c(322, 325, 329, 330, 347, 353, 362, 376, 380, 386) # interesting ones
           low = c(328, 340, 371, 385)
           rather_high = c(336, 341, 363, 365) # 352 (missing)
@@ -467,12 +467,12 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
         yellow_right <- c(90, 357, 367, 150, 293, 361, 285, 333, 300)
         red_left <- c(197, 198, 201, 253, 268, 250, 262, 265)
         red_right <- c(225, 294, 238, 276, 239, 241, 277, 288, 292)
-        
+
         list <- list("#69A019" = c(green_left, green_right),     # green
                      "#FFD700" = c(yellow_left, yellow_right),   # yellow
                      "#CC0000" = c(red_left, red_right),         # red
                      "#1874CD" = blue_)                          # blue
-        
+
       } else #if (grepl("FS3", coloring)) {
         # if (grepl("FS3", coloring) && grepl("mix", coloring) && !(grepl("manual", coloring))) {
         #   # if (missing(counts)) {
@@ -482,7 +482,7 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
         #   if (!is.na(as.numeric(colors))) {
         #     round_categories <- as.numeric(colors)
         #   } else {
-        #     round_categories <- 1 
+        #     round_categories <- 1
         #   }
         #   list <- classify_nodes(counts, round_categories = round_categories, mix = TRUE, colors = colnames(counts))
         #   # fillcolor <- colors_for_nodes(clustering = node_clusters, colors = names(node_clusters))
@@ -559,9 +559,9 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
         module_list[[25]] <- c(141, 144, 149)
         module_list[[26]] <- c(141, 174)
         module_list[[27]] <- c(285)
-        
+
         list <- module_list
-        
+
         nAttrs <- list()
         nAttrs$fillcolor <- fillcolor
       } else { # different coloring for p38g # Figure S3 automatically mixed
@@ -569,13 +569,13 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
         if (missing(counts)) {
           counts <- read.csv2("Data/FigS3.csv", row.names = 1, check.names=FALSE, skip = 1)
           counts <- as.matrix(counts, ncol = 4)
-  
+
           if (!is.na(as.numeric(colors)) && !is.null(colors)) {
             round_categories <- as.numeric(colors)
           } else {
             round_categories <- 1
           }
-          
+
           list <- classify_nodes(counts, round_categories = round_categories, mix = TRUE, base_colors = colnames(counts))
         }
       }
@@ -585,9 +585,9 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
     if (!is.null(interesting_pos)) {  # !is.null(list) ?!
       warning("No interesting positions known")
       list <- list()
-    } 
+    }
   }
-  
+
   if (for_coloring) {
     return(list)
     # n <- interesting_positions(protein = "PDZ")
@@ -616,15 +616,15 @@ colors_for_edges <- function(clustering, colors, graph) {
   edge_groups <- clustering
   edge_groups <- lapply(edge_groups, function(positions) edgeNames(graph)[positions])
   print(edge_groups)
-  
+
   if (missing(colors)) {
     colors <- rainbow(length(edge_groups))
   }
-  
+
   if (length(colors) > length(edge_groups)) {
     colors <- colors[1:length(edge_groups)]
   }
-  
+
   edges_with_colors <- c()
   for (i in 1:length(edge_groups)) {
     color <- colors[i]
@@ -636,7 +636,7 @@ colors_for_edges <- function(clustering, colors, graph) {
   # nAttrs$fillcolor <- edges_with_colors
   # return(nAttrs)
   return(edges_with_colors)
-  
+
 }
 
 # returns the list for nAttrs$fillcolor.
@@ -678,25 +678,25 @@ colors_for_nodes <- function(node_clusters, protein, coloring, colors, clusterin
         # nAttrs$fillcolor <- colors
         # return(nAttrs)
         return(colors)
-      } 
+      }
     }
   }
-  
+
   if (missing(colors)) {
     colors <- rainbow(length(pos_list))
   }
-  
+
   if (colors == "auto" || is.null(colors) || colors == "") {
     colors <- names(pos_list)
   }
-  
+
   if (length(pos_list) == 0) {
     return(pos_list)
   } else {
     if (length(colors) > length(pos_list)) {
       colors <- colors[1:length(pos_list)]
     }
-    
+
     nodes_with_colors <- c()
     for (i in 1:length(pos_list)) {
       color <- colors[i]
@@ -712,13 +712,13 @@ colors_for_nodes <- function(node_clusters, protein, coloring, colors, clusterin
 }
 
 # TODO: call plot_graphs oder so
-plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", graph_layout = "dot", protein, 
-                       position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE, 
+plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", graph_layout = "dot", protein,
+                       position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE,
                        plot_only_subgraphs = NULL, subgraphs, numerical = TRUE, output_formats, mute_all_plots = FALSE) {
   if (numerical) {
     if (missing(coloring) || missing(colors)) {
-      plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout, protein = protein, 
-                           position_numbering = position_numbering, coloring = coloring, colors = colors, outpath = outpath, caption = caption, 
+      plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout, protein = protein,
+                           position_numbering = position_numbering, coloring = coloring, colors = colors, outpath = outpath, caption = caption,
                            plot_as_subgraphs = plot_as_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
     } else {
       for (i in 1:(max(c(1,length(coloring))))) {
@@ -741,10 +741,10 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         ## TODO: zusammenfügen:
         ## node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
         ## fillcolor <- colors_for_nodes(node_clusters = node_clustering, protein, coloring = coloring, colors = colors)
-        ## zu einer in bel. skript möglichst eindach aufrufbaren Fkt. die für protein, pos_numbering etc (colors mit default wert) fillcolors so zurückgibt, 
+        ## zu einer in bel. skript möglichst eindach aufrufbaren Fkt. die für protein, pos_numbering etc (colors mit default wert) fillcolors so zurückgibt,
         ## dass man sie für diese plot.graph-Fkt nutzen kann
-        # plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, protein = protein, 
-        #                     position_numbering = position_numbering, coloring = coloring_i, colors = colors_i, outpath = outpath, caption = caption, 
+        # plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, protein = protein,
+        #                     position_numbering = position_numbering, coloring = coloring_i, colors = colors_i, outpath = outpath, caption = caption,
         #                     plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
         ## can not use missing here because those are not the parameters of this function
         node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
@@ -767,10 +767,10 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         }
         if (!is.null(coloring) && !(coloring == "")) {
             outpath <- paste(outpath, "_", graph_layout, "_colored-", coloring, sep = "")
-        } 
-        plot_graph_new(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, 
-                       graph_layout = graph_layout_i, outpath = outpath, caption = caption, 
-                       plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, 
+        }
+        plot_graph_new(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode,
+                       graph_layout = graph_layout_i, outpath = outpath, caption = caption,
+                       plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs,
         subgraphs = subgraphs, output_formats = output_formats, mute_all_plots = mute_all_plots)
       }
     }
@@ -780,22 +780,22 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
 ## calculate fillcolor, already done by colors_for_nodes
 # TODO: default-Wert für subgraphs
 plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "", graph_layout = "dot", protein,
-                                 position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE, 
+                                 position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE,
                                  plot_only_subgraphs = NULL, subgraphs, output_formats = "pdf") {
   # if (!(missing(subgraphs))) {
   #   plot_as_subgraphs <- TRUE
   # }
-  
+
   if (missing(fillcolor) || (missing(subgraphs) && (plot_as_subgraphs || !is.null(plot_only_subgraphs)))) {
     node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
   }
   if (missing(fillcolor)) {
     fillcolor <- colors_for_nodes(node_clusters = node_clustering, protein, coloring = coloring, colors = colors)
   }
-  
+
   nAttrs <- list()
   nAttrs$fillcolor <- fillcolor
-  
+
   eAttrs <- list()
   eAttrs$color <- edgecolor
   ## message when no subgraphs but plot_as_subgraphs true
@@ -806,21 +806,21 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
           subgraphs <- NULL
         }
   }
-  
+
   # node shapes (pie)
   if (missing(drawnode)) {
     drawnode <- node_function_for_graph(!is.null(coloring) && (grepl("pie", coloring)))
   }
-  
+
   if (!is.null(plot_only_subgraphs)) {
     # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
     graph <- subgraphs[[plot_only_subgraphs]]$graph
     subgraphs <- NULL
   }
-    
+
   pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) # circle produziert cluster
   plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
-  
+
   for (format in output_formats) {
     if (!nchar(outpath) == 0) {
       if (!is.null(coloring) && !(coloring == "")) {
@@ -840,7 +840,7 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
           svg(paste(outpath, ".svg", sep = ""))
         }
       }
-      plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption) 
+      plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption)
       dev.off()
     }
   }
@@ -853,10 +853,10 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
 ## what to do about drawnode, if it would be missing it was previously computed through
 ## node_function_for_graph which, however needs coloring
 ## for now I assume that this has been already computed and is NOT missing
-plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="", 
-                           plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL, 
+plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="",
+                           plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL,
                            output_formats = "pdf", mute_all_plots = mute_all_plots) {
-  
+
   nAttrs <- list()
   nAttrs$fillcolor <- fillcolor
   # what happens if edgecolor is NULL
@@ -871,11 +871,11 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
 
   ## filter drawnode
   if(length(drawnode) > 1) {
-    drawnode = drawnode[nodes(graph)] 
+    drawnode = drawnode[nodes(graph)]
   }
-  
-  pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) 
-  
+
+  pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs)
+
   # this plots the graph with the given options
   if (!mute_all_plots) {
     plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
@@ -900,7 +900,7 @@ plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="
         warning(paste("Unknown format:", format))
       }
       # }
-      plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption) 
+      plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption)
       dev.off()
     }
   }
@@ -930,17 +930,17 @@ get_eAttrs <- function(graph, igraph=FALSE) {
   return(eAttrs$color)
 }
 
-# deprecated. Use 
-# 
+# deprecated. Use
+#
 # parameters_to_info_file(parameters_for_info_file, outpath)
 # # pc_func <- function(outpath) {return(pc_fun(outpath))}
 # pc_func <- function_set_parameters(pc_fun, parameters = list(outpath = outpath))
 # loaded_object_ok_fun <- function(pc) {return(length(pc@graph@nodes) != dim(data)[2])}
-# compute_if_not_existent(filename = paste(outpath, "-pc.RData", sep = ""), FUN = pc_func, obj_name = "pc", 
+# compute_if_not_existent(filename = paste(outpath, "-pc.RData", sep = ""), FUN = pc_func, obj_name = "pc",
 #                         compute_anew = compute_pc_anew, loaded_object_ok_fun = loaded_object_ok_fun)
-# 
+#
 # instead of get_pc(pc_fun, outpath, compute_pc_anew, parameters_for_info_file, data = data).
-# 
+#
 # Compute pc if necessary
 get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info, data) {
   parameters_to_info_file(parameters_for_info, outpath)
@@ -966,9 +966,9 @@ get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info, data) 
       dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
       print("Directory created.")
     }
-  
+
   pc <- pc_fun(outpath)
-  
+
   save(pc, file = paste(outpath, "-pc.RData", sep = ""))
   print_pc_results_to_info_file(paste(outpath, sep = ""), pc)
   }
@@ -977,8 +977,8 @@ get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info, data) 
 
 
 scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, neg_effects = "pos") {  neg_effects = "abs"
-  
-  amplify_with_factor <- function(effects, element_that_should_be_scaled_to = 2, 
+
+  amplify_with_factor <- function(effects, element_that_should_be_scaled_to = 2,
                                   value_the_element_should_be_scaled_to = 0.9, cut_values_at = 1) {
     sorted_effects <- sort(effects, decreasing = TRUE)
     if (sorted_effects[element_that_should_be_scaled_to] == 0) {
@@ -993,10 +993,10 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
     # pos_with_colors[,2][pos_with_colors[,2] > 1] <- 1 # sollte nur eine Position sein, falls factor != 1, dann keine
     return(effects)
   }
-  
+
   effects_na <- as.matrix(effects[,1][is.na(effects[,1])])
   effects <- as.matrix(effects[,1][!is.na(effects[,1])])
-  
+
   if (!length(effects) == 0) {
     if (neg_effects == "discard") {
       effects[,1][effects[,1] < 0] <- 0
@@ -1010,19 +1010,19 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
         effects_neg <- -effects_neg
         effects_pos <- cbind(apply(effects_pos, 2, rank))
         effects_neg <- cbind(apply(effects_neg, 2, rank))
-        
+
         effects_pos <- effects_pos - min(effects_pos) + 1
         effects_neg <- effects_neg - min(effects_neg) + 1
         effects_pos <- effects_pos / max(effects_pos)
         effects_neg <- effects_neg / max(effects_neg)
-        
+
         effects_neg <- -effects_neg
         effects <- rbind(effects_pos, effects_neg)
         # effects_ <- effects_[order(rownames(effects_)), , drop = FALSE]
         # effects <- effects_
       } else {
         effects <- cbind(apply(effects, 2, rank))
-        
+
         effects <- effects - min(effects) + 1
         effects <- effects / max(effects)
         #effects <- effects/dim(effects)[1]
@@ -1042,19 +1042,19 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
         # effects_pos <- as.matrix(effects[,1][effects[,1] >= 0 & !is.na(effects[,1])])
         effects_neg <- as.matrix(effects[,1][effects[,1] < 0])
         # effects_neg <- as.matrix(effects[,1][effects[,1] < 0 & !is.na(effects[,1])])
-        # effects_neg <- cbind(effects_neg[!is.na(effects_neg),]) # NAs nicht doppelt haben -- in neg rausschmeißen! 
-                                                                # TODO: in dan anderen Fällen ggf. auch !!!!! 
+        # effects_neg <- cbind(effects_neg[!is.na(effects_neg),]) # NAs nicht doppelt haben -- in neg rausschmeißen!
+                                                                # TODO: in dan anderen Fällen ggf. auch !!!!!
         effects_neg <- -effects_neg
-        
-        
+
+
         if (amplification_factor) {
           effects_pos <- amplify_with_factor(effects_pos)
         }
-        
+
         if (amplification_factor && dim(effects_neg)[1] > 1) {
           effects_neg <- amplify_with_factor(effects_neg)
         }
-        
+
         effects_neg <- -effects_neg
         effects <- rbind(effects_pos, effects_neg)
         # effects_ <- effects_[order(rownames(effects_)), , drop = FALSE]
@@ -1064,14 +1064,14 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
   }
 
   effects <- rbind(effects, effects_na)
-  
+
   effects <- effects[order(rownames(effects)), , drop = FALSE]
   # effects <- effects
-  
+
   return(effects)
 }
 
-# computes a vector of the same length as pos that for each position either contains 
+# computes a vector of the same length as pos that for each position either contains
 # color_for_other_positions, or, if the position is in int_pos, its name in int_pos;
 # this vector can e.g. be used as the color vector in plots
 int_pos_to_color_vector <- function(pos, int_pos, color_for_other_positions = "#000000") {
@@ -1099,14 +1099,14 @@ color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874
       pos <- names(effects)
     }
   }
-  
+
   pos_with_colors <- int_pos_to_color_vector(pos = pos, int_pos = int_pos, color_for_other_positions = "#1874CD")
   # pos_with_colors <- sapply(rownames(effects), base_color)
   pos_with_colors <- cbind(pos_with_colors, effects)
-  
+
   # pos_with_colors <- sapply(colnames(pos_with_colors)),  function(pos) {})
-  
-  if (mode == "opacity") { 
+
+  if (mode == "opacity") {
     color_function <- function(vector) {
       if (is.na(vector[2])) {
         vector <- c("#FF6347", 1)
@@ -1128,11 +1128,11 @@ color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874
       }
     }
   }
-  
+
   # pos_with_colors <- apply(pos_with_colors, 1, function(vector) return(substr(adjustcolor(vector[1], alpha.f = vector[2]), start = 1, stop = 7)))
     pos_with_colors <- apply(pos_with_colors, 1, color_function)
   # pos_with_colors[] # sollte nur eine Position sein
-  
+
   return(pos_with_colors)
 }
 
@@ -1145,11 +1145,11 @@ color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874
 # all_paths: plot all paths between from and to, instead of only the shortest
 paths_between_nodes <- function(graph, from, to, all_paths = FALSE) {
   igraph <- igraph.from.graphNEL(graph)
-  
+
   from_to <- paste(from, to)
-  
+
   paths <- list()
-  
+
   for (endpoints in from_to) {
     if (all_paths) {
       path_fun <- all_simple_paths
@@ -1157,18 +1157,18 @@ paths_between_nodes <- function(graph, from, to, all_paths = FALSE) {
       path_fun <- function(graph, from, to, ...) {
         return(shortest_paths(graph, from = from, to = to)$vpath)}
     }
-    
+
     from <- strsplit(endpoints, " ")[[1]][1]
     to <- strsplit(endpoints, " ")[[1]][2]
-    
+
     path <- path_fun(igraph, from = from, to = to)
     path <- lapply(path, names)
-    
+
     paths <- c(paths, path)
-    
+
     # path_1 <- all_simple_paths(igraph, from = "30", to = "337")
     # path_2 <- all_simple_paths(igraph, from = "197", to = "268")
-    # 
+    #
     # s_path_1 <- shortest_paths(igraph, from = "30", to = "337")$vpath
     # s_path_2 <- shortest_paths(igraph, from = "197", to = "268")$vpath
   }
@@ -1183,21 +1183,21 @@ nonsingular_connected_components <- function(graph, remove_non_assigned = TRUE){
   }
   real_ones_ind <- which(sapply(connected_components, function(x) length(x) > 1))
   connected_components <- connected_components[real_ones_ind]
-  
-  
+
+
   return(connected_components)
 }
 
 # This function is used e.g. for plotting connected components in pymol.
-# Normally, the connected components are sorted alphabetically. 
-# Since in proteins the false impression that neighbouring residues are in the 
-# same connected components could arise when they have subsequent and thus 
+# Normally, the connected components are sorted alphabetically.
+# Since in proteins the false impression that neighbouring residues are in the
+# same connected components could arise when they have subsequent and thus
 # indistinguishable rainbow colors, the components can be mixed (mix argment given).
-# Then, mix_offset determines how many other positions there are (at least) between two 
+# Then, mix_offset determines how many other positions there are (at least) between two
 # originally neighbouring components
 
-# if mix = "every_mix_offset_th", the mixed version is obtained by appending to the 
-# new list every i'th element from the original list, where i = mix_offset + 1, 
+# if mix = "every_mix_offset_th", the mixed version is obtained by appending to the
+# new list every i'th element from the original list, where i = mix_offset + 1,
 # continuing with incremeted offset every time the end of the list is reached
 reorder_list_of_lists <- function(list, ordering, mix_mode = "mix_offset_between_original_neighbours", mix_offset = floor(sqrt(length(list))),
                                   sort_mode, sort_descending = TRUE) {
@@ -1214,7 +1214,7 @@ reorder_list_of_lists <- function(list, ordering, mix_mode = "mix_offset_between
             }
           }## for(i in 1:length(list)) {
 ##              for(j in 1:length(connected_components)) {
-##  if(list[i] %in% connected_components[[j]]) 
+##  if(list[i] %in% connected_components[[j]])
 ## names(list)[i] = colors[j]
 ##              }
           ##              }
@@ -1227,7 +1227,7 @@ reorder_list_of_lists <- function(list, ordering, mix_mode = "mix_offset_between
         }
       } else {
         # there are at least mix_offest + 1 blcoks (+ one block with the rest of the division).
-        # To obtain the permutation, first, the first elements of all the blocks are taken, 
+        # To obtain the permutation, first, the first elements of all the blocks are taken,
         # then the second ones and so on.
         block_size = floor(length(list) / mix_offset)
         for (offset in 0:(block_size-1)) {
@@ -1259,14 +1259,14 @@ position_clustering_from_clustering_with_duplicates <- function(clustering_with_
   positions <- unique(sapply(names(clustering_with_duplicates), function(long_name) return(gsub("-.*","",long_name))))
   k = max(clustering_with_duplicates)
 
-  
+
   ## averaged_clusters <- sapply(positions, function(position) {
   ##  position_clustering <- clustering_with_duplicates[which(grepl(position, names(clustering_with_duplicates)))]
   ##  mean_cluster <- mean(position_clustering)
   ## names(mean_cluster) <- position
   ##  return(mean_cluster)
   ##})
-  
+
   ## averaged_clusters <- round(averaged_clusters)
   rb_cols = substr(rainbow(k), 1, 7)
   averaged_clusters <- sapply(positions, function(position) {
@@ -1283,9 +1283,9 @@ position_clustering_from_clustering_with_duplicates <- function(clustering_with_
     ##  names(mean_col) <- position
     return(mean_col)
     })
-  
+
   cl <- clusterlist_from_membershiplist(averaged_clusters)
-  
+
   return(cl)
   # TODO!
 }
