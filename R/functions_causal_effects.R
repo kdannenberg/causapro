@@ -319,7 +319,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
   return(results)
 }
 
-#' Positions with highest effects
+#' Positions with Highest Effects
 #'
 #' Returns the labels of the positions for which the effects are highest
 #' @param effects Vector (or matrix) of effects that are to be considered
@@ -422,6 +422,14 @@ conflict_edges <- function(graph, print = FALSE, interesting_positions) {
 
 ### relevant measures: conflict_edges/(bidirected_edges + unidirected_edges)
 ### or conflict_edges/(2 * bidirected_edges + unidirected_edges) (number of directed edges)
+#' Different Edge Types in a Graph
+#'
+#' Get the number of edges of different types (conflict, bidirected, directed)
+#'
+#' @param adj_m the adjacency matrix of the graph that is to be considered (as returned by wgtMartix(...))
+#' @param print should the result also be printed?
+#'
+#' @return A list with names "conflict", "directed" and "undirected" and the respective numbers of such edges.
 edge_information <- function(adj_m, print = FALSE) {
 
   # m <- adj_m[apply(adj_m!=0, 1, any), , drop=FALSE]
