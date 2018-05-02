@@ -1,10 +1,5 @@
-protein_causal_graph <- function(results = list(),data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
-                                 parameters_for_info_file, alpha, cor_cov_FUN = cov, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule,
-                                 caption, analysis, stages, plot_types, coloring, colors,
-                                 graph_layout = "dot", graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs,
-                                 plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console,
-                                 lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, graph_output_formats,
-                                 numerical, mute_all_plots = FALSE, plot_no_isolated_nodes, plot_with_graphviz) {
+protein_causal_graph <- function(results = list(), data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
+                                 parameters_for_info_file, alpha, cor_cov_FUN = cov, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule) {
   print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
@@ -33,11 +28,7 @@ protein_causal_graph <- function(results = list(),data, protein, type_of_data, s
 
   # garbage <- graphics.off()
   # if (!mute_all_plots) {
-  if (plot_no_isolated_nodes) {
-    graph <- kernelize_graph(results$pc@graph)
-  } else {
-    graph <- results$pc@graph
-  }
+
 
   #### some statistics
   number_of_edges <- sum(unlist(conflict_edges(graph)))
@@ -53,16 +44,31 @@ protein_causal_graph <- function(results = list(),data, protein, type_of_data, s
 
   results$general$int_pos <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
 
-  if(plot_with_graphviz) {
-    plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout,
-             coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs,
-             plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
-  } else {
-    call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = FALSE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = FALSE, layout_str = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs)
-  }
+
 
   # }
 
   return(results)
+}
+
+plot_pc <- function(graph, caption, outpath, protein, position_numbering, plot_types, coloring, colors,
+                    graph_layout = "dot", graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs,
+                    plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info, print_r_to_console,
+                    lines_in_abbr_of_r, compute_pc_anew, compute_localTests_anew, graph_output_formats,
+                    numerical, mute_all_plots = FALSE, plot_no_isolated_nodes, plot_with_graphviz) {
+
+  if (plot_no_isolated_nodes) {
+    graph <- kernelize_graph(graph)
+  }
+
+  if(plot_with_graphviz) {
+    plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout,
+               coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs,
+               plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
+  } else {
+    call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors,
+                     clusters = FALSE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = FALSE,
+                     layout_str = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs)
+  }
 }
 
