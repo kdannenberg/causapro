@@ -1,0 +1,306 @@
+
+analysis_causal_effect_without_IDA.R,404
+topological_nodesnames <- functiontopological_nodesnames45,1290
+pseudo_ida_by_causalEffect <- functionpseudo_ida_by_causalEffect56,1796
+pseudo_idaFast_by_causalEffect <- functionpseudo_idaFast_by_causalEffect142,4665
+set_edge_weights_for_graph <- functionset_edge_weights_for_graph146,4929
+set_of_DAGs <- functionset_of_DAGs186,6256
+ida_for_set_of_DAGs <- functionida_for_set_of_DAGs212,7340
+
+analysis_clustering.R,47
+as_clustering <- functionas_clustering17,389
+
+analysis_different_characteristic_curves.R,219
+number_of_conflict_edges <- functionnumber_of_conflict_edges49,1464
+fraction_of_conflict_edges <- functionfraction_of_conflict_edges53,1567
+edges <- functionedges57,1721
+plot_names <- functionplot_names103,3328
+
+analysis_distibution_of_qualities.R,460
+function_quality_of_effects_distibution <- functionfunction_quality_of_effects_distibution27,578
+function_score_of_effects_distibution <- functionfunction_score_of_effects_distibution32,911
+function_quality_of_effects_classifier <- functionfunction_quality_of_effects_classifier37,1271
+function_score_of_effects_classifier <- functionfunction_score_of_effects_classifier43,1714
+function_score_for_effects <- functionfunction_score_for_effects50,2157
+
+analysis_effects_of_other_int_pos.R,57
+effect_on_position <- functioneffect_on_position10,137
+
+analysis_find_good_graph_conflicts_solved.R,217
+find_good_graph_among <- functionfind_good_graph_among61,2189
+sum_effects <- functionsum_effects81,3214
+deviat_from_mean <- functiondeviat_from_mean98,4044
+graph_to_results <- functiongraph_to_results104,4297
+
+analysis_NMR-GTB_data.R,315
+scatterplot_NMR <- functionscatterplot_NMR11,254
+var_of_pos <- functionvar_of_pos25,755
+rem_cols_by_colname <- functionrem_cols_by_colname32,939
+scale_NMR_dimensions <- functionscale_NMR_dimensions40,1246
+scatterplots_of_most_variating_positions <- functionscatterplots_of_most_variating_positions46,1469
+
+analysis_optimize_parameters_G.R,176
+pc_fun <- functionpc_fun77,2156
+analysis_after_pc_fun <- functionanalysis_after_pc_fun81,2286
+parameters_for_info_file_fun <- functionparameters_for_info_file_fun91,2981
+
+analysis_optimize_parameters_NMR.R,176
+pc_fun <- functionpc_fun75,1932
+analysis_after_pc_fun <- functionanalysis_after_pc_fun79,2062
+parameters_for_info_file_fun <- functionparameters_for_info_file_fun88,2729
+
+analysis_optimize_parameters.R,146
+optimize_pc_results <- functionoptimize_pc_results7,129
+linear_optimization_of_pc_results <- functionlinear_optimization_of_pc_results77,3199
+
+analysis_pc_ida.R,91
+check_formula <- functioncheck_formula50,1464
+edgeWeight <- functionedgeWeight133,3329
+
+compute_DAG_NMR-GTB.R,69
+protein_causality_NMRGTB <- functionprotein_causality_NMRGTB17,490
+
+compute_DAG_own_measures.R,28
+fun <- functionfun77,2657
+
+functions_analysis_for_a_set_of_graphs.R,715
+analyse_set_of_graphs <- functionanalyse_set_of_graphs3,3
+pymol_mean_effects <- functionpymol_mean_effects266,15844
+determine_set_of_graphs <- functiondetermine_set_of_graphs316,18718
+find_graphs_with_highest_int_pos <- functionfind_graphs_with_highest_int_pos504,26588
+element_in_most_of_the_6_sets <- functionelement_in_most_of_the_6_sets579,31610
+mean_effects_min_max <- functionmean_effects_min_max591,32159
+compute_over_all_graphs <- functioncompute_over_all_graphs628,33482
+display_effects <- functiondisplay_effects668,36085
+plot_effects <- functionplot_effects853,45359
+deviation_from_mean <- functiondeviation_from_mean973,49542
+graph_to_results <- functiongraph_to_results1052,52543
+
+functions_causal_effects (kopia).R,647
+causal_effects_ida <- functioncausal_effects_ida12,227
+get_most_influenced_positions <- functionget_most_influenced_positions284,15040
+statistics_of_influenced_positions <- functionstatistics_of_influenced_positions302,15833
+first_tests <- functionfirst_tests337,17549
+conflict_edges <- functionconflict_edges364,19340
+edge_information <- functionedge_information376,19850
+remove_zero_rows_or_columns <- functionremove_zero_rows_or_columns399,20794
+set_effects_of_unconnected_positions_to_zero <- functionset_effects_of_unconnected_positions_to_zero408,21080
+cluster_pairwise_effects <- functioncluster_pairwise_effects424,21456
+
+functions_causal_effects.R,727
+causal_effects_ida <- functioncausal_effects_ida12,227
+get_most_influenced_positions <- functionget_most_influenced_positions297,15280
+statistics_of_influenced_positions <- functionstatistics_of_influenced_positions315,16073
+first_tests <- functionfirst_tests350,17789
+conflict_edges <- functionconflict_edges377,19569
+edge_information <- functionedge_information389,20079
+remove_zero_rows_or_columns <- functionremove_zero_rows_or_columns412,21023
+set_effects_of_unconnected_positions_to_zero <- functionset_effects_of_unconnected_positions_to_zero421,21309
+compute_all_pairwise_effects <- functioncompute_all_pairwise_effects436,21684
+cluster_pairwise_effects <- functioncluster_pairwise_effects471,23245
+
+functions_ci_tests.R,99
+disCItest_given_nmin <- functiondisCItest_given_nmin1,0
+ci_test_pc <- functionci_test_pc19,699
+
+functions_compute_DAG_categorical.R,261
+estimate_DAG <- functionestimate_DAG15,502
+replace_with_numbers <- functionreplace_with_numbers138,5705
+map_aminoacids <- functionmap_aminoacids173,7137
+print.cluster <- functionprint.cluster183,7574
+remove_sing_col <- functionremove_sing_col198,7936
+
+functions_compute_DAG_numerical.R,85
+estimate_DAG_from_numerical_data <- functionestimate_DAG_from_numerical_data12,282
+
+functions_conversions.R,453
+get_adjmatrix <- functionget_adjmatrix10,193
+compare_graphs <-functioncompare_graphs42,1305
+compare_all_graphs <- functioncompare_all_graphs92,2754
+conv_to_r <- functionconv_to_r112,3579
+conv_to_web <- functionconv_to_web179,6128
+conv_to_graphnel <- functionconv_to_graphnel209,6872
+conv_to_DIMACS <- functionconv_to_DIMACS256,8257
+td_to_graphNEL <- functiontd_to_graphNEL304,9329
+graphNEL_to_tikz <- functiongraphNEL_to_tikz361,11026
+
+functions_evaluate_DAG.R,375
+analysis_after_pc <- functionanalysis_after_pc14,448
+evaluate_DAG <- functionevaluate_DAG87,4611
+pairs_of_pos <- functionpairs_of_pos192,8719
+plots <- functionplots201,9075
+print_evaluation_results_to_info_file <- functionprint_evaluation_results_to_info_file279,12455
+print_r_short <- functionprint_r_short389,17010
+td_analysis <- functiontd_analysis415,17913
+
+functions_general.R,1785
+alignment_to_binary_matrix <- functionalignment_to_binary_matrix8,211
+set_parameters <- functionset_parameters20,600
+kernelize_graph <- functionkernelize_graph30,1144
+enumerate_graphs_rec <- functionenumerate_graphs_rec105,3372
+dfs <- functiondfs134,4051
+dag_check <- functiondag_check150,4409
+direct_unambigous_undirected_edges <- functiondirect_unambigous_undirected_edges162,4645
+solve_conflicts <- functionsolve_conflicts217,5857
+remove_dummies <- functionremove_dummies271,7117
+enumerate_graphs <- functionenumerate_graphs280,7316
+sink.reset <- functionsink.reset348,9091
+subgraph_of_interesting_positions <- functionsubgraph_of_interesting_positions356,9204
+ancestorgraph_of_interesting_positions <- functionancestorgraph_of_interesting_positions365,9572
+interesting_positions <- functioninteresting_positions379,10319
+conv_for_coloring <- functionconv_for_coloring600,22455
+colors_for_edges <- functioncolors_for_edges609,22896
+colors_for_nodes <- functioncolors_for_nodes638,23765
+plot_graph <- functionplot_graph709,25918
+plot_graph_numerical <- functionplot_graph_numerical776,29898
+plot_graph_new <- functionplot_graph_new850,33248
+get_eAttrs <- functionget_eAttrs905,35451
+get_pc <- functionget_pc939,36520
+scale_effects <- functionscale_effects973,37869
+int_pos_to_color_vector <- functionint_pos_to_color_vector1071,41908
+color_by_effect <- functioncolor_by_effect1086,42421
+paths_between_nodes <- functionpaths_between_nodes1140,44372
+nonsingular_connected_components <- functionnonsingular_connected_components1173,45290
+reorder_list_of_lists <- functionreorder_list_of_lists1196,46494
+position_clustering_from_clustering_with_duplicates <- functionposition_clustering_from_clustering_with_duplicates1252,49016
+
+functions_i_o.R,1144
+get_data_description <- functionget_data_description3,40
+read_data <- functionread_data19,587
+adjust_data <- functionadjust_data53,2022
+adjust_data_description <- functionadjust_data_description125,4769
+subtype_of_data_after_adjustment <- functionsubtype_of_data_after_adjustment132,4943
+get_outpath <- functionget_outpath164,5884
+get_old_outpath <- functionget_old_outpath231,8278
+compute_if_not_existent <- functioncompute_if_not_existent289,10618
+compute_data_from_alignment <- functioncompute_data_from_alignment331,12341
+readAlignment <- functionreadAlignment337,12527
+readAlignment_fasta <- functionreadAlignment_fasta357,13235
+remove_gaps <- functionremove_gaps367,13629
+rem_cols_by_colname <- functionrem_cols_by_colname387,14252
+get_caption <- functionget_caption392,14376
+parameters_for_info_file <- functionparameters_for_info_file400,14737
+parameters_to_info_file <- functionparameters_to_info_file412,15454
+print_pc_results_to_info_file <- functionprint_pc_results_to_info_file419,15637
+outpath_for_ida <- functionoutpath_for_ida433,16020
+get_conservation <- functionget_conservation468,17104
+
+functions_linkcommunities.R,681
+node_function_for_graph <- functionnode_function_for_graph5,76
+get_meaningful_names_for_clustering <- functionget_meaningful_names_for_clustering41,1126
+node_colors_pie <- functionnode_colors_pie45,1265
+clusterlist_from_membershiplist <- functionclusterlist_from_membershiplist59,1783
+membershiplist_from_clusterlist <- functionmembershiplist_from_clusterlist69,2207
+compute_link_communities <- functioncompute_link_communities77,2577
+max_cluster_linkcomm <- functionmax_cluster_linkcomm162,6246
+subgraphs_from_node_clusters <- functionsubgraphs_from_node_clusters166,6365
+classify_nodes <- functionclassify_nodes176,6879
+mixcolors <- functionmixcolors218,8305
+
+functions_measures_MSA.R,413
+compute_q_ <- functioncompute_q_7,87
+f_i_x <- functionf_i_x11,171
+f_ij_xy <- functionf_ij_xy17,327
+C_ij_xy <- functionC_ij_xy30,671
+C_ij_xy_mul <- functionC_ij_xy_mul39,859
+C_ij_xy_add <- functionC_ij_xy_add48,1068
+most_freq_k <- functionmost_freq_k66,1590
+most_freq <- functionmost_freq73,1891
+mat_from_measure_i_j_mostfreqi_mostfreqj <- functionmat_from_measure_i_j_mostfreqi_mostfreqj79,2089
+
+functions_partuning.R,854
+analyse_edge_types_by_alpha <- functionanalyse_edge_types_by_alpha3,32
+find_best_alphas <- functionfind_best_alphas104,4512
+effects_for_distinct_alphas <- functioneffects_for_distinct_alphas132,5881
+apply_to_all_effects_in_nested_list <- functionapply_to_all_effects_in_nested_list215,9447
+analyse_graphs_for_alphas_and_minposvars <- functionanalyse_graphs_for_alphas_and_minposvars257,11502
+quality_of_edge_distribution <- functionquality_of_edge_distribution356,17618
+quality_of_effects_classifier <- functionquality_of_effects_classifier367,17991
+score_for_effects <- functionscore_for_effects380,18827
+score_of_effects_height <- functionscore_of_effects_height399,19805
+score_of_effects_classifier <- functionscore_of_effects_classifier449,21348
+quality_of_effects_distibution <- functionquality_of_effects_distibution494,22746
+
+functions_plotting.R,297
+call_plot_igraph <- functioncall_plot_igraph10,336
+plot_graph_igraph <- functionplot_graph_igraph17,1441
+get_edgecolor_igraph <- functionget_edgecolor_igraph94,5161
+get_nodecolor_igraph <- functionget_nodecolor_igraph105,5533
+get_subgraphs_igraph <- functionget_subgraphs_igraph114,5784
+
+functions_protein_causality_analysis.R,128
+protein_causal_graph <- functionprotein_causal_graph1,0
+protein_graph_clustering <- functionprotein_graph_clustering70,3727
+
+functions_protein_causality (kopia).R,311
+protein_causality <- functionprotein_causality3,18
+protein_causality_G <- functionprotein_causality_G346,15815
+protein_causality_S <- functionprotein_causality_S545,24075
+protein_causality_p38g <- functionprotein_causality_p38g733,32048
+protein_causality_NoV <- functionprotein_causality_NoV928,40654
+
+functions_protein_causality.R,311
+protein_causality <- functionprotein_causality3,18
+protein_causality_G <- functionprotein_causality_G455,23998
+protein_causality_S <- functionprotein_causality_S616,29796
+protein_causality_p38g <- functionprotein_causality_p38g766,35385
+protein_causality_NoV <- functionprotein_causality_NoV918,41079
+
+functions_pymol.R,340
+pymol_header <- functionpymol_header4,34
+plot_clusters_in_pymol <- functionplot_clusters_in_pymol63,2260
+plot_connected_components_in_pymol <- functionplot_connected_components_in_pymol126,4673
+plot_paths_in_pymol <- functionplot_paths_in_pymol243,10408
+plot_total_effects_in_pymol <- functionplot_total_effects_in_pymol295,12529
+
+functions_results_analysis.R,75
+compare_effects_per_position <- functioncompare_effects_per_position3,17
+
+functions_tools.R,115
+plus_minus_x <- functionplus_minus_x3,19
+pastes <- functionpastes10,295
+get_index <- functionget_index14,442
+
+partuning-alpha_by_effects.R,149
+function_score_for_effects_ <- functionfunction_score_for_effects_37,845
+function_score_for_effects <- functionfunction_score_for_effects39,1038
+
+tests_analysis_for_a_set_of_graphs.R,58
+test_sum_all_effects <- functiontest_sum_all_effects1,0
+
+trial_ida.R,28
+ida <- functionida31,1658
+
+Untitled.R,193
+insbesondere <- functioninsbesondere1,0
+allgemein <- functionallgemein10,220
+insbesondere2 <- functioninsbesondere223,337
+protein_causality_test <- functionprotein_causality_test33,580
+
+partuning-alpha_by_edge_types.R,0
+
+partuning-alpha_by_edge_types-NoV.R,0
+
+configuration_data.R,0
+
+compute_DAG_S.R,0
+
+compute_DAG_Nov.R,0
+
+compute_DAG_NMR.R,0
+
+compute_DAG_MSA.R,0
+
+compute_DAG_G.R,0
+
+analysis_var_and_conservation_of_int_pos.R,0
+
+analysis_performance_IDA.R,0
+
+analysis_for_a_set_of_graphs.R,0
+
+analysis_effects_and_graphs_for_certain_parameters.R,0
+
+analysis_conservative-maj_rule.R,0
+
+analysis_compare_mean_effects.R,0

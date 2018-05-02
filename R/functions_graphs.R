@@ -1,5 +1,8 @@
-## this function gets a graph and returns graph which includes only non-isolated nodes
-## it also prints a list of the isolated nodes
+#' Removes isolated nodes from a graph.
+#'
+#' @param graph A graph object as described in the R graph package.
+#' @param ret_list A boolean flag indicating if the removed nodes should be returned.
+#' @return The kernelized graph and if ret_list is the additionally the list of removed nodes.
 kernelize_graph <- function(graph, ret_list = FALSE) {
   n = numNodes(graph)
   vis = logical(n)
@@ -72,6 +75,13 @@ kernelize_graph <- function(graph, ret_list = FALSE) {
   }
 }
 
+#' Given a graph with some edges direction unclear, this function enumerates all possible graphs by fixing those unclear edges in every possible direction.
+#'
+#' @param am A adjecency matrix where 0 indicates no edge, 1 an edge, and 2 an edge with unclear direction.
+#' @param n Number of nodes.
+#' @param i Parameter needed for recursion, set to 1 at the initial call.
+#' @param j Parameter needed for recursion, set to 1 at the initial call.
+
 ## I assume that the adjmatrix is given where conflict edges have weight 2
 ## this corresponds to the wgtMatrix function of the pcalg package
 ## I enumerate the graphs as true adjacency matrices with a 1 indicating an edge a 0 no edge and there is no other value
@@ -132,6 +142,7 @@ dag_check <- function(am) {
   }
   return(res)
 }
+
 
 direct_unambigous_undirected_edges <- function(am) {
   n = dim(am)[1]

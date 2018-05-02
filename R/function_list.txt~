@@ -1,0 +1,31 @@
+Tags in file ‘functions_general.R’:
+
+alignment_to_binary_matrix <- function
+set_parameters <- function
+kernelize_graph <- function
+enumerate_graphs_rec <- function
+dfs <- function
+dag_check <- function
+direct_unambigous_undirected_edges <- function
+solve_conflicts <- function
+remove_dummies <- function
+enumerate_graphs <- function
+sink.reset <- function
+subgraph_of_interesting_positions <- function
+ancestorgraph_of_interesting_positions <- function
+interesting_positions <- function
+conv_for_coloring <- function
+colors_for_edges <- function
+colors_for_nodes <- function
+plot_graph <- function
+plot_graph_numerical <- function
+plot_graph_new <- function
+get_eAttrs <- function
+get_pc <- function
+scale_effects <- function
+int_pos_to_color_vector <- function
+color_by_effect <- function
+paths_between_nodes <- function
+nonsingular_connected_components <- function
+reorder_list_of_lists <- function
+position_clustering_from_clustering_with_duplicates <- function
