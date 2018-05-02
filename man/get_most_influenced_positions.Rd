@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions_causal_effects.R
 \name{get_most_influenced_positions}
 \alias{get_most_influenced_positions}
-\title{Positions with highest effects}
+\title{Positions with Highest Effects}
 \usage{
 get_most_influenced_positions(effects, threshold, percentile)
 }
