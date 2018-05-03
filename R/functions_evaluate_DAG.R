@@ -5,39 +5,39 @@ library("dagitty")
 # results$sub
 # results$anc
 # with respective sublists
-# results$orig$graph$NEL       (only for orig, sub) 
+# results$orig$graph$NEL       (only for orig, sub)
 # results$orig$graph$dagitty   (only for orig, anc)
 # results$orig$localTests_results$r
 # results$orig$localTests_results$r_interesting --> r_int
 # results$orig$localTests_results$r_int_alpha --> r_int_sign
 # results$orig$localTests_results$r_int_bad -- r_int_sign_bad
-analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, graph_layout = graph_layout, 
-                              plot_as_subgraphs = FALSE, plot_only_subgraphs = NULL, 
-                              coloring = coloring, colors = colors, stages = c("orig", "anc"), 
-                              plot_types = c("localTests", "graphs"), unabbrev_r_to_info, print_r_to_console, 
-                              lines_in_abbr_of_r, compute_localTests_anew = FALSE, print = TRUE, plot = TRUE, 
+analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, graph_layout = graph_layout,
+                              plot_as_subgraphs = FALSE, plot_only_subgraphs = NULL,
+                              coloring = coloring, colors = colors, stages = c("orig", "anc"),
+                              plot_types = c("localTests", "graphs"), unabbrev_r_to_info, print_r_to_console,
+                              lines_in_abbr_of_r, compute_localTests_anew = FALSE, print = TRUE, plot = TRUE,
                               caption = "", graph_output_formats = "pdf", combined_plot = FALSE) {
   results <- list()
   results$pc <- pc
-  
+
   results$orig <- list()
   results$orig$graph$NEL <- pc@graph
-  
+
   graph_dagitty <- conv_to_r(pc@graph, type_of_graph = "pdag", nodename_prefix = "P")
 
   results$orig$graph$dagitty <- graph_dagitty
-  
+
   if (("main" %in% stages) || ("orig" %in% stages)) {
   # if (originalgraph) {
     print("ORIGINAL GRAPH...")
     results$orig$localTests <- evaluate_DAG(data = data, graph = graph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, compute_localTests_anew = compute_localTests_anew)
   }
-  
+
   if ("sub" %in% stages) {
   # if (subgraph) {
     print("SUBGRAPH...")
-    # outpath_subgraph = paste(outpath, "-sub", sep = "") 
-    
+    # outpath_subgraph = paste(outpath, "-sub", sep = "")
+
     subgraph <- subgraph_of_interesting_positions(pc@graph, protein = protein, position_numbering = position_numbering)
     # if (!((plotstages == "sub") && (plot_types == "graph"))) {
     #   garbage <- graphics.off()
@@ -47,12 +47,12 @@ analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, gr
     subgraph_dagitty <- conv_to_r(subgraph, type_of_graph = "pdag", nodename_prefix = "P")
     results$sub$localTests <- evaluate_DAG(data = data, graph = subgraph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, stage = "sub", plot = TRUE, compute_localTests_anew = compute_localTests_anew)
   }
-  
+
   if ("anc" %in% stages) {
   # if (ancestorgraph) {
     print("ANCESTOR GRAPH...")
-    # outpath_ancestor = paste(outpath, "-anc", sep = "") 
-    
+    # outpath_ancestor = paste(outpath, "-anc", sep = "")
+
     ancestor_graph_dagitty <- ancestorgraph_of_interesting_positions(graph_dagitty = graph_dagitty, protein = protein, position_numbering = position_numbering, nodename_prefix = "P")
     if (!is.null(ancestor_graph_dagitty)) {
       # if (!((plotstages == "ancestor") && (plot_types == "graph"))) {
@@ -60,18 +60,18 @@ analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, gr
       # }
       # plot(dagitty::graphLayout(ancestor_graph_dagitty))
       results$anc$graph$dagitty <- dagitty::graphLayout(ancestor_graph_dagitty)
-      results$anc$localTests <- evaluate_DAG(data = data, graph = ancestor_graph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, stage = "anc", plot = TRUE, compute_localTests_anew = compute_localTests_anew) 
+      results$anc$localTests <- evaluate_DAG(data = data, graph = ancestor_graph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, stage = "anc", plot = TRUE, compute_localTests_anew = compute_localTests_anew)
     } else {
       print("Ancestor graph is NULL!")
     }
   }
-  
+
   if (plot) {
-    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, 
-          coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats, 
+    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+          coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
           combined_plot = combined_plot, position_numbering = position_numbering)
-    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, 
-          coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats, 
+    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+          coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
           combined_plot = combined_plot, position_numbering = position_numbering)
   }
   if (print) {
@@ -84,11 +84,11 @@ analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, gr
 # only for Gauss-distributed data
 # bad_alpha_threshold: alpha above which the estimate given by localTests(...) is not regarded
 # estimate_margin: margin around zero, in which estimates given by localTests(...) are regarded "bad"
-evaluate_DAG <- function(data, graph, results, protein, position_numbering = NULL, outpath, stage = "orig", plot = TRUE, 
+evaluate_DAG <- function(data, graph, results, protein, position_numbering = NULL, outpath, stage = "orig", plot = TRUE,
                          bad_alpha_threshold = 0.01, estimate_margin = 0.4, compute_localTests_anew) {
   if (!(stage == "" || is.null(stage))) {
     outpath <- paste(outpath, stage, sep = "-")
-  }  
+  }
   if ((file.exists(paste(outpath, "-localTests.RData", sep = ""))) && !(compute_localTests_anew)) {
     filename <- paste(outpath, "-localTests.RData", sep = "")
     load(filename)
@@ -110,19 +110,19 @@ evaluate_DAG <- function(data, graph, results, protein, position_numbering = NUL
     d <- data.frame(data, check.names = FALSE)
     colnames(d) <- paste("P", colnames(d), sep="")
     rownames(d) <- paste("R", rownames(d), sep="")
-    
+
     r <- localTests(graph, d)
     save(r, file = paste(outpath, "-r.RData", sep = ""))
     print("r saved.")
   }
-  
+
   result_position = paste("localTests", stage, "r", sep = "_")
   results[[result_position]] <- r
-  
+
   r$p.value <- p.adjust(r$p.value)
-  
+
   interesting_pos <- interesting_positions(protein, position_numbering, allpositions = colnames(data))
-  
+
   if (length(interesting_pos >= 2)) {
     if ((file.exists(paste(outpath, "-r_int.RData", sep = ""))) && !(compute_localTests_anew)) {
     filename <- paste(outpath, "-r_int.RData", sep = "")
@@ -158,21 +158,21 @@ evaluate_DAG <- function(data, graph, results, protein, position_numbering = NUL
     print("No interesting positons known, r_int = r")
     r_int <- r
   }
-    
+
   r_int_signif <- r_int[r_int$p.value < bad_alpha_threshold, ]
   result_position = paste("localTests", stage, "r_int_signif", sep = "_")
   results[[result_position]] <- r_int_signif
-  
+
   r_int_signif_bad_low <- r_int_signif[r_int_signif$estimate > estimate_margin, ]
   r_int_signif_bad_high <- r_int_signif[r_int_signif$estimate < -estimate_margin, ]
-  
+
   r_int_signif_bad <- rbind(r_int_signif_bad_low, r_int_signif_bad_high)
-  
+
   r_int_signif_bad <- r_int_signif_bad[order(rownames(r_int_signif_bad)), ]
-  
+
   result_position = paste("localTests", stage, "r_int_signif_bad", sep = "_")
   results[[result_position]] <- r_int_signif_bad
-  
+
   localTests_results = list(r, r_int, r_int_signif, r_int_signif_bad)
   names(localTests_results) = list("r", "r_int", "r_int_signif", "r_int_signif_bad")
   return(localTests_results)
@@ -181,7 +181,7 @@ evaluate_DAG <- function(data, graph, results, protein, position_numbering = NUL
 # # noch nicht ausfuehrlich getestet
 # # deprecated
 # which_pairs_of_postions <- function(r, position = NULL) {
-#   pairs <- unique(substr(rownames(r), 0, 14)) # wenn Knotennummern 4-stellig 
+#   pairs <- unique(substr(rownames(r), 0, 14)) # wenn Knotennummern 4-stellig
 #   if (!is.null(position)) {
 #     return(grep(paste(position), pairs, value=TRUE))
 #   } else {
@@ -198,9 +198,9 @@ pairs_of_pos <- function(r) {
 
 # plottypes: "graphs", "localTests", "both"
 # plotstages: "main", "sub", "anc", "all"
-plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph_layout, 
-                  plot_as_subgraphs = FALSE, plot_only_subgraphs = FALSE, coloring, colors, 
-                  outpath = "", caption = "", graph_output_formats = graph_output_formats, 
+plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph_layout,
+                  plot_as_subgraphs = FALSE, plot_only_subgraphs = FALSE, coloring, colors,
+                  outpath = "", caption = "", graph_output_formats = graph_output_formats,
                   combined_plot = FALSE, position_numbering) {
   if (!(outpath == "" || is.null(outpath))) {
     for (format in graph_output_formats) {
@@ -211,24 +211,24 @@ plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph
       }
     }
   } else if (!combined_plot) {
-    garbage <- graphics.off()
+    graphics.off()
   }
-  
+
   if (!combined_plot) {
     old_par <- par()
     par(mfrow = c(length(stages), length(plot_types)))
   }
-  
+
   for (stage in stages) {
     if ("localTests" %in% plot_types) {
       localTests_results <- results[[stage]]$localTests
-      
+
       r <- localTests_results[[1]]
       r_int <- localTests_results[[2]]
       r_int_signif_bad <- localTests_results[[4]]
-      
+
       #TODO: plotten wenn leer fktiert nicht! bzw. es sein lassen
-      
+
       if (dim(r_int_signif_bad)[1] > 0) {
         plotLocalTestResults(r_int_signif_bad, main = "r_int_signif_bad")
       }  else if (dim(r_int)[1] > 0) {
@@ -237,13 +237,13 @@ plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph
         plotLocalTestResults(r, main = "r")
       }
     }
-    
+
     if ("graphs" %in% plot_types){
       if (!is.null(results[[stage]]$graph$NEL)) {
-        plot_graph(graph = results[[stage]]$graph$NEL, caption = caption, protein = protein, position_numbering = position_numbering, 
-                   graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, 
+        plot_graph(graph = results[[stage]]$graph$NEL, caption = caption, protein = protein, position_numbering = position_numbering,
+                   graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                    coloring = coloring, colors = colors, outpath = "", output_formats = "")
-        
+
         # colors <- colors_for_graph(protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors)
         # nAttrs <- list()
         # nAttrs$fillcolor <- colors
@@ -251,7 +251,7 @@ plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph
         # # node shapes (pie)
         # drawNode <- node_function_for_graph(!is.null(coloring) && (coloring == "pie"))
         # pc_graph <- agopen(results[[stage]]$graph$NEL, layoutType = graph_layout, nodeAttrs = nAttrs, name = "pc") # circle produziert cluster
-        # plot(pc_graph, nodeAttrs = nAttrs, drawNode = drawNode)  
+        # plot(pc_graph, nodeAttrs = nAttrs, drawNode = drawNode)
       } else if (!is.null(results[[stage]]$graph$dagitty)) {
         plot(results[[stage]]$graph$dagitty, main = current_alpha)
       } else {
@@ -263,16 +263,16 @@ plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph
   # if (!(outpath == "" || is.null(outpath))) {
   #   dev.off()
   # }
-  
+
   if (!combined_plot) {
     par(old_par)
   }
-  
+
   return(results)
 }
 
 # if print_r_to_console:
-## if (print_exactly_one_r_short): r_int_signif_bad is printed to console, or, if empty, r_int_signif, 
+## if (print_exactly_one_r_short): r_int_signif_bad is printed to console, or, if empty, r_int_signif,
 ### or otherwise r_int, otherwise r (all abbridged, when longer than lines_in_abbr_of_r lines)
 ## otherwise: r_int_signif_bad is printed to console (abbridged, when longer than lines_in_abbr_of_r lines)
 # otherwise, only the statistics is printed
@@ -283,28 +283,28 @@ print_evaluation_results_to_info_file <- function(results, outpath, stages, unab
   options("width" = 200) # alle columns nebeneinander printen
   print("ANALYSIS")
   # cat("\n")
-  
+
   r_statistics <- list()
   r_print <- list()
   for (stage in stages) {
     print(paste(toupper(stage), ":", sep = ""))
     cat("\n")
-    
+
     localTests_results <- results[[stage]]$localTests
     names(localTests_results) <- c("r", "r_int", "r_int_signif", "r_int_signif_bad")
-    
+
     stage_table <- matrix(c(
       sapply(localTests_results, function(x) {return(dim(x)[1])}),
       sapply(localTests_results, function(x) {return(dim(x[x$estimate < 0,])[1])}),
       sapply(localTests_results, function(x) {return(dim(x[x$estimate > 0,])[1])}),
       sapply(localTests_results, function(x) {return(mean(x$estimate))})
     ), nrow = 4)
-    
+
     colnames(stage_table) <- c("# elements", "# negative elements", "# positive elements", "mean")
     rownames(stage_table) <- c("r", "r_int", "r_int_signif", "r_int_signif_bad")
-    
+
     r_statistics[[stage]] <- stage_table
-    
+
     if (print_exactly_one_r_short) {
       # r_print bestimmen
       if (dim(localTests_results["r_int_signif_bad"][[1]])[1] > 0) {
@@ -321,7 +321,7 @@ print_evaluation_results_to_info_file <- function(results, outpath, stages, unab
         r_print[[stage]]$value <- localTests_results["r"][[1]][order(localTests_results["r"][[1]]$estimate, decreasing = TRUE), ]
       }
     }
-    
+
     if (unabbrev_r_to_info) {
       options(max.print = 9999999)
       if (dim(localTests_results["r_int_signif_bad"][[1]])[1] > 0) {
@@ -369,7 +369,7 @@ print_evaluation_results_to_info_file <- function(results, outpath, stages, unab
   options("width" = old_width) # back to default
   sink()
   print("Written.")
-  
+
   # cat("\n")
   print("RESULTS:")
   if (print_r_to_console) {
@@ -379,10 +379,10 @@ print_evaluation_results_to_info_file <- function(results, outpath, stages, unab
       cat("\n")
     }
   }
-  
+
   print("STATISTICS:", quote = FALSE)
   print(r_statistics)
-  
+
   return(r_statistics)
 }
 

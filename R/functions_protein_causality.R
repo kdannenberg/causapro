@@ -254,9 +254,12 @@ protein_causality <- function(
   # if (output_parameters_in_results) {
     results$summary$caption <- caption
     results$summary$outpath <- outpath
+
+    results$general$int_pos <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
   # }
 
   if (graph_computation) {
+
     print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
     if (!dir.exists(output_dir)) {
       dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
@@ -267,17 +270,16 @@ protein_causality <- function(
       outpath <- paste(output_dir, filename, sep = "/")
     }
 
-
-
     results <- protein_causal_graph(results = results, data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering,
-                                    # output_dir = output_dir, filename = filename,
+                                    output_dir = output_dir, filename = filename,
                                     outpath = outpath, parameters_for_info_file = parameters_for_info_file,
                                     alpha = alpha, cor_cov_FUN = cor_cov_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
-                                    caption = caption,
+                                    # caption = caption,
                                     # analysis = causal_analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors,
                                     # graph_layout = graph_layout, graph_layout_igraph = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
                                     # unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
-                                    # compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew,
+                                    compute_pc_anew = compute_pc_anew
+                                    # , compute_localTests_anew = compute_localTests_anew,
                                     # graph_output_formats = graph_output_formats, numerical = numerical, mute_all_plots = mute_all_plots,
                                     # plot_no_isolated_nodes = plot_no_isolated_nodes, plot_with_graphviz = plot_with_graphviz
                                     )
@@ -361,7 +363,7 @@ protein_causality <- function(
                                                 mute_all_plots = mute_all_plots, caption = caption,
                                                 show_neg_causation = TRUE, neg_effects = "sep",
                                                 analysis = TRUE, percentile = ida_percentile,
-                                                causal_effects_function = "IDA-reset", cor_cov_FUN = cor_cov_FUN))
+                                                causal_effects_function = "IDA-reset", cov_FUN = cor_cov_FUN))
     # ida_function_w_o_pos_and_results
     ida_function_w_o_pos <- function_set_parameters(ida_function_w_o_pos_and_results,
                                                     parameters = list(results = results))
