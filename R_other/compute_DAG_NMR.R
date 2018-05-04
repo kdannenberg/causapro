@@ -1,6 +1,6 @@
 source("~/.configuration_code.R")
 
-source_all_function_scripts()
+# source_all_function_scripts()
 
 # source("functions_causal_effects.R")
 # source("functions_ci_tests.R")
@@ -19,12 +19,16 @@ source("configuration_data.R")
 
 # data_set = "inact",
 
+debug(plot_graph_new)
+# debug(protein_causality)
+
 
 results_p38g <- protein_causality_p38g(data_set = "inact",
-                                      alpha = 0.8, min_pos_var = 0, # show_variance_cutoff_plot = TRUE,
-                                      ranked = TRUE, plot_no_isolated_nodes = FALSE, plot_with_graphviz = TRUE, 
+                                      alpha = 0.2, min_pos_var = 0, # show_variance_cutoff_plot = TRUE,
+                                      ranked = TRUE, plot_no_isolated_nodes = FALSE, plot_with_graphviz = TRUE,
                                       pymol_sort_connected_components_by_length = FALSE, pymol_mix_connected_components = FALSE,
                                       print_connected_components = TRUE, coloring = "FS3-pie", compute_pc_anew = TRUE,
+                                      cor_cov_FUN = ""
                                       # rank_obs_per_pos = FALSE,
                                       # linkcommunities_k = 4,
                                       # data_set = "inact", only_cols = c("26", "78", "89", "109", "112", "170", "116", "119", "161"), only_cols_label = "Fig.7a.1"
@@ -111,13 +115,13 @@ results_p38g <- protein_causality_p38g(data_set = "inact",
 #   # "FS3-mix", "S3-mixed-manually-simple",
 #   # "FS3-mix", "S3-mixed-manually",
 #   # "FS3-pie", "S4")
-#   # colors = c(1, "", 4, "", 
+#   # colors = c(1, "", 4, "",
 #   #   "", "")
 #   plot_as_subgraphs = c(FALSE, TRUE, FALSE, TRUE, FALSE, TRUE)
 # } else {
 #   # coloring = "none"
 #   # colors = ""
-  
+
 #   # coloring = "auto"
 #   # coloring = NULL
 #   coloring = "FS3-pie" #FS3-mix" # "FS3-pie" #"FS3-mix"  # different Method
@@ -160,7 +164,7 @@ results_p38g <- protein_causality_p38g(data_set = "inact",
 #   data_list <- list()
 #   for (state in c("wild_inact_apo", "wild_ATP", "wild_act", "wild_BIRB796")) {
 #     source_of_data = paste(protein, type_of_data, state, sep = "-")
-    
+
 #     filename <- paste("~/Viren/R/Data/", source_of_data, ".csv", sep = "")
 #     # filename <- paste("../Data/", source_of_data, ".csv", sep = "")
 #     var <- read_data(filename, transpose = transpose)
@@ -189,22 +193,22 @@ results_p38g <- protein_causality_p38g(data_set = "inact",
 # output_dir <- paste("~/Viren/R/Outputs/", protein, "/", type_of_data, "/", filename, sep = "")
 # # output_dir <- paste("../Outputs/", protein, "/", type_of_data, "/", filename, sep = "")
 # outpath <- paste(output_dir, filename, sep = "/")
- 
+
 # source_of_data <- paste(state, " (", type_of_data, ")", sep = "")
 
 # caption <- caption(protein = protein, data = source_of_data, alpha = alpha, chars_per_line = 45) #TODO rem_gaps_threshold hinzufügen
-# parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = "/"))  
+# parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering, only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = "/"))
 
 # garbage <- graphics.off()
 # if (several_plots) {
 #   par(mfrow = c(3,2))
 # }
-# results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering, 
+# results <- protein_causal_graph(data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering,
 #                                 output_dir = output_dir, filename = filename, parameters_for_info_file = parameters_for_info_file,
-#                                 alpha = alpha, caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors, 
+#                                 alpha = alpha, caption = caption, analysis = analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors,
 #                                 graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
 #                                 unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
-#                                 compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew, 
+#                                 compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew,
 #                                 print_analysis = print_analysis, plot_analysis = plot_analysis)
 
 
@@ -218,14 +222,14 @@ results_p38g <- protein_causality_p38g(data_set = "inact",
 
 # # graphics.off()                                                                                                                                                          #yellow       #blue     #red       #green
 # # base_colors <- c("#FFD700", "#1874CD", "#CC0000",  "#69A019")
-# # cols <- compute_link_communities(results$orig$graph$NEL, k = 4, plot_bar_plot = FALSE, 
+# # cols <- compute_link_communities(results$orig$graph$NEL, k = 4, plot_bar_plot = FALSE,
 # #                                  classify_nodes = TRUE, pie_nodes = FALSE, color_edges = TRUE,
-# #                                  round_categories = 1, base_colors = base_colors , protein = protein, 
+# #                                  round_categories = 1, base_colors = base_colors , protein = protein,
 # #                                  outpath = outpath)
 # # ### cols <- compute_link_communities(results$orig$graph$NEL, k = 4, plot_bar_plot = FALSE, classify_nodes = TRUE, pie_nodes = FALSE, color_edges = TRUE,
 # #                                 #round_categories = 2, colors = c("#FFD700", "#1874CD", "#CC0000",  "#69A019"))
-# # 
-# # 
+# #
+# #
 # # coloring = "FS3-mix"
 # # colors <- 1
 # # node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
@@ -236,9 +240,9 @@ results_p38g <- protein_causality_p38g(data_set = "inact",
 # # print(cluster_edges)
 # # print(paste(sum(diag(cluster_edges)), ":", sum(cluster_edges) - sum(diag(cluster_edges)), "=", sum(diag(cluster_edges)) / (sum(cluster_edges) - sum(diag(cluster_edges)))))
 
-# # "#FFD700" (yellow), 
+# # "#FFD700" (yellow),
 # # "#FFFFFF" (white),
-# # "#69A019" (green), 
-# # "#1874CD" (blue),  
-# # "#CC0000" (red), 
+# # "#69A019" (green),
+# # "#1874CD" (blue),
+# # "#CC0000" (red),
 # # "#FF9933" (orange)

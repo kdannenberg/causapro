@@ -43,6 +43,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
   cat("\n")
   for (dir in direction) {
     if (dir == "of" || dir == "by" || dir == "from") {
+      # TODO: function: CAUSAL_EFFECTS_OF
       if (grepl(pattern = "ida", tolower(causal_effects_function))) {
         # IDA
         # effects <- idaFast(which(as.character(colnames(data)) == perturbed_position), 1:dim(data)[2], data, graph)
@@ -83,6 +84,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
                                                 cov(data), graph, outpath = outpath)
       }
     } else if (dir == "on") {
+      # TODO: function: CAUSAL_EFFECTS_OF
       if (grepl(pattern = "ida", tolower(causal_effects_function))) {
         # IDA
         ida_rev <- function(pos) {
@@ -197,8 +199,9 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
     effects[is.na(effects)] <- 0
     effects[is.infinite(effects)] <- 1
 
+    # TODO: return(effects)
 
-    # print(effects)
+    # TODO: function: PLOT_CAUSAL_EFFECTS
     cat("CAUSAL EFFECTS ")
     cat(toupper(dir))
     cat(" POSITION ")
@@ -257,6 +260,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
         current_effects <- NULL
       }
 
+      # TODO: rauszeihen (for (i in 1:dim(effects)[2]))
       if (pymol) {
         plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbed_position = perturbed_position,
                                     protein = protein, outpath = current_outpath, amplification_exponent = amplification_exponent,
@@ -284,6 +288,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
         barplot(vector_scaled_effects, main = paste("\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
       }
 
+      # TODO: rauszeihen (for (i in 1:dim(effects)[2]))
       if (analysis) {
         statistics_of_influenced_positions(effects = current_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
 

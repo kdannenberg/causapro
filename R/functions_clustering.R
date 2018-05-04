@@ -1,7 +1,7 @@
 #' Cluster by Causal Structure (Graph Clustering)
 # TODO: singuläre Cluster entfernen!
-protein_graph_clustering <- function(results, protein, position_numbering, coloring, colors, outpath,output_formats, file_separator, mute_all_plots, caption,
-                                     cluster_methods, add_cluster_of_conserved_positions,
+protein_graph_clustering <- function(results, protein, position_numbering, coloring, colors, outpath,output_formats, file_separator,
+                                     mute_all_plots, caption, cluster_methods, add_cluster_of_conserved_positions,
                                      removed_cols, more_levels_of_conservedness = FALSE, sort_clusters = length) {
 
   ## sort_clusters = "DDS-SVD") {
