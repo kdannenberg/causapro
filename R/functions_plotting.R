@@ -101,7 +101,8 @@ colors_for_nodes <- function(node_clusters, protein, coloring, colors, clusterin
   }
 }
 
-# TODO: call plot_graphs oder so
+# TODO: call plot_graph_by_coloring oder so
+# TODO: add par(mfrow=...), so everything fits on one plane
 plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", graph_layout = "dot", protein,
                        position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE,
                        plot_only_subgraphs = NULL, subgraphs, numerical = TRUE, output_formats, mute_all_plots = FALSE) {
@@ -131,7 +132,7 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         ## TODO: zusammenfügen:
         ## node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
         ## fillcolor <- colors_for_nodes(node_clusters = node_clustering, protein, coloring = coloring, colors = colors)
-        ## zu einer in bel. skript möglichst eindach aufrufbaren Fkt. die für protein, pos_numbering etc (colors mit default wert) fillcolors so zurückgibt,
+        ## zu einer in bel. skript möglichst einfach aufrufbaren Fkt. die für protein, pos_numbering etc (colors mit default wert) fillcolors so zurückgibt,
         ## dass man sie für diese plot.graph-Fkt nutzen kann
         # plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout_i, protein = protein,
         #                     position_numbering = position_numbering, coloring = coloring_i, colors = colors_i, outpath = outpath, caption = caption,

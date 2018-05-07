@@ -137,7 +137,7 @@ protein_causality <- function(
   # output_parameters_in_results = FALSE,
   #
   file_separator = "/",
-  graph_graph_cluster_methods = c("edge_betweenness", "infomap"),
+  graph_cluster_methods = c("edge_betweenness", "infomap"),
   add_cluster_of_conserved_positions = TRUE
 ) {
   # INIT
@@ -258,8 +258,8 @@ protein_causality <- function(
     results$general$int_pos <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
   # }
 
+  # CAUSAL STRUCTURE LEARNING
   if (graph_computation) {
-
     print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
     if (!dir.exists(output_dir)) {
       dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
@@ -311,7 +311,7 @@ protein_causality <- function(
     # if (!is.null(clustering)) {
     if (plot_clusters) {
       protein_graph_clustering(results = results, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, outpath = outpath, output_formats = graph_output_formats, file_separator = file_separator,
-                               caption = caption, mute_all_plots = mute_all_plots, graph_cluster_methods = graph_cluster_methods,
+                               caption = caption, mute_all_plots = mute_all_plots, cluster_methods = graph_cluster_methods,
                                add_cluster_of_conserved_positions = add_cluster_of_conserved_positions, removed_cols = removed_cols)
     }
 

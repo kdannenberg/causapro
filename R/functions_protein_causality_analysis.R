@@ -1,6 +1,5 @@
 protein_causal_graph <- function(results = list(), data, protein, type_of_data, source_of_data, position_numbering, output_dir, filename, outpath,
-                                 parameters_for_info_file, alpha, cor_cov_FUN = cov, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule,
-                                 compute_pc_anew) {
+                                 parameters_for_info_file, alpha, cor_cov_FUN = cov, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule) {
 
 
   # Computation of pc
@@ -22,9 +21,8 @@ protein_causal_graph <- function(results = list(), data, protein, type_of_data, 
   # garbage <- graphics.off()
   # if (!mute_all_plots) {
 
-  # TODO Marcel: write into .out-file instead
+
   #### some statistics
-  graph <- results$pc@graph
   number_of_edges <- sum(unlist(conflict_edges(graph)))
   number_of_nodes <- length(graph@nodes)
 
@@ -36,7 +34,7 @@ protein_causal_graph <- function(results = list(), data, protein, type_of_data, 
   results$summary$edges <- c(results$summary$edges, conflict_edges(graph))
   ### end
 
-
+  results$general$int_pos <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
 
 
 
