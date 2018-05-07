@@ -105,11 +105,11 @@ colors_for_nodes <- function(node_clusters, protein, coloring, colors, clusterin
 plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", graph_layout = "dot", protein,
                        position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE,
                        plot_only_subgraphs = NULL, subgraphs, numerical = TRUE, output_formats, mute_all_plots = FALSE) {
+  ## numerical serves no purpose right now, but it might in the future
   if (numerical) {
     if (missing(coloring) || missing(colors)) {
-      plot_graph_numerical(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout, protein = protein,
-                           position_numbering = position_numbering, coloring = coloring, colors = colors, outpath = outpath, caption = caption,
-                           plot_as_subgraphs = plot_as_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
+      plot_structure(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout, outpath = outpath, caption = caption,
+                           plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats, mute_all_plots = mute_all_plots)
     } else {
       for (i in 1:(max(c(1,length(coloring))))) {
         coloring_i <- coloring[i]
@@ -158,7 +158,7 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         if (!is.null(coloring) && !(coloring == "")) {
           outpath <- paste(outpath, "_", graph_layout, "_colored-", coloring, sep = "")
         }
-        plot_graph_new(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode,
+        plot_structure(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode,
                        graph_layout = graph_layout_i, outpath = outpath, caption = caption,
                        plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs,
                        subgraphs = subgraphs, output_formats = output_formats, mute_all_plots = mute_all_plots)
@@ -167,74 +167,6 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
   }
 }
 
-## calculate fillcolor, already done by colors_for_nodes
-# TODO: default-Wert für subgraphs
-plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, caption = "", graph_layout = "dot", protein,
-                                 position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE,
-                                 plot_only_subgraphs = NULL, subgraphs, output_formats = "pdf") {
-  # if (!(missing(subgraphs))) {
-  #   plot_as_subgraphs <- TRUE
-  # }
-
-  if (missing(fillcolor) || (missing(subgraphs) && (plot_as_subgraphs || !is.null(plot_only_subgraphs)))) {
-    node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
-  }
-  if (missing(fillcolor)) {
-    fillcolor <- colors_for_nodes(node_clusters = node_clustering, protein, coloring = coloring, colors = colors)
-  }
-
-  nAttrs <- list()
-  nAttrs$fillcolor <- fillcolor
-
-  eAttrs <- list()
-  eAttrs$color <- edgecolor
-  ## message when no subgraphs but plot_as_subgraphs true
-  if (missing(subgraphs)) {
-    if (plot_as_subgraphs || !is.null(plot_only_subgraphs)) {
-      subgraphs <- subgraphs_from_node_clusters(node_clustering, graph, protein = protein)
-    } else {
-      subgraphs <- NULL
-    }
-  }
-
-  # node shapes (pie)
-  if (missing(drawnode)) {
-    drawnode <- node_function_for_graph(!is.null(coloring) && (grepl("pie", coloring)))
-  }
-
-  if (!is.null(plot_only_subgraphs)) {
-    # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
-    graph <- subgraphs[[plot_only_subgraphs]]$graph
-    subgraphs <- NULL
-  }
-
-  pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs) # circle produziert cluster
-  plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
-
-  for (format in output_formats) {
-    if (!nchar(outpath) == 0) {
-      if (!is.null(coloring) && !(coloring == "")) {
-        if (format == "pdf") {
-          pdf(paste(outpath, "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
-        } else if ((format == "ps") || (format == "postscript")) {
-          postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
-        } else if (format == "svg") {
-          svg(paste(outpath, "_", graph_layout, "_colored-", coloring, ".svg", sep = ""))
-        }
-      } else {
-        if (format == "pdf") {
-          pdf(paste(outpath, ".pdf", sep = ""))
-        } else if ((format == "ps") || (format == "postscript")) {
-          postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
-        } else if (format == "svg") {
-          svg(paste(outpath, ".svg", sep = ""))
-        }
-      }
-      plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption)
-      dev.off()
-    }
-  }
-}
 
 
 # TODO: call plot_graphs oder so
@@ -243,7 +175,7 @@ plot_graph_numerical <- function(graph, fillcolor, edgecolor = NULL, drawnode, c
 ## what to do about drawnode, if it would be missing it was previously computed through
 ## node_function_for_graph which, however needs coloring
 ## for now I assume that this has been already computed and is NOT missing
-plot_graph_new <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="",
+plot_structure <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="",
                            plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL,
                            output_formats = "pdf", mute_all_plots = mute_all_plots) {
 
