@@ -552,7 +552,7 @@ protein_causality_G <- function(
   # PDZ_DDDG-all_372
   # PDZ_DDDG-all
   # PDZ_DDDG-all_SVD
-  type_of_variables = "numerical",
+  type_of_variables = "continuous",
   protein = "PDZ",
   type_of_data = "DDG",
   subtype_of_data = "10",
@@ -706,7 +706,7 @@ protein_causality_G <- function(
 
 protein_causality_S <- function(
   # data parameters
-  type_of_variables = "numerical",
+  type_of_variables = "continuous",
   protein = "PDZ",
   type_of_data = "DDS",
   subtype_of_data = "",
@@ -858,7 +858,7 @@ protein_causality_S <- function(
 
 protein_causality_p38g <- function(
   # data parameters
-  type_of_variables = "numerical",
+  type_of_variables = "continuous",
   protein = "p38g",
   type_of_data = "NMR",
   subtype_of_data = "",
@@ -1025,7 +1025,7 @@ protein_causality_NoV <- function(
   # TODO: wieder ermöglichen
   # subtype_of_data = c("Fuc", "BTS")
 
-  type_of_variables = "numerical",
+  type_of_variables = "continuous",
   protein = "NoV",
   # type_of_data = "NMR-Tit",
   type_of_data = "DDS",
