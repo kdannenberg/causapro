@@ -36,7 +36,7 @@ debug(node_colors_pie)
 # par(mfrow = c(1,4))
 results_S <- protein_causality_S(#alpha = 0.25, min_pos_var = 0, #data_set = "bin_approx",
                                  #alpha = 0.08, min_pos_var = 0.01,
-                                 alpha = 0.2, min_pos_var = 0.01, cor_cov_FUN = "", # cor_cov_FUN = "none",
+                                 alpha = 0.001, min_pos_var = 0.01, cor_cov_FUN = "", # cor_cov_FUN = "none",
                                  show_variance_cutoff_plot = TRUE, max_conflict_edges = 15,
                                  causal_analysis = TRUE, pc_maj_rule = TRUE, pc_solve_confl = TRUE,
                                  for_combined_plot = TRUE, data_in_results = TRUE, plot_with_graphviz = TRUE,
