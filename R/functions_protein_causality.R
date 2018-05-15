@@ -11,7 +11,7 @@ protein_causality <- function(
   # PDZ_DDDG-all_372
   # PDZ_DDDG-all
   # PDZ_DDDG-all_SVD
-  numerical,
+  type_of_variables = NULL,
   protein,
   #
   # type_of_data = "DG",
@@ -183,6 +183,20 @@ protein_causality <- function(
     cor_cov_FUN = ""
   }
 
+  if (missing(type_of_variables)) {
+    if (grepl("ALN", data_description)) {
+      type_of_variables <- "nominal"
+    } else if (grepl("rank", data_description)) {
+      type_of_variables <- "ordinal"
+    } else {
+      type_of_variables <- "continuous"
+    }
+  }
+  if (ranked) {
+    type_of_variables <- "ordinal"
+  }
+
+
   data_description <- adjust_data_description(data_description = data_description, ranked = ranked)
 
 
@@ -201,10 +215,12 @@ protein_causality <- function(
   #   data_description <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other)
   # }
 
-  outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other,
+  outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data,
+                         data_set = data_set, suffix = other,
                          alpha = alpha, min_pos_var = min_pos_var, only_cols_label = only_cols_label,
                          cor_cov_FUN = cor_cov_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
-                         pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule, file_separator = file_separator)
+                         pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
+                         file_separator = file_separator)
 
   directories <- strsplit(outpath, file_separator)
   filename <- directories[[1]][length(directories[[1]])]
@@ -235,6 +251,7 @@ protein_causality <- function(
   parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering,
                                                        only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = file_separator))
 
+  parameters_to_info_file(parameters_for_info_file, outpath)
 
   graph_computation <- graph_computation || evaluation || causal_analysis
   # Computation of the Graph
@@ -270,9 +287,11 @@ protein_causality <- function(
       outpath <- paste(output_dir, filename, sep = "/")
     }
 
+
+
     results <- protein_causal_graph(results = results, data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering,
                                     output_dir = output_dir, filename = filename,
-                                    outpath = outpath, parameters_for_info_file = parameters_for_info_file,
+                                    outpath = outpath, type_of_variables = type_of_variables,
                                     alpha = alpha, cor_cov_FUN = cor_cov_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
                                     # caption = caption,
                                     # analysis = causal_analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors,
@@ -284,13 +303,29 @@ protein_causality <- function(
                                     # plot_no_isolated_nodes = plot_no_isolated_nodes, plot_with_graphviz = plot_with_graphviz
                                     )
 
+    # numerical <- (type_of_variables == "continuous")
     plot_pc(graph = results$pc@graph, caption = caption, outpath = outpath, protein = protein, position_numbering = position_numbering,
             plot_types = plot_types, coloring = coloring, colors = colors,
             graph_layout = graph_layout, graph_layout_igraph = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs,
             plot_only_subgraphs = plot_only_subgraphs,unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console,
             lines_in_abbr_of_r = lines_in_abbr_of_r, compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew,
-            graph_output_formats = graph_output_formats, numerical = numerical, mute_all_plots = mute_all_plots,
+            graph_output_formats = graph_output_formats, numerical = TRUE, mute_all_plots = mute_all_plots,
             plot_no_isolated_nodes = plot_no_isolated_nodes, plot_with_graphviz = plot_with_graphviz)
+
+
+    #### some statistics
+    graph <- results$pc@graph
+
+    number_of_edges <- sum(unlist(conflict_edges(graph)))
+    number_of_nodes <- length(graph@nodes)
+
+    results$summary$nodes$sum <- number_of_nodes
+    results$summary$nodes$avg_deg <- number_of_edges/number_of_nodes
+    results$summary$nodes$labels <- graph@nodes
+
+    results$summary$edges$sum <- number_of_edges
+    results$summary$edges <- c(results$summary$edges, conflict_edges(graph))
+    ### end
   }
 
   # Evaluation
@@ -331,10 +366,13 @@ protein_causality <- function(
                                        mix_connected_components = pymol_mix_connected_components)
     if (print_connected_components) {
       conn_comp <- nonsingular_connected_components(graph)
-      print(conn_comp)
+      if (length(conn_comp) > 0) {
+        cat("Connected components:")
+        print(conn_comp)
+      }
     }
 
-    if (linkcommunities) {
+    if (linkcommunities && sum(unlist(conflict_edges(results$pc@graph))) > 0) {
       cols <- compute_link_communities(results$pc@graph, k = linkcommunities_k, plot_bar_plot = FALSE,
                                        classify_nodes = TRUE, pie_nodes = FALSE, color_edges = TRUE,
                                        round_categories = 1, base_colors = linkcommunities_base_colors , protein = protein,
@@ -514,7 +552,7 @@ protein_causality_G <- function(
   # PDZ_DDDG-all_372
   # PDZ_DDDG-all
   # PDZ_DDDG-all_SVD
-  numerical = TRUE,
+  type_of_variables = "numerical",
   protein = "PDZ",
   type_of_data = "DDG",
   subtype_of_data = "10",
@@ -596,7 +634,7 @@ protein_causality_G <- function(
   ) {
     argList <-  as.list(match.call(expand.dots = TRUE)[-1])
   # Enforce inclusion of non-optional arguments
-  argList$numerical <- numerical
+  argList$type_of_variables <- type_of_variables
   argList$protein = protein
   argList$type_of_data = type_of_data
   argList$subtype_of_data = subtype_of_data
@@ -668,7 +706,7 @@ protein_causality_G <- function(
 
 protein_causality_S <- function(
   # data parameters
-  numerical = TRUE,
+  type_of_variables = "numerical",
   protein = "PDZ",
   type_of_data = "DDS",
   subtype_of_data = "",
@@ -748,7 +786,7 @@ protein_causality_S <- function(
 
   argList <-  as.list(match.call(expand.dots = TRUE)[-1])
   # Enforce inclusion of non-optional arguments
-  argList$numerical <- numerical
+  argList$type_of_variables <- type_of_variables
   argList$protein = protein
   argList$type_of_data = type_of_data
   argList$subtype_of_data = subtype_of_data
@@ -820,7 +858,7 @@ protein_causality_S <- function(
 
 protein_causality_p38g <- function(
   # data parameters
-  numerical = TRUE,
+  type_of_variables = "numerical",
   protein = "p38g",
   type_of_data = "NMR",
   subtype_of_data = "",
@@ -845,7 +883,7 @@ protein_causality_p38g <- function(
   min_pos_var = 0,
   show_variance_cutoff_plot = NULL,
   ranked = TRUE,
-  rank_obs_per_pos = TRUE,
+  rank_obs_per_pos = TRUE,  # Alvaro's way: TRUE
   # analysis parameters: pc
   alpha = NULL,
   cor_cov_FUN = NULL,
@@ -901,7 +939,7 @@ protein_causality_p38g <- function(
 
   argList <-  as.list(match.call(expand.dots = TRUE)[-1])
   # Enforce inclusion of non-optional arguments
-  argList$numerical <- numerical
+  argList$type_of_variables <- type_of_variables
   argList$protein = protein
   argList$type_of_data = type_of_data
   argList$subtype_of_data = subtype_of_data
@@ -987,7 +1025,7 @@ protein_causality_NoV <- function(
   # TODO: wieder ermöglichen
   # subtype_of_data = c("Fuc", "BTS")
 
-  numerical = TRUE,
+  type_of_variables = "numerical",
   protein = "NoV",
   # type_of_data = "NMR-Tit",
   type_of_data = "DDS",
@@ -1063,7 +1101,7 @@ protein_causality_NoV <- function(
 
   argList <-  as.list(match.call(expand.dots = TRUE)[-1])
   # Enforce inclusion of non-optional arguments
-  argList$numerical <- numerical
+  argList$type_of_variables <- type_of_variables
   argList$protein = protein
   argList$type_of_data = type_of_data
   argList$subtype_of_data = subtype_of_data
