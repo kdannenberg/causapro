@@ -170,12 +170,21 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
 
 
 
-# TODO: call plot_graphs oder so
-
-## instead of fixing/working on the above function I think it is easier to write a new plot function the way we need it and then integrate it into the program if necessary
-## what to do about drawnode, if it would be missing it was previously computed through
-## node_function_for_graph which, however needs coloring
-## for now I assume that this has been already computed and is NOT missing
+#' Plots a given structure using the Rgraphviz package.
+#'
+#' @param graph The DAG to plot given as graph object (as specified in the R graph package).
+#' @param fillcolor List of colors indicating the node coloring. The name of a list element specifies the node (e.g. character string)
+#' @param edgecolor List of colors indicating the edge coloring. The name of a list element specifies the edge (the edge names are e.g. given by the edgeNames(graph) function of the R graph package).
+#' @param drawnode Draws the node as a pie. Parameter should be a list of drawing functions (details can be found in the Rgraphviz package documentation).
+#' @param caption A character string, the caption of the plot.
+#' @param graph_layout A character string. All graph layouts from Rgraphviz are available.
+#' @param outpath A character string, the path to the location where the plot should be stored. If an empty string is passed, the plot will not be stored.
+#' @param plot_as_subgraphs A boolean, indicating if the plot should be divided into multiple subgraphs.
+#' @param plot_only_subgraphs Possibly a list of indices, indicating which subgraphs should be plotted? <- TODO
+#' @param subgraphs TODO
+#' @param output_formats A character string, the desired output format. All standard R plotting options are available.
+#' @param mute_all_plots A boolean, if TRUE the structure will not be plotted.
+#' @return No return value.
 plot_structure <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="",
                            plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL,
                            output_formats = "pdf", mute_all_plots = mute_all_plots) {
@@ -263,13 +272,25 @@ get_eAttrs <- function(graph, igraph=FALSE) {
 
 ## wrapper around plot function below
 call_plot_igraph <- function(g, protein = "PDZ", position_numbering = "crystal", coloring = "", colors = "", clusters = FALSE, cluster_str = "infomap", clustering, caption = "", outpath = "", output_formats = c(), mute_all_plots = FALSE, layout_str = "layout_nicely", plot_as_subgraphs = "FALSE") {
-  plot_graph_igraph(g = g, nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)), edgecolor = get_edgecolor_igraph(g),clusters = clusters, cluster_str = cluster_str, clustering = clustering, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots, layout_str = layout_str, plot_as_subgraphs = plot_as_subgraphs, subgraphs = get_subgraphs_igraph(node_clusters = interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors), protein = protein))
+  plot_structure_igraph(g = g, nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)), edgecolor = get_edgecolor_igraph(g),clusters = clusters, cluster_str = cluster_str, clustering = clustering, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots, layout_str = layout_str, plot_as_subgraphs = plot_as_subgraphs, subgraphs = get_subgraphs_igraph(node_clusters = interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors), protein = protein))
 }
 
-## wrapper around the igraph plot function
-## further parameters will be added later
-## note that the graph that is given is still an graph object
-plot_graph_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str, clustering, caption, outpath, output_formats, mute_all_plots, layout_str, plot_as_subgraphs, subgraphs) {
+#' Plots a given structure using the igraph package. Note that the graph is still passed as an graph object (not an igraph object).
+#'
+#' @param g A graph object as specified in the R graph package.
+#' @param nodecolor List of colors indexed by the node.
+#' @param edgecolor List of colors indexed by edge id.
+#' @param clusters Boolean indicating if graph should be clustered.
+#' @param clustering Character string choosing a clustering from the ones available in the igraph package.
+#' @param caption A character string, the caption of the plot.
+#' @param outpath A character string, the path to the location where the plot should be stored. If an empty string is passed, the plot will not be stored.
+#' @param output_formats A character string, the desired output format. All standard R plotting options are available.
+#' @param mute_all_plots A boolean, if TRUE the structure will not be plotted.
+#' @param layout_str A character string. All graph layouts from igraph are available.
+#' @param plot_as_subgraphs A boolean, indicating if the plot should be divided into multiple subgraphs.
+#' @param subgraphs TODO
+#' @return No return value.
+plot_structure_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str, clustering, caption, outpath, output_formats, mute_all_plots, layout_str, plot_as_subgraphs, subgraphs) {
   ## par(mfrow = c(2,2))
   # kernel
   ig = igraph.from.graphNEL(g)
