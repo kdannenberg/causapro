@@ -10,7 +10,7 @@ library(stringr)
 
 # eqivalent to estimateDAG for numerical, Gauss-distributed data instead of an MSA
 estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath,
-                                             type_of_variables,
+                                             type_of_variables = "continuous",
                                              solve_conflicts = TRUE, u2pd = "retry",
                                              conservative = FALSE, maj_rule = FALSE) {
   # if (!length(only_cols) == 0) {
