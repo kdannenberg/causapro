@@ -11,12 +11,10 @@ library("dagitty")
 # results$orig$localTests_results$r_interesting --> r_int
 # results$orig$localTests_results$r_int_alpha --> r_int_sign
 # results$orig$localTests_results$r_int_bad -- r_int_sign_bad
-analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, graph_layout = graph_layout,
-                              plot_as_subgraphs = FALSE, plot_only_subgraphs = NULL,
-                              coloring = coloring, colors = colors, stages = c("orig", "anc"),
-                              plot_types = c("localTests", "graphs"), unabbrev_r_to_info, print_r_to_console,
-                              lines_in_abbr_of_r, compute_localTests_anew = FALSE, print = TRUE, plot = TRUE,
-                              caption = "", graph_output_formats = "pdf", combined_plot = FALSE) {
+analysis_after_pc <- function(pc, data, outpath, protein, position_numbering,
+                               stages = c("orig", "anc"),
+                               unabbrev_r_to_info, print_r_to_console,
+                              lines_in_abbr_of_r, compute_localTests_anew = FALSE, print = TRUE) {
   results <- list()
   results$pc <- pc
 
@@ -66,14 +64,14 @@ analysis_after_pc <- function(pc, data, outpath, protein, position_numbering, gr
     }
   }
 
-  if (plot) {
-    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-          coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
-          combined_plot = combined_plot, position_numbering = position_numbering)
-    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-          coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
-          combined_plot = combined_plot, position_numbering = position_numbering)
-  }
+  ## if (plot) {
+  ##   plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+  ##         coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
+  ##         combined_plot = combined_plot, position_numbering = position_numbering)
+  ##   plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+  ##         coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
+  ##         combined_plot = combined_plot, position_numbering = position_numbering)
+  ## }
   if (print) {
     results$r_statistics <- print_evaluation_results_to_info_file(results = results, outpath = outpath, stages, unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r)
   }
@@ -121,7 +119,8 @@ evaluate_DAG <- function(data, graph, results, protein, position_numbering = NUL
 
   r$p.value <- p.adjust(r$p.value)
 
-  interesting_pos <- interesting_positions(protein, position_numbering, allpositions = colnames(data))
+  ## interesting_pos <- interesting_positions(protein, position_numbering, allpositions = colnames(data))
+  interesting_pos <- interesting_positions(protein, position_numbering)
 
   if (length(interesting_pos >= 2)) {
     if ((file.exists(paste(outpath, "-r_int.RData", sep = ""))) && !(compute_localTests_anew)) {
@@ -201,7 +200,7 @@ pairs_of_pos <- function(r) {
 plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph_layout,
                   plot_as_subgraphs = FALSE, plot_only_subgraphs = FALSE, coloring, colors,
                   outpath = "", caption = "", graph_output_formats = graph_output_formats,
-                  combined_plot = FALSE, position_numbering) {
+                  combined_plot = FALSE, position_numbering, protein = protein) {
   if (!(outpath == "" || is.null(outpath))) {
     for (format in graph_output_formats) {
       if (format == "pdf") {

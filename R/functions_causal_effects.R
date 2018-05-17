@@ -23,7 +23,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
     graph = results$pc@graph
   }
 
-
+##----------------------------
   lines <- 1 # lines in plot_space
 
   if (direction == "both") {
@@ -39,7 +39,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
     # par(mfrow=c(lines, columns), oma = oma)
     par(oma = oma)
   }
-
+  ##-----------------------------
   cat("\n")
   for (dir in direction) {
     if (dir == "of" || dir == "by" || dir == "from") {
@@ -198,7 +198,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
     # TODO: make less restrictive; maybe only if all values non-numbers
     effects[is.na(effects)] <- 0
     effects[is.infinite(effects)] <- 1
-
+    ##-------------------------------------------
     # TODO: return(effects)
 
     # TODO: function: PLOT_CAUSAL_EFFECTS
@@ -212,7 +212,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
 
     scaled_effects <- matrix(nrow = dim(effects)[1], ncol = 0)
     rownames(scaled_effects) <- rownames(effects)
-
+    
     if (dir == "of" && ("of" %in% direction)) {
       lines <- dim(effects)[2] + 2
     } else if (dir == "of" && !("of" %in% direction)) {
@@ -227,7 +227,6 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
       }
       par(mfrow=c(ceiling(lines), columns))
     }
-
 
     for (i in 1:dim(effects)[2]) {
       cat("OPTION ")
@@ -259,7 +258,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
       if (!show_neg_causation) {
         current_effects <- NULL
       }
-
+      ##--------------------------------------
       # TODO: rauszeihen (for (i in 1:dim(effects)[2]))
       if (pymol) {
         plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbed_position = perturbed_position,
@@ -287,7 +286,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
         # barplot(vector_scaled_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
         barplot(vector_scaled_effects, main = paste("\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
       }
-
+      ##---------------------------------------------
       # TODO: rauszeihen (for (i in 1:dim(effects)[2]))
       if (analysis) {
         statistics_of_influenced_positions(effects = current_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)

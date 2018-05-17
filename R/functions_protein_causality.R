@@ -329,16 +329,22 @@ protein_causality <- function(
   }
 
   # Evaluation
-  # if ("evaluation" %in% steps) {
+                                        # if ("evaluation" %in% steps) {
   if (evaluation) {
-    results <- analysis_after_pc(results$pc, data, outpath = outpath, protein = protein, position_numbering = position_numbering,
-                                 graph_layout = graph_layout, coloring = coloring, colors = colors,  stages = stages,
-                                 plot_types = plot_types, unabbrev_r_to_info = unabbrev_r_to_info,
+    results <- analysis_after_pc(results$pc, data, outpath = outpath, protein = protein, position_numbering = position_numbering,  stages = stages,
+                                 unabbrev_r_to_info = unabbrev_r_to_info,
                                  print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
-                                 compute_localTests_anew = compute_localTests_anew, print = print_analysis, plot = plot_analysis,
-                                 caption = caption, graph_output_formats = graph_output_formats, combined_plot = combined_plot)
-    # print_analysis <- FALSE
-    # plot_analysis <- FALSE
+                                 compute_localTests_anew = compute_localTests_anew, print = print_analysis)
+    ## print_analysis <- FALSE
+    ## plot_analysis <- FALSE
+    if(plot_analysis) {
+          plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+          coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
+          combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
+    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+          coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
+          combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
+    }
   }
 
   # Pymol
