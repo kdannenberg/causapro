@@ -197,7 +197,7 @@ pairs_of_pos <- function(r) {
 
 # plottypes: "graphs", "localTests", "both"
 # plotstages: "main", "sub", "anc", "all"
-plots <- function(results, stages, plot_types = c("localTests", "graphs"), graph_layout,
+plot_structure_evaluation<- function(results, stages, plot_types = c("localTests", "graphs"), graph_layout,
                   plot_as_subgraphs = FALSE, plot_only_subgraphs = FALSE, coloring, colors,
                   outpath = "", caption = "", graph_output_formats = graph_output_formats,
                   combined_plot = FALSE, position_numbering, protein = protein) {

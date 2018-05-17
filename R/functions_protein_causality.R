@@ -338,10 +338,10 @@ protein_causality <- function(
     ## print_analysis <- FALSE
     ## plot_analysis <- FALSE
     if(plot_analysis) {
-          plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+          plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
           coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
           combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
-    plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+          plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
           coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
           combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
     }
