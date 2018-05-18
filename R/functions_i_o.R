@@ -27,13 +27,13 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
     rownames(data_i) <- paste(file, rownames(data_i), sep = "-")
     return(data_i)
   }
-  
+
   if (length(files) == 1) {   # for very mysterious reasons, the matrixs gets transposed by do.call(rbind, data_i) otherwise (rbind(data_i) does NOT transpose the matrix!)
     data <- read(files[1])
   } else {
     data <- do.call(rbind, lapply(files, read))
   }
-  
+
   # data <- matrix()
   # for (file in files) {
   #   filename <- paste(path_to_data, source_of_data, extension, sep = "")
@@ -55,12 +55,12 @@ analyse_data <- function(data, int_pos, min_var) {
 }
 
 
-# rank_obs_per_pos: should the ranking be done the other way round? 
+# rank_obs_per_pos: should the ranking be done the other way round?
 #   That is, per position, over all observations?
-adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, only_cols = NULL, 
-                        only_cols_grep = FALSE, 
+adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, only_cols = NULL,
+                        only_cols_grep = FALSE,
                         remove_low_variance = FALSE, zero_var_fct, min_var = 0.01, keep_quadratic = FALSE, mute_plot = TRUE) {
-  
+
   if (!length(only_cols) == 0) {
     # grep the right cols
     if (only_cols_grep) {
@@ -91,7 +91,7 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   colors <- rep("#FFFFFF", dim(data)[[1]])
   colors[drop] <- "#000000"
   if (!mute_plot) {
-    barplot(apply(data, 2, var), col = colors, las = 2, 
+    barplot(apply(data, 2, var), col = colors, las = 2,
             names.arg = colnames(data))
   }
   # var unter min_var wegschmeißen
@@ -108,10 +108,10 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   } else {
     print(paste("No columns removed."))
   }
-  
+
   print(paste("Next lowest variance:", min(apply(data, 2, var))))
-  
-  
+
+
   if (rank) {
     if (!rank_obs_per_pos) {
       if (!missing(data)) {
@@ -150,7 +150,7 @@ subtype_of_data_after_adjustment <- function(data, subtype_of_data, rank = FALSE
         subtype_of_data <- paste(subtype_of_data, "ranked-obs-per-pos", sep = "-")
     }
   }
-  
+
   # TODO: statistical test for zero variance
   if (subtype_of_data == "") {
     delimiter = ""
@@ -164,16 +164,16 @@ subtype_of_data_after_adjustment <- function(data, subtype_of_data, rank = FALSE
   } else {
     subtype_of_data <- paste(subtype_of_data, delimiter, "var>fct", sep = "-")
   }
-  
-  
-  
+
+
+
   return(subtype_of_data)
 }
 
 
 
-get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "", alpha, min_pos_var, only_cols_label = "", 
-                        cor_cov_FUN, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/", 
+get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "", alpha, min_pos_var, only_cols_label = "",
+                        cor_cov_FUN, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/",
                         filename_suffix, main_dir = "Outputs") {   ## last two options: only for get_old_outpath
   dir_1 <- protein
   dir_2 <- type_of_data
@@ -183,23 +183,23 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
   #   dir_3 <- type_of_data
   # }
   dir_3 <- pastes(type_of_data, paste(subtype_of_data, collapse = "+"), data_set, sep = "-")
-  
-  dir_4 <- paste0(get_data_description(protein = protein, type_of_data = type_of_data, 
-                                       subtype_of_data = paste(subtype_of_data, collapse = "+"), 
+
+  dir_4 <- paste0(get_data_description(protein = protein, type_of_data = type_of_data,
+                                       subtype_of_data = paste(subtype_of_data, collapse = "+"),
                                        data_set = data_set, suffix = suffix), "_alpha=", alpha)
-  
+
   # if (min_pos_var > 0) {
   #   dir_4 <- paste0(dir_min_pos_var, "_mv=", min_pos_var)
   # }
- 
-  
-  output_dir <- paste(main_dir, dir_1, dir_2, dir_3, dir_4, sep = file_separator) 
+
+
+  output_dir <- paste(main_dir, dir_1, dir_2, dir_3, dir_4, sep = file_separator)
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
   }
-  
+
   filename <- dir_4
-  
+
   if (!missing(filename_suffix)) {
     filename <- paste0(filename, filename_suffix)
   } else {
@@ -207,7 +207,7 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
       filename <- paste0(filename, "_")
     }
     filename <- paste0(filename, only_cols_label)
-    
+
     if (typeof(cor_cov_FUN) == "closure") {
       cor_cov_FUN <- deparse(substitute(cor_cov_FUN))
     }
@@ -216,10 +216,10 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
     }
     if (cor_cov_FUN != "") {
       filename <- paste0(filename, "_corFUN-", cor_cov_FUN)
-    } 
+    }
     if (pc_solve_conflicts) {
       filename <- paste0(filename, "_sc")
-    } 
+    }
     if (pc_conservative) {
       filename <- paste0(filename, "_cons")
     }
@@ -229,21 +229,21 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
     if (!(pc_solve_conflicts || pc_conservative)) {
       filename <- paste(filename, substr(pc_u2pd, 1, 3), sep = "_")
     }
-  } 
-  
-  
-  
+  }
+
+
+
   return(paste(output_dir, filename, sep = file_separator))
 }
 
-# gab früher den old_outpath zurück, 
+# gab früher den old_outpath zurück,
 # jetzt das Verzeichnis in dem es die Datei gibt, oder NULL, wenn es sie nicht gibt.
 # TODO: rename: get_file (oder so) / get_outpath_where_file_exists
 get_old_outpath <- function(outpath, suffix) {
   if (file.exists(paste0(outpath, suffix))) {
     return(paste0(outpath, suffix))
-  } 
-  
+  }
+
   if (endsWith(outpath, "_sc_maj")) {
     old_outpath <- str_replace(outpath, "_sc_maj", "_rel")
     if (file.exists(paste0(old_outpath, suffix))) {
@@ -251,7 +251,7 @@ get_old_outpath <- function(outpath, suffix) {
     }
   } # else {
   dirs <- str_split(outpath, "/", simplify = TRUE)
-    
+
   protein <- dirs[2]
   type_of_data <- dirs[3]
   extension <- sub(type_of_data, "", dirs[4])
@@ -270,35 +270,35 @@ get_old_outpath <- function(outpath, suffix) {
     }
     type_of_data <- pastes(type_of_data, rest_of_extension, sep = "-")
   }
-  
+
   start_of_alpha <- gregexpr(pattern ='alpha', outpath)[[1]][1]
   end_that_starts_with_first_alpha <- substr(outpath, start_of_alpha + 6, nchar(outpath))
   first_slash <- gregexpr(pattern ='/', end_that_starts_with_first_alpha)[[1]][1]
   alpha <- substr(end_that_starts_with_first_alpha, 1, first_slash - 1)
   # rest_of_extension <- str_replace(extension, ", "")
-  
+
   filename <- dirs[length(dirs)]
   start_of_suffix <- gregexpr(pattern ='alpha', filename)[[1]][1] + 6 + nchar(alpha)
-  filename_suffix <- substr(filename, start_of_suffix, nchar(filename)) 
-  
+  filename_suffix <- substr(filename, start_of_suffix, nchar(filename))
+
   old_outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, alpha = alpha,
                              filename_suffix = filename_suffix, main_dir = "Outputs_2017-09-14")
     # old_outpath <- paste(old_outpath, paste(dirs[c(5,6)], collapse = "/"), sep = "/")
   # }
-  
+
   old_outpath <- str_replace(old_outpath, "_sc_maj", "_rel")
   if (file.exists(paste0(old_outpath, suffix))) {
     return(paste0(old_outpath, suffix))
   }
-  
+
   return(NULL)
 }
 
-# loaded_object_ok_fun -> fun_loaded_object_ok, dabei einmal invertieren! 
+# loaded_object_ok_fun -> fun_loaded_object_ok, dabei einmal invertieren!
 # (Jetzt wirklich checken, ob es ok ist, nicht, ob es nicht ok ist!!)
 # TODO: old_outpath an geänderte get_old_outpath-Funktion anpassen
-compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_anew = FALSE, 
-                                    fun_loaded_object_ok = function(obj) return(TRUE), 
+compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_anew = FALSE,
+                                    fun_loaded_object_ok = function(obj) return(TRUE),
                                     try_old_outpath = TRUE) {
   # debug(FUN)
   filename <- paste(filename, ".RData", sep = "")
@@ -333,6 +333,7 @@ compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_an
   } # else {
   print(paste("Computing", obj_name, "object."))
   assign(obj_name, FUN())
+  create_parent_directory_if_necessary(filename)
   save(list = obj_name, file = filename)
   print(paste(obj_name, "object computed and saved."))
   # }
@@ -377,7 +378,7 @@ allAS = c("-", "A", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "P", 
 
 remove_gaps <- function(MSA_in, threshold, n_lev, allAS, outpath) {
   gap_freq <- t(apply(MSA_in, 2, function(x) (table(factor(x, levels = allAS)) / length(x))["-"]))
-  
+
   if (!is.null(outpath)) {
     sink(file = paste(outpath, "-info.txt", sep = ""), append = TRUE)
     cat("positions without more than 'remove_cols_gaps_threshold'=")
@@ -391,7 +392,7 @@ remove_gaps <- function(MSA_in, threshold, n_lev, allAS, outpath) {
     cat("\n")
     sink()
   }
-  
+
   MSA_out <- MSA_in[, gap_freq < threshold]
 }
 
@@ -441,17 +442,17 @@ print_pc_results_to_info_file <- function(outpath, pc) {
   sink()
 }
 
-outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr, neg_effects, perturbed_position, amplification_exponent, 
+outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr, neg_effects, perturbed_position, amplification_exponent,
                             amplification_factor, no_colors, rank_effects, effect_to_color_mode) {
   outpath <- paste0(outpath, "-total_effects_(", neg_effects, ")")
-  
+
   out_file <- outpath
   if (option_nr != "") {
     out_file <- paste0(out_file, "_#", option_nr)
   }
-  
+
   out_file <- paste0(out_file, "_", direction, "_pos_", perturbed_position)
-  
+
   if (effect_to_color_mode == "opacity") {
     out_file <- paste0(out_file, "-opac")
   }
@@ -460,7 +461,7 @@ outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr,
   } else {
     if (amplification_exponent != 1) {
       out_file <- paste0(out_file, "-ampl_exp=", amplification_exponent)
-    } 
+    }
     if (amplification_factor) {
       out_file <- paste0(out_file, "-ampl_fac")
     }
@@ -469,7 +470,7 @@ outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr,
     out_file <- paste0(out_file, "-bw")
   }
   out_file <- paste0(out_file, ".pml")
-  
+
   # print(out_file)
   # if (!mute_all_plots) {    ### HÄÄÄÄ???
     return(out_file)
@@ -480,11 +481,26 @@ get_conservation <- function(measure, protein) {
   type_of_data <- paste0("D", measure)
   data_description <- get_data_description(protein = protein, type_of_data = type_of_data)
   data <- read_data(files = data_description)
-  
+
   if (dim(data)[1] > 0) {
     data <- apply(data, 2, sum)
   }
-  
+
   return(data)
+}
+
+set_alpha_in_outpath <- function(outpath, alpha) {
+  pattern <- "alpha=[0-9]*.[0-9]+|alpha=[0-9]*e-[0-9]+"
+  return(str_replace_all(outpath, pattern, paste0("alpha=", alpha)))
+}
+
+create_parent_directory_if_necessary <- function(outpath, file_separator = "/") {
+  directories <- strsplit(outpath, file_separator)
+  # filename <- directories[[1]][length(directories[[1]])]
+  output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_separator, sep = file_separator)
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
+    print("Directory created.")
+  }
 }
 

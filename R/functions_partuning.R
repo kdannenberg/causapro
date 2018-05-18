@@ -1,12 +1,34 @@
 library(stringr) # for str_sub
 
+tune_alpha_bnlearn <- function(data, pc_func_w_o_alpha, alphas, outpath, compute_pc_anew) {
+  scores <- c()
+  for (alpha in alphas) {
+    outpath <- set_alpha_in_outpath(outpath = outpath, alpha = alpha)
+    pc_func <- function_set_parameters(pc_func_w_o_alpha, parameters = list(alpha = alpha))
+    loaded_object_ok_fun <- function(pc) {return(length(pc@graph@nodes) == dim(data)[2])}
+    pc <- compute_if_not_existent(filename = outpath,
+                                  FUN = pc_func, obj_name = "pc", compute_anew = compute_pc_anew,
+                                  fun_loaded_object_ok = loaded_object_ok_fun)
+    # class(pc) <- ('pcAlgo')
+
+    # bn <- as.bn(pc, check.cycles = FALSE)
+    bn <- as.bn(pc@graph)
+
+    score <- score(bn, as.data.frame(data))
+    scores[[as.character(alpha)]] <- score
+    print(paste("alpha =", alpha, "-> score =", score))
+  }
+
+  return(which(scores == max(scores)))
+}
+
 analyse_edge_types_by_alpha <- function(edge_types, numbers_of_nodes, plot_labels_as_rows_and_cols = TRUE,
                                         plot_logscale_alpha = FALSE,
                                         ylim_for_plots = c(0,200), # or NULL
                                         conflict_edge_weight = 1,
                                         print = TRUE, plot = TRUE) {
   best_alphas <- list()
-  
+
   if (print) {
     graphics.off()
     if (plot_labels_as_rows_and_cols) {
@@ -16,21 +38,21 @@ analyse_edge_types_by_alpha <- function(edge_types, numbers_of_nodes, plot_label
       # par(mfrow = c(length(measures), length(min_pos_vars)))
       par(mfcol = c(length(min_pos_vars), length(measures)))
     }
-    # for (measure_type_sub in c(# "DDS", 
+    # for (measure_type_sub in c(# "DDS",
     #   "DDG-10", "DDG-5", "DDG-all", "DDDG-10", "DDDG-5", "DDDG-all")) {
-    
+
     # plot row labels
     if (plot_labels_as_rows_and_cols) {
       plot.new()
       legend('center', legend = c(names(edge_types[[1]][[1]][[1]][[1]]), "sum"), col = c('red','green','orange', 'black'), lty = c(1,1,1,1), lwd = 1 )
       for (min_pos_var in min_pos_vars) {
         plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
-        text(x = 0.5, y = 0.5, paste("min_pos_var \n=", min_pos_var), 
+        text(x = 0.5, y = 0.5, paste("min_pos_var \n=", min_pos_var),
              cex = 1.6, col = "black")
       }
     }
   }
-  
+
   for (measure_type_sub in measures) {
     # measure = str_sub(strsplit(measure_type_sub, "-")[[1]][1], start = -1)
     type_of_data = strsplit(measure_type_sub, "-")[[1]][1]
@@ -44,37 +66,37 @@ analyse_edge_types_by_alpha <- function(edge_types, numbers_of_nodes, plot_label
       # plot row labels
       if (plot_labels_as_rows_and_cols) {
         plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
-        text(x = 0.5, y = 0.5, measure_type_sub, 
+        text(x = 0.5, y = 0.5, measure_type_sub,
              cex = 1.6, col = "black")
       }
     }
-    
+
     for (min_pos_var in min_pos_vars) {
       print(paste(measure_type_sub, " - min_pos_var =", min_pos_var))
       edge_types_by_alpha <- matrix(unlist(edge_types[[type_of_data]][[subtype_of_data]][[as.character(min_pos_var)]]), ncol = 3, byrow = TRUE)
-      
+
       rownames(edge_types_by_alpha) <- names(edge_types[[type_of_data]][[subtype_of_data]][[as.character(min_pos_var)]])
       colnames(edge_types_by_alpha) <- names(edge_types[[type_of_data]][[subtype_of_data]][[as.character(min_pos_var)]][[1]])
-      
+
       sum_of_edges <- apply(edge_types_by_alpha, 1, sum)
       edge_types_by_alpha <- cbind(edge_types_by_alpha, sum = sum_of_edges)
       quality <- apply(edge_types_by_alpha, 1, quality_of_edge_distribution, weight_of_conflict_edges = conflict_edge_weight)
       best_alpha <- as.numeric(names(quality)[which(quality == max(quality))])
       best_alphas[[measure_type_sub]][[as.character(min_pos_var)]] <- best_alpha
       print(paste("Best alpha, according to quality:", best_alpha))
-      
+
       if (print) {
         print(cbind(edge_types_by_alpha, quality = quality))
         cat("\n")
       }
-      
+
       if (plot) {
         if (plot_logscale_alpha) {
           log <- "x"
-        } else { 
+        } else {
           log <- ""
         }
-        
+
         n_nodes <- numbers_of_nodes[[type_of_data]][[subtype_of_data]][[as.character(min_pos_var)]]
         n_edges <- 1/2 * n_nodes * (n_nodes - 1)
         if (length(ylim_for_plots) == 1) {
@@ -82,7 +104,7 @@ analyse_edge_types_by_alpha <- function(edge_types, numbers_of_nodes, plot_label
         } else {
           current_ylim_for_plots <- ylim_for_plots
         }
-        
+
         matplot(edge_types_by_alpha, x = rownames(edge_types_by_alpha), xlab = "alpha", ylab = "# edges",
                 type = "l", lty = c(1,1,1,1), col = c('red','green','orange', 'black'), ylim = current_ylim_for_plots, log = log)
         abline(h = 15, col = "red", lty = 2)
@@ -132,7 +154,7 @@ find_best_alphas <- function(all_scores) {
 effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, with_effects = TRUE, for_all_alphas = FALSE,
                                         measures, min_pos_vars, cols_for_measures = TRUE, protein_causality_function) {
   effects <- list()
-  
+
   if (with_graphs && with_effects) {
     if (missing(min_pos_vars)) {
       lines_of_plot <- 2 * length(names(distinct_alphas[[1]]))
@@ -159,10 +181,10 @@ effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, wi
       cols_of_plot <- length(measures)
     }
   }
-  
+
   par(mfcol = c(lines_of_plot, cols_of_plot))
-  
-  
+
+
   if (missing(measures)) {
     measures <- names(distinct_alphas)
   }
@@ -175,22 +197,22 @@ effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, wi
       subtype_of_data <- ""
       subtype_of_data_list <- "-"
     }
-    
+
     if (missing(min_pos_vars)) {
       min_pos_vars <- as.numeric(names(distinct_alphas[[measure_type_sub]]))
     }
     for (min_pos_var in min_pos_vars) {
       alphas <- distinct_alphas[[measure_type_sub]][[as.character(min_pos_var)]]
-      
+
       if (!for_all_alphas && length(alphas) > 1) {
         # alpha <- alpha[1]
-        alphas <- alphas[length(alphas)] 
+        alphas <- alphas[length(alphas)]
       }
       for (alpha in alphas) {
         if (missing(protein_causality_function)) {
           protein_causality_function = get(paste0("protein_causality_", measure))
         }
-        
+
         pc_function_ <- function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
                                                                                               plot_clusters = FALSE, alpha = alpha, min_pos_var = min_pos_var,
                                                                                               for_combined_plot = TRUE))
@@ -203,9 +225,9 @@ effects_for_distinct_alphas <- function(distinct_alphas, with_graphs = FALSE, wi
           }
         if (with_graphs) {
           pc_function_(pc_maj_rule = TRUE) # mute_all_plots = FALSE
-          # protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data, alpha = alpha, 
+          # protein_causality_function(type_of_data = type_of_data, subtype_of_data = subtype_of_data, alpha = alpha,
           # min_pos_var = min_pos_var, for_combined_plot = TRUE, pc_maj_rule = TRUE)
-        } 
+        }
       }
     }
   }
@@ -238,9 +260,9 @@ apply_to_all_effects_in_nested_list <- function(all_effects, FUN, measures = NUL
       }
       for (min_pos_var in min_pos_vars) {
         if (!is.null(all_effects[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]][[which_effects]])) {
-          result[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]] <- 
+          result[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]] <-
             FUN(effects = all_effects[[measure_type_sub]][[as.character(alpha)]][[as.character(min_pos_var)]][[which_effects]],
-                measure = measure_type_sub, alpha = alpha, min_pos_var = min_pos_var)               # this line is new (measure, alpha, min_pos_var added), 
+                measure = measure_type_sub, alpha = alpha, min_pos_var = min_pos_var)               # this line is new (measure, alpha, min_pos_var added),
                                                                                                     # if not needed by FUN, hide by ...
         }
       }
@@ -263,12 +285,12 @@ apply_to_all_effects_in_nested_list <- function(all_effects, FUN, measures = NUL
 #                                                      #   protein_causality_function(type_of_data = eval(type_of_data), subtype_of_data = eval(subtype_of_data), min_pos_var = min_pos_var, alpha = alpha,
 #                                                      #                              pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_maj_rule = pc_maj_rule, pc_conservative = pc_conservative,
 #                                                      #                              evaluation = evaluation, causal_analysis = analysis, mute_all_plots = TRUE)
-#                                                      # pc_function = f_protein_causality_pc_parameters_eval_analysis(measure = measure, type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
-#                                                      #### min_pos_var = min_pos_var, alpha = alpha, 
+#                                                      # pc_function = f_protein_causality_pc_parameters_eval_analysis(measure = measure, type_of_data = type_of_data, subtype_of_data = subtype_of_data,
+#                                                      #### min_pos_var = min_pos_var, alpha = alpha,
 #                                                      # mute_all_plots = TRUE)
 #                                                      ida_function = causal_effects_ida,
-#                                                      pc_function = function_set_parameters(protein_causality_function, 
-#                                                                                            parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+#                                                      pc_function = function_set_parameters(protein_causality_function,
+#                                                                                            parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
 #                                                                                                              mute_all_plots = TRUE)),
 #                                                      new = FALSE, save = TRUE
 # ) {
@@ -276,18 +298,18 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure, # type_of_data, su
                                                      alphas = c(0.001, 0.005, 0.01, 0.05, 0.1), min_pos_vars = c(0.0001, 0.001, 0.01),
                                                      protein_causality_function = get(paste0("protein_causality_", measure)),
                                                      ida_function = causal_effects_ida,
-                                                     # pc_function = function_set_parameters(protein_causality_function, 
+                                                     # pc_function = function_set_parameters(protein_causality_function,
                                                      #      parameters = list(mute_all_plots = TRUE)),
                                                      new = FALSE, save = TRUE
 ) {
-  
+
   # if (missing(pc_function)) {
-  #   pc_function <- function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data, 
+  #   pc_function <- function_set_parameters(protein_causality_function, parameters = list(type_of_data = type_of_data, subtype_of_data = subtype_of_data,
   #                                                                         mute_all_plots = TRUE))
   # }
-  
+
   effects <- list()
-  
+
   graphics.off()
   oma <- c( 2, 0, 2, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
   if (length(alphas) <= 4) {
@@ -295,7 +317,7 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure, # type_of_data, su
   } else {
     par(mfrow = c(4, length(min_pos_vars)), oma = oma)
   }
-  
+
   for (alpha in alphas) {
     effects[[as.character(alpha)]] <- list()
     for (min_pos_var in min_pos_vars) {
@@ -341,18 +363,18 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure, # type_of_data, su
       cat("\n")
       cat(paste0("alpha = ", alpha, ", min_pos_var = ", min_pos_var, "\n"))
       pc_function <- function_set_parameters(protein_causality_function, parameters = list(alpha = alpha, min_pos_var = min_pos_var))
-      effects[[as.character(alpha)]][[as.character(min_pos_var)]] <- analyse_set_of_graphs(measure = measure, 
+      effects[[as.character(alpha)]][[as.character(min_pos_var)]] <- analyse_set_of_graphs(measure = measure,
                                                                                            # type_of_data = type_of_data, subtype_of_data = subtype_of_data,
                                                                                            # data_set = data_set,
                                                                                            pc_function = pc_function, direction = "mean",
                                                                                            alpha = alpha, min_pos_var = min_pos_var, ida_func = ida_function,
                                                                                            for_combined_plot = TRUE, scale_in_the_end = FALSE, new = new, save = save)
-      
+
       # }
       # }
     }
   }
-  
+
   ### title(main = paste0(type_of_data, "-", subtype_of_data),
   ###       sub = "Mean causal effects over all conflict graphs and over the effects on and of position 372", outer = TRUE)
   # title(main = paste0("Mean causal effects over all conflict graphs and over the effects on and of position 372",
@@ -383,13 +405,13 @@ quality_of_effects_classifier <- function(effects, int_pos, percentile = 1 - (le
   fn = setdiff(int_pos, most_influenced_pos_interesting)
   if (length(fp) != length(fn)) {
     # Das kann passieren, wenn es weniger als lenght(int_pos) nicht-null Effekte gibt!
-    warning("Not as many false positives as false negatives in quality_of_effects_classifier.") 
+    warning("Not as many false positives as false negatives in quality_of_effects_classifier.")
   }
   # return((mean(c(length(fp), length(fn)))) / length(setdiff(int_pos, perturbed_position)))
   return((max(c(length(fp), length(fn)))) / length(setdiff(int_pos, perturbed_position)))
 }
 
-score_for_effects <- function(effects, int_pos, perturbed_position = "372", effect_quality_height, false_pos_neg, 
+score_for_effects <- function(effects, int_pos, perturbed_position = "372", effect_quality_height, false_pos_neg,
                               percentile = 1 - (length(int_pos) / length(effects))) {
   if (missing(effect_quality_height)) {
     effect_quality_height <- quality_of_effects_distibution(effects = effects, int_pos = int_pos, perturbed_position = perturbed_position)
@@ -399,7 +421,7 @@ score_for_effects <- function(effects, int_pos, perturbed_position = "372", effe
   } else {
     quality_of_effects_classifier <- false_pos_neg / length(setdiff(int_pos, perturbed_position))
   }
-  
+
   s_height <- score_of_effects_height(effect_quality_height)
   s_classifier <- score_of_effects_classifier(quality_of_effects_classifier)
   return(s_height + s_classifier)
@@ -407,7 +429,7 @@ score_for_effects <- function(effects, int_pos, perturbed_position = "372", effe
 
 # give either effect_quality_height directly, or effects, int_pos and perturbed_position,
 # so it can be computed internally
-# previously: quality_score 
+# previously: quality_score
 score_of_effects_height <- function(effect_quality_height, effects, int_pos, perturbed_position, range_to_six = TRUE) {
   if (missing(effect_quality_height)) {
     effect_quality_height <- quality_of_effects_distibution(effects = effects, int_pos = int_pos, perturbed_position = perturbed_position)
@@ -460,7 +482,7 @@ score_of_effects_height <- function(effect_quality_height, effects, int_pos, per
 # previously: false_pos_neg_score
 score_of_effects_classifier <- function(false_pos_neg_fraction, effects, int_pos, perturbed_position) {
   if (missing(false_pos_neg_fraction)) {
-    false_pos_neg_fraction <- quality_of_effects_classifier(effects, int_pos = int_pos, perturbed_position = perturbed_position) 
+    false_pos_neg_fraction <- quality_of_effects_classifier(effects, int_pos = int_pos, perturbed_position = perturbed_position)
   }
   # if (false_pos_neg_fraction >= 1) {
   #   return(0)
@@ -514,12 +536,12 @@ quality_of_effects_distibution <- function(effects, int_pos, neg_effects = "disc
   effects <- effects[!names(effects) %in% perturbed_position]
   mean_effect_int <- function_over_effects(effects[names(effects) %in% int_pos])
   mean_effect_other <- function_over_effects(effects[!names(effects) %in% int_pos])
-  
+
   quality <- mean_effect_int / mean_effect_other
-  
+
   if (is.na(quality)) {
     quality = 0
-  }  
+  }
   return(quality)
 }
 

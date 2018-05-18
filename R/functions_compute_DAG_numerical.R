@@ -11,6 +11,7 @@ library(stringr)
 # eqivalent to estimateDAG for numerical, Gauss-distributed data instead of an MSA
 estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath,
                                              type_of_variables = "continuous",
+                                             indepTest, suffStat, # werden aktuell noch nciht genutzt
                                              solve_conflicts = TRUE, u2pd = "retry",
                                              conservative = FALSE, maj_rule = FALSE) {
   # if (!length(only_cols) == 0) {
@@ -34,28 +35,42 @@ estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath
   n <- nrow(data)
   V <- colnames(data)
 
-  if (type_of_variables == "continuous" || type_of_variables == "ordinal") {
-    suffStat <- list(C = cor_FUN(data), n=n, adaptDF = FALSE) #dm = dat$x        ### WHY COR?!
+  if (missing(indepTest) || is.null(indepTest))
+  if (type_of_variables == "continuous") {
+    if (missing(suffStat)) {
+      suffStat <- list(C = cor_FUN(data), n=n, adaptDF = FALSE) #dm = dat$x        ### WHY COR?!
+    }
     indepTest <- gaussCItest   # partial correlation
+  } else if (type_of_variables == "ordinal") {
+    if (missing(suffStat) || is.null(indepTest)) {
+      suffStat <- list(dm = data,#scale_data_for_pc_discrete(data),
+      nlev = apply(data, 2, function(row){length(unique(row))}),
+      adaptDF = FALSE)
+    }
+    indepTest <- ci_test_pc("jt")   # Jonckhere-Terptra
   } else if (type_of_variables == "nominal") {
-    suffStat <- list(dm = scale_data_for_pc_discrete(data),
-                     nlev = apply(data, 2, function(row){length(unique(row))}),
-                     adaptDF = FALSE)
+    if (missing(suffStat) || is.null(indepTest)) {
+      suffStat <- list(dm = data, #scale_data_for_pc_discrete(data),
+                       nlev = apply(data, 2, function(row){length(unique(row))}),
+                       adaptDF = FALSE)
+    }
     indepTest <- disCItest   # G^2
   }
 
-  sink(paste(outpath, ".txt", sep = ""))
+  # debug(indepTest)
+
+  # sink(paste(outpath, ".txt", sep = ""))
     # pc <- pc(suffStat, indepTest = ci_test_cor, alpha = alpha, labels = V, verbose = TRUE) #p=dim(MSA)[2]
     # without solve.confl = true, cycles can emerge in the final CPD"A"G.
     pc <- pc(suffStat, indepTest = indepTest, alpha = alpha, labels = V, verbose = TRUE,
              solve.confl = solve_conflicts, u2pd = u2pd, conservative = conservative, maj.rule = maj_rule) #p=dim(MSA)[2]
-  sink()
+  # sink()
 
   return(pc)
 }
 
 scale_data_for_pc_discrete <- function(data) {
   scaled_data <- 2 * data
-  scaled_data <- scaled_data-min(scaled_data)
+  scaled_data <- scaled_data - min(scaled_data)
   return(scaled_data)
 }

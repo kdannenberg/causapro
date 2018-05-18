@@ -39,6 +39,8 @@ protein_causality <- function(
   alpha = 0.01,
   ranked = FALSE,
   rank_obs_per_pos = FALSE,
+  pc_indepTest = NULL,
+  pc_suffStat = NULL,
   #
   # pc_solve_conflicts = FALSE,
   # pc_u2pd = "retry",
@@ -186,7 +188,7 @@ protein_causality <- function(
   if (missing(type_of_variables)) {
     if (grepl("ALN", data_description)) {
       type_of_variables <- "nominal"
-    } else if (grepl("rank", data_description)) {
+    } else if (grepl("rank", data_description) || ranked) {
       type_of_variables <- "ordinal"
     } else {
       type_of_variables <- "continuous"
@@ -222,9 +224,7 @@ protein_causality <- function(
                          pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
                          file_separator = file_separator)
 
-  directories <- strsplit(outpath, file_separator)
-  filename <- directories[[1]][length(directories[[1]])]
-  output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_separator, sep = file_separator)
+
 
   # output_dir = paste("../Outputs/", type_of_data, sep = "")
   # if (!dir.exists(output_dir)) {
@@ -249,7 +249,8 @@ protein_causality <- function(
   caption <- get_caption(protein = protein, data = data_description, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = chars_per_line) #TODO rem_gaps_threshold hinzufuegen
   # TODO Marcel: add all the new ones
   parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering,
-                                                       only_cols = only_cols, coloring = coloring, colors = colors, outpath = paste(output_dir, filename, sep = file_separator))
+                                                       only_cols = only_cols, coloring = coloring, colors = colors, #outpath = paste(output_dir, filename, sep = file_separator)
+                                                       outpath = outpath)
 
   parameters_to_info_file(parameters_for_info_file, outpath)
 
@@ -277,21 +278,39 @@ protein_causality <- function(
 
   # CAUSAL STRUCTURE LEARNING
   if (graph_computation) {
+    directories <- strsplit(outpath, file_separator)
+    # filename <- directories[[1]][length(directories[[1]])]
+    output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_separator, sep = file_separator)
     print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
-    if (!dir.exists(output_dir)) {
-      dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
-      print("Directory created.")
-    }
 
-    if (missing(outpath)) {
-      outpath <- paste(output_dir, filename, sep = "/")
-    }
+    create_parent_directory_if_necessary(outpath)
+    # if (!dir.exists(output_dir)) {
+    #   dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
+    #   print("Directory created.")
+    # }
+    #
+    # if (missing(outpath)) {
+    #   outpath <- paste(output_dir, filename, sep = "/")
+    # }
 
+    pc_func_w_o_alpha <- function_set_parameters(estimate_DAG_from_numerical_data,
+                                       parameters = list(data = data, outpath = outpath,
+                                                         cor_FUN = cor_cov_FUN, type_of_variables = type_of_variables,
+                                                         solve_conflicts = pc_solve_conflicts, u2pd = pc_u2pd,
+                                                         conservative = pc_conservative, maj_rule = pc_maj_rule))
 
+    # TODO: rausziehen
+    # alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
+    # alphas <- c(1e-5)
+    # alpha <- tune_alpha_bnlearn(data = data, pc_func_w_o_alpha = pc_func_w_o_alpha, alphas = alphas, outpath = outpath, compute_pc_anew = compute_pc_anew)
 
+    pc_func <- function_set_parameters(pc_func_w_o_alpha, parameters = list(alpha = alpha))
+
+    # TODO: gleich pc_func übergeben, alle anderen parameter rausnehmen
     results <- protein_causal_graph(results = results, data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering,
                                     output_dir = output_dir, filename = filename,
                                     outpath = outpath, type_of_variables = type_of_variables,
+                                    indepTest = pc_indepTest, suffStat = pc_suffStat,
                                     alpha = alpha, cor_cov_FUN = cor_cov_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
                                     # caption = caption,
                                     # analysis = causal_analysis, stages = stages, plot_types = plot_types, coloring = coloring, colors = colors,
@@ -588,6 +607,8 @@ protein_causality_G <- function(
   rank_obs_per_pos = FALSE,
   # analysis parameters: pc
   alpha = NULL,
+  pc_indepTest = NULL,
+  pc_suffStat = NULL,
   cor_cov_FUN = NULL,
   pc_solve_conflicts = TRUE,
   pc_u2pd = NULL,
@@ -651,6 +672,8 @@ protein_causality_G <- function(
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
+  argList$pc_indepTest = pc_indepTest
+  argList$pc_suffStat = pc_suffStat
   argList$ranked = ranked
   argList$rank_obs_per_pos = rank_obs_per_pos
   argList$cor_cov_FUN = cor_cov_FUN
@@ -739,6 +762,8 @@ protein_causality_S <- function(
   rank_obs_per_pos = FALSE,
   ## analysis parameters: pc
   alpha = NULL,
+  pc_indepTest = NULL,
+  pc_suffStat = NULL,
   cor_cov_FUN = NULL,
   pc_solve_conflicts = TRUE,
   pc_u2pd = NULL,
@@ -803,6 +828,8 @@ protein_causality_S <- function(
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
+  argList$pc_indepTest = pc_indepTest
+  argList$pc_suffStat = pc_suffStat
   argList$ranked = ranked
   argList$rank_obs_per_pos = rank_obs_per_pos
   argList$cor_cov_FUN = cor_cov_FUN
@@ -892,6 +919,8 @@ protein_causality_p38g <- function(
   rank_obs_per_pos = TRUE,  # Alvaro's way: TRUE
   # analysis parameters: pc
   alpha = NULL,
+  pc_indepTest = NULL,
+  pc_suffStat = NULL,
   cor_cov_FUN = NULL,
   pc_solve_conflicts = TRUE,
   pc_u2pd = NULL,
@@ -957,6 +986,8 @@ protein_causality_p38g <- function(
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
+  argList$pc_indepTest = pc_indepTest
+  argList$pc_suffStat = pc_suffStat
   argList$ranked = ranked
   argList$rank_obs_per_pos = rank_obs_per_pos
   argList$cor_cov_FUN = cor_cov_FUN
@@ -1045,6 +1076,8 @@ protein_causality_NoV <- function(
   only_cols = NULL,
   only_cols_label = "",
   alpha = 0.05,
+  pc_indepTest = NULL,
+  pc_suffStat = NULL,
   ranked = FALSE,
   rank_obs_per_pos = FALSE,
   cor_cov_FUN = NULL,
@@ -1118,6 +1151,8 @@ protein_causality_NoV <- function(
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
   argList$alpha = alpha
+  argList$pc_indepTest = pc_indepTest
+  argList$pc_suffStat = pc_suffStat
   argList$ranked = ranked
   argList$rank_obs_per_pos = rank_obs_per_pos
   argList$cor_cov_FUN = cor_cov_FUN
