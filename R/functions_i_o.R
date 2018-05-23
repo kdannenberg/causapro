@@ -3,7 +3,7 @@ library(stringr) # for str_replace_all
 get_data_description <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "") {
   data_description <- ""
   if (is.null(subtype_of_data) || subtype_of_data != "") {
-    type_of_data <- paste(type_of_data, subtype_of_data, sep = "-")
+    type_of_data <- paste(type_of_data, subtype_of_data, sep = "_")
   }
   data_description <- paste(protein, type_of_data, sep = "_")
   if (data_set != "") {
@@ -144,25 +144,22 @@ subtype_of_data_after_adjustment <- function(data, subtype_of_data, rank = FALSE
                                           zero_var_fct, min_var = 0.01) {
   if (rank) {
     if (!rank_obs_per_pos) {
-        subtype_of_data <- paste(subtype_of_data, "ranked", sep = "-")
-        # type_of_data <- paste(type_of_data, "ranked-pos-per-obs", sep = "-")
+        subtype_of_data <- pastes(subtype_of_data, "ranked", sep = "_")
+        # type_of_data <- pastes(type_of_data, "ranked-pos-per-obs", sep = "-")
     } else {
-        subtype_of_data <- paste(subtype_of_data, "ranked-obs-per-pos", sep = "-")
+        subtype_of_data <- pastes(subtype_of_data, "ranked-obs-per-pos", sep = "_")
     }
   }
 
   # TODO: statistical test for zero variance
-  if (subtype_of_data == "") {
-    delimiter = ""
-  } else {
-    delimiter = "-"
-  }
   if (!typeof(min_var) == "closure") {
     if ((min_var > 0) || (min_var < 0)) {
-      subtype_of_data <- paste0(subtype_of_data, delimiter, "var>", min_var)
+      # subtype_of_data <- paste0(subtype_of_data, delimiter, "var>", min_var)
+      subtype_of_data <- pastes(subtype_of_data, paste0("var>", min_var), sep = "_")
     }
   } else {
-    subtype_of_data <- paste(subtype_of_data, delimiter, "var>fct", sep = "-")
+    subtype_of_data <- pastes(subtype_of_data, "var>fct", sep = "_")
+    # subtype_of_data <- paste(subtype_of_data, delimiter, "var>fct", sep = "-")
   }
 
 
@@ -172,7 +169,8 @@ subtype_of_data_after_adjustment <- function(data, subtype_of_data, rank = FALSE
 
 
 
-get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "", alpha, min_pos_var, only_cols_label = "",
+get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "",
+                        alpha, min_pos_var, only_cols_label = "", pc_indepTest = "",
                         cor_cov_FUN, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/",
                         filename_suffix, main_dir = "Outputs") {   ## last two options: only for get_old_outpath
   dir_1 <- protein
@@ -182,7 +180,7 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
   # else {
   #   dir_3 <- type_of_data
   # }
-  dir_3 <- pastes(type_of_data, paste(subtype_of_data, collapse = "+"), data_set, sep = "-")
+  dir_3 <- pastes(type_of_data, paste(subtype_of_data, collapse = "+"), data_set, sep = "_")
 
   dir_4 <- paste0(get_data_description(protein = protein, type_of_data = type_of_data,
                                        subtype_of_data = paste(subtype_of_data, collapse = "+"),
@@ -208,6 +206,12 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
     }
     filename <- paste0(filename, only_cols_label)
 
+    if (typeof(pc_indepTest) == "closure") {
+      pc_indepTest <- deparse(substitute(pc_indepTest))
+    }
+    if (pc_indepTest != "") {
+      filename <- paste0(filename, "_test=", pc_indepTest)
+    }
     if (typeof(cor_cov_FUN) == "closure") {
       cor_cov_FUN <- deparse(substitute(cor_cov_FUN))
     }

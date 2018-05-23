@@ -55,20 +55,44 @@ ci_test_pc <- function(test, ...) {
       return(result$p.value)
     })
   } else {
-    return(function(x, y, S, stat, ...) {
+    independence_test <- function(x, y, S, stat, test, ...) {
       # colnames(stat$dm) <- paste("P", seq(1:dim(stat$dm)[2]), sep = "")
       #
-      # with_z <- function_set_parameters(ci.test, parameters = list(x = as.ordered(stat$dm[,x]), y = as.ordered(stat$dm[,y]), z = as.ordered(stat$dm[,z]), data = data.frame(stat$dm, check.names = FALSE), test = test, debug = TRUE))
-      # debug(with_z)
+      # zum debuggen (nur bei |S| > 0 bzw 1)
       if (length(S) == 0) {
         result <- ci.test(x = as.ordered(stat$dm[,x]), y = as.ordered(stat$dm[,y]), data = data.frame(stat$dm, check.names = FALSE), test = test, debug = TRUE, B = 1, ...)
-      } else {
+      } else if (length(S) == 1) {
         # z = paste("P", S, sep = "")
-        # result <- with_z(...)
-        result <- ci.test(x = as.ordered(stat$dm[,x]), y = as.ordered(stat$dm[,y]), z = as.ordered(stat$dm[,S]), data = data.frame(stat$dm, check.names = FALSE), test = test, debug = TRUE, ...)
+        # print(S)
+        # a <- rfklö
+        with_z_1 <- function_set_parameters(ci.test, parameters = list(x = as.ordered(stat$dm[,x]), y = as.ordered(stat$dm[,y]), z = as.ordered(stat$dm[,S]), data = data.frame(stat$dm, check.names = FALSE), test = test, debug = TRUE))
+        result <- with_z_1(...)
+        # result <- ci.test(x = as.ordered(stat$dm[,x]), y = as.ordered(stat$dm[,y]), z = as.ordered(stat$dm[,S]), data = data.frame(stat$dm, check.names = FALSE), test = test, debug = TRUE, ...)
+      } else {
+        # print(S)
+        z_list <- list()
+        S_data <- stat$dm[,S]
+        # print(S_data)
+        for (i in seq(1:dim(S_data)[2])) {
+          z_list[[i]] <- as.ordered(S_data[,i])
+        }
+        # print(z_list)
+        z <- do.call(data.frame, args = z_list)
+        with_z_higher <- function_set_parameters(ci.test, parameters = list(x = as.ordered(stat$dm[,x]), y = as.ordered(stat$dm[,y]),
+                                                                            # z = apply(stat$dm[,S], 2, function(v) {as.ordered(as.numeric(v))}),
+                                                                            z = z,
+                                                                            data = data.frame(stat$dm, check.names = FALSE), test = test, debug = TRUE))
+
+        # print(S)
+        # sjdkj
+        # debug(with_z_higher)
+        result <- with_z_higher(...)
       }
       return(result$p.value)
-    })
+    }
+    # debug(independence_test)
+    independence_test <- function_set_parameters(independence_test, parameters = list(test = test))
+    return(independence_test)
   }
 }
 
