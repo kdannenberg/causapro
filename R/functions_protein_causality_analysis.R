@@ -4,7 +4,7 @@ protein_causal_graph <- function(results = list(), data, protein, type_of_data, 
                                  alpha, cor_cov_FUN = cov, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule) {
 
 
-  outpath <- paste(outpath, type_of_variables, "pc", sep = "-")
+  outpath <- paste(outpath, paste(type_of_variables, "pc", sep = "-"), sep = "_")
 
   # Computation of pc
   # pc_fun <- function(outpath) {

@@ -35,36 +35,49 @@ estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath
   n <- nrow(data)
   V <- colnames(data)
 
-  if (missing(indepTest) || is.null(indepTest))
-  if (type_of_variables == "continuous") {
-    if (missing(suffStat)) {
-      suffStat <- list(C = cor_FUN(data), n=n, adaptDF = FALSE) #dm = dat$x        ### WHY COR?!
+  if (missing(indepTest) || is.null(indepTest)) {
+    if (type_of_variables == "continuous") {
+      if (missing(suffStat) || is.null(suffStat)) {
+        suffStat <- list(C = cor_FUN(data), n=n, adaptDF = FALSE) #dm = dat$x        ### WHY COR?!
+      }
+      indepTest <- gaussCItest   # partial correlation
+    } else if (type_of_variables == "ordinal") {
+      indepTest <- "jt" # Jonckhere-Terpstra
+      # if (missing(suffStat) || is.null(indepTest)) {
+      #   suffStat <- list(dm = data,#scale_data_for_pc_discrete(data),
+      #   nlev = apply(data, 2, function(row){length(unique(row))}),
+      #   adaptDF = FALSE)
+      # }
+      # indepTest <- ci_test_pc("jt")   # Jonckhere-Terpstra
+    } else if (type_of_variables == "nominal") {
+      if (missing(suffStat) || is.null(suffStat)) {
+        suffStat <- list(dm = data, #scale_data_for_pc_discrete(data),
+                         nlev = apply(data, 2, function(row){length(unique(row))}),
+                         adaptDF = FALSE)
+      }
+      indepTest <- disCItest   # G^2
     }
-    indepTest <- gaussCItest   # partial correlation
-  } else if (type_of_variables == "ordinal") {
-    if (missing(suffStat) || is.null(indepTest)) {
-      suffStat <- list(dm = data,#scale_data_for_pc_discrete(data),
-      nlev = apply(data, 2, function(row){length(unique(row))}),
-      adaptDF = FALSE)
+  } else {
+    if (typeof(indepTest) == "character") {
+      if (indepTest %in% c("jc", "mc-jt", "smc-jt")) {
+        if (missing(suffStat) || is.null(suffStat)) {
+          suffStat <- list(dm = data,#scale_data_for_pc_discrete(data),
+                           nlev = apply(data, 2, function(row){length(unique(row))}),
+                           adaptDF = FALSE)
+        }
+        indepTest <- ci_test_pc(indepTest)
+      }
     }
-    indepTest <- ci_test_pc("jt")   # Jonckhere-Terptra
-  } else if (type_of_variables == "nominal") {
-    if (missing(suffStat) || is.null(indepTest)) {
-      suffStat <- list(dm = data, #scale_data_for_pc_discrete(data),
-                       nlev = apply(data, 2, function(row){length(unique(row))}),
-                       adaptDF = FALSE)
-    }
-    indepTest <- disCItest   # G^2
   }
 
-  # debug(indepTest)
+  debug(indepTest)
 
   # sink(paste(outpath, ".txt", sep = ""))
     # pc <- pc(suffStat, indepTest = ci_test_cor, alpha = alpha, labels = V, verbose = TRUE) #p=dim(MSA)[2]
     # without solve.confl = true, cycles can emerge in the final CPD"A"G.
     pc <- pc(suffStat, indepTest = indepTest, alpha = alpha, labels = V, verbose = TRUE,
              solve.confl = solve_conflicts, u2pd = u2pd, conservative = conservative, maj.rule = maj_rule) #p=dim(MSA)[2]
-  # sink()
+  sink()
 
   return(pc)
 }

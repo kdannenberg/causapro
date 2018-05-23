@@ -220,7 +220,8 @@ protein_causality <- function(
   outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data,
                          data_set = data_set, suffix = other,
                          alpha = alpha, min_pos_var = min_pos_var, only_cols_label = only_cols_label,
-                         cor_cov_FUN = cor_cov_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
+                         pc_indepTest = pc_indepTest, cor_cov_FUN = cor_cov_FUN,
+                         pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
                          pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
                          file_separator = file_separator)
 
