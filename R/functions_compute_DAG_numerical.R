@@ -70,7 +70,7 @@ estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath
     }
   }
 
-  debug(indepTest)
+  # debug(indepTest)
 
   # sink(paste(outpath, ".txt", sep = ""))
     # pc <- pc(suffStat, indepTest = ci_test_cor, alpha = alpha, labels = V, verbose = TRUE) #p=dim(MSA)[2]

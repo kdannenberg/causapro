@@ -42,8 +42,8 @@ disCItest_given_nmin <- function(n_min) {
 #   }
 # }
 
-ci_test_pc <- function(test, ...) {
-  if (missing(test)) {
+ci_test_pc <- function(ci_test, ...) {
+  if (missing(ci_test)) {
     return(function(x, y, S, stat, ...) {
       # colnames(stat$dm) <- paste("P", seq(1:dim(stat$dm)[2]), sep = "")
       if (length(S) == 0) {
@@ -56,15 +56,9 @@ ci_test_pc <- function(test, ...) {
     })
   } else {
     independence_test <- function(x, y, S, stat, test, ...) {
-      # colnames(stat$dm) <- paste("P", seq(1:dim(stat$dm)[2]), sep = "")
-      #
-      # zum debuggen (nur bei |S| > 0 bzw 1)
       if (length(S) == 0) {
         result <- ci.test(x = as.ordered(stat$dm[,x]), y = as.ordered(stat$dm[,y]), data = data.frame(stat$dm, check.names = FALSE), test = test, debug = TRUE, B = 1, ...)
       } else if (length(S) == 1) {
-        # z = paste("P", S, sep = "")
-        # print(S)
-        # a <- rfklö
         with_z_1 <- function_set_parameters(ci.test, parameters = list(x = as.ordered(stat$dm[,x]), y = as.ordered(stat$dm[,y]), z = as.ordered(stat$dm[,S]), data = data.frame(stat$dm, check.names = FALSE), test = test, debug = TRUE))
         result <- with_z_1(...)
         # result <- ci.test(x = as.ordered(stat$dm[,x]), y = as.ordered(stat$dm[,y]), z = as.ordered(stat$dm[,S]), data = data.frame(stat$dm, check.names = FALSE), test = test, debug = TRUE, ...)
@@ -83,16 +77,15 @@ ci_test_pc <- function(test, ...) {
                                                                             z = z,
                                                                             data = data.frame(stat$dm, check.names = FALSE), test = test, debug = TRUE))
 
-        # print(S)
-        # sjdkj
         # debug(with_z_higher)
         result <- with_z_higher(...)
       }
       return(result$p.value)
     }
     # debug(independence_test)
-    independence_test <- function_set_parameters(independence_test, parameters = list(test = test))
-    return(independence_test)
+    par <- list(test = ci_test)
+    independ_test <- function_set_parameters(FUN = independence_test, parameters = par)
+    return(independ_test)
   }
 }
 
