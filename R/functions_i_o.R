@@ -493,9 +493,20 @@ get_conservation <- function(measure, protein) {
   return(data)
 }
 
-set_alpha_in_outpath <- function(outpath, alpha) {
-  pattern <- "alpha=[0-9]*.[0-9]+|alpha=[0-9]*e-[0-9]+"
-  return(str_replace_all(outpath, pattern, paste0("alpha=", alpha)))
+## set_alpha_in_outpath <- function(outpath, alpha) {
+##   pattern <- "alpha=[0-9]*.[0-9]+|alpha=[0-9]*e-[0-9]+"
+##   return(str_replace_all(outpath, pattern, paste0("alpha=", alpha)))
+## }
+
+set_in_outpath <- function(outpath, parameter_name, parameter_value) {
+  outpath <- str_replace_all(outpath, paste0(parameter_name, "=[^_]*_"), paste0(parameter_name, "=", parameter_value, "_"))
+  return(outpath)
+}
+
+overwrite_in_outpath <- function(outpath, pattern, replacement) {
+  outpath <- str_replace_all(outpath, pattern, replacement)
+  outpath <- str_replace_all(outpath, "[_-]{2}", "_")
+  return(outpath)
 }
 
 create_parent_directory_if_necessary <- function(outpath, file_separator = "/") {
