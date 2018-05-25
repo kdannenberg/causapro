@@ -57,9 +57,9 @@ estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath
       }
       indepTest <- disCItest   # G^2
     }
-  } else {
+  } #else {
     if (typeof(indepTest) == "character") {
-      if (indepTest %in% c("jc", "mc-jt", "smc-jt")) {
+      if (indepTest %in% c("jt", "mc-jt", "smc-jt")) {
         if (missing(suffStat) || is.null(suffStat)) {
           suffStat <- list(dm = data,#scale_data_for_pc_discrete(data),
                            nlev = apply(data, 2, function(row){length(unique(row))}),
@@ -67,7 +67,7 @@ estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath
         }
         indepTest <- ci_test_pc(indepTest)
       }
-    }
+    # }
   }
 
   # debug(indepTest)

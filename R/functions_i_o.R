@@ -209,7 +209,7 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
     if (typeof(pc_indepTest) == "closure") {
       pc_indepTest <- deparse(substitute(pc_indepTest))
     }
-    if (pc_indepTest != "") {
+    if (!(missing(pc_indepTest)) && !(is.null(pc_indepTest)) && pc_indepTest != "") {
       filename <- paste0(filename, "_test=", pc_indepTest)
     }
     if (typeof(cor_cov_FUN) == "closure") {
@@ -243,6 +243,7 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
 # gab früher den old_outpath zurück,
 # jetzt das Verzeichnis in dem es die Datei gibt, oder NULL, wenn es sie nicht gibt.
 # TODO: rename: get_file (oder so) / get_outpath_where_file_exists
+# TODO: try - <-> _
 get_old_outpath <- function(outpath, suffix) {
   if (file.exists(paste0(outpath, suffix))) {
     return(paste0(outpath, suffix))
@@ -505,6 +506,7 @@ set_in_outpath <- function(outpath, parameter_name, parameter_value) {
 
 overwrite_in_outpath <- function(outpath, pattern, replacement) {
   outpath <- str_replace_all(outpath, pattern, replacement)
+  outpath <- str_replace_all(outpath, "[-]{2}", "-")
   outpath <- str_replace_all(outpath, "[_-]{2}", "_")
   return(outpath)
 }
