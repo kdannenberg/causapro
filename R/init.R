@@ -1,6 +1,5 @@
 source_all_function_scripts <- function() {
   source("functions_causal_effects.R")
-  source("functions_ci_tests.R")
   source("functions_clustering.R")
   source("functions_compute_DAG_categorical.R")
   source("functions_compute_DAG_numerical.R")
@@ -18,4 +17,5 @@ source_all_function_scripts <- function() {
   source("functions_pymol.R")
   source("functions_tools.R")
   source("functions_results_analysis.R")
+  source("functions_ci_tests.R")
 }

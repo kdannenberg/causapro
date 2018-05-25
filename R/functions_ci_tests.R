@@ -91,6 +91,6 @@ ci_test_pc <- function(ci_test, ...) {
 
 
 
-ci_test_pc_chi_square <- ci_test_pc("x2")
+## ci_test_pc_chi_square <- ci_test_pc("x2")
 
-ci_test_cor <- ci_test_pc("cor")
+## ci_test_cor <- ci_test_pc("cor")

@@ -5,6 +5,46 @@
 
 library(colorspace)  # for mixcolor, hex
 
+plot_init <-  function(...) {
+  ##----------------------------
+  lines <- 1 # lines in plot_space
+  
+  if (direction == "both") {
+    direction <- c("of", "on")
+    lines <- 2
+  }
+    
+  if (!mute_all_plots) {
+    graphics.off()
+    # lines <- 6 # 1/2 für of, 2 für on (min, max)
+    columns <- 2
+    oma <- c( 0, 0, length(caption) + 1, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
+    # par(mfrow=c(lines, columns), oma = oma)
+    par(oma = oma)
+  }
+  ##-----------------------------
+}
+
+plot_causal_effects_ida <- function(...) {
+
+  ## graphics.off()
+  ## par(mfrow=c(m,n))
+  ## plot.new()
+  ## title("My 'Title' in a strange place", side = 3, line = -21, outer = TRUE)
+  ## mtext( "Centered Overall Title", outer = TRUE )
+  
+  vector_effects <- as.vector(current_effects)
+  is.na(vector_effects) <- sapply(vector_effects, is.infinite)   # set infinite values to NA
+  names(vector_effects) <- rownames(current_effects)
+  ## barplot(vector_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+  barplot(vector_effects, main = paste("\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+  vector_scaled_effects <- as.vector(current_scaled_effects)
+  is.na(vector_scaled_effects) <- sapply(vector_scaled_effects, is.infinite)   # set infinite values to NA
+  names(vector_scaled_effects) <- rownames(current_scaled_effects)
+  ## barplot(vector_scaled_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+  barplot(vector_scaled_effects, main = paste("\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+}
+
 compute_causal_effects_ida <- function(data, perturbed_position, direction = "both", weight_effects_on_by = "mean_abs_effect",
                 results, protein, coloring = "all", effect_hue_by = "effect", #effect_hue_by = "variance",
                 outpath,amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE,
@@ -176,33 +216,18 @@ tmp_causal_effects_ida <- function(data, perturbed_position, direction = "both",
                 effect_to_color_mode = "#FFFFFF", pymol = TRUE, pymol_bg_color = "black", caption, no_colors,
                 show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75, mute_all_plots = FALSE,
                 causal_effects_function, cov_FUN) {
-    if (!is.null(slotNames(results)) && all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
+  if (!is.null(slotNames(results)) && all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
     graph = results
   } else {
     graph = results$pc@graph
   }
 
-##----------------------------
-  lines <- 1 # lines in plot_space
-
-  if (direction == "both") {
-    direction <- c("of", "on")
-    lines <- 2
-  }
-
-  if (!mute_all_plots) {
-    graphics.off()
-    # lines <- 6 # 1/2 für of, 2 für on (min, max)
-    columns <- 2
-    oma <- c( 0, 0, length(caption) + 1, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
-    # par(mfrow=c(lines, columns), oma = oma)
-    par(oma = oma)
-  }
-  ##-----------------------------
   cat("\n")
   for (dir in direction) {
-    compute_causal_effects_ida(...)
-    # TODO: function: PLOT_CAUSAL_EFFECTS
+    ## computation rausgezogen, returned effects
+    effects <- compute_causal_effects_ida(...)
+    ## TODO: function: PLOT_CAUSAL_EFFECTS
+    ## wo genau starten mit plot Funktion
     cat("CAUSAL EFFECTS ")
     cat(toupper(dir))
     cat(" POSITION ")
@@ -260,35 +285,23 @@ tmp_causal_effects_ida <- function(data, perturbed_position, direction = "both",
         current_effects <- NULL
       }
       ##--------------------------------------
-      # TODO: rauszeihen (for (i in 1:dim(effects)[2]))
+      ## TODO: rauszeihen (for (i in 1:dim(effects)[2]))
+      ## so schon OK?
       if (pymol) {
         plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbed_position = perturbed_position,
                                     protein = protein, outpath = current_outpath, amplification_exponent = amplification_exponent,
                                     amplification_factor = amplification_factor, ranked = opacity_ranked,
                                     index = i, no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = current_effects)
       }
-
+      ##---------------------------------------
+      ## hier eigentliche plot Funktion?
       # if (barplot) {
       if (!mute_all_plots) {
-        # graphics.off()
-        # par(mfrow=c(m,n))
-        # plot.new()
-        # title("My 'Title' in a strange place", side = 3, line = -21, outer = TRUE)
-        # mtext( "Centered Overall Title", outer = TRUE )
-
-        vector_effects <- as.vector(current_effects)
-        is.na(vector_effects) <- sapply(vector_effects, is.infinite)   # set infinite values to NA
-        names(vector_effects) <- rownames(current_effects)
-        # barplot(vector_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
-        barplot(vector_effects, main = paste("\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
-        vector_scaled_effects <- as.vector(current_scaled_effects)
-        is.na(vector_scaled_effects) <- sapply(vector_scaled_effects, is.infinite)   # set infinite values to NA
-        names(vector_scaled_effects) <- rownames(current_scaled_effects)
-        # barplot(vector_scaled_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
-        barplot(vector_scaled_effects, main = paste("\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+        plot_causal_effects_ida(...)
       }
       ##---------------------------------------------
-      # TODO: rauszeihen (for (i in 1:dim(effects)[2]))
+      ## TODO: rauszeihen (for (i in 1:dim(effects)[2]))
+      ## so schon OK?
       if (analysis) {
         statistics_of_influenced_positions(effects = current_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
 
@@ -529,11 +542,26 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
     scaled_effects <- matrix(nrow = dim(effects)[1], ncol = 0)
     rownames(scaled_effects) <- rownames(effects)
     
-    if (dir == "of" && ("of" %in% direction)) {
+    ## if (dir == "of" && ("of" %in% direction)) {
+    ##   lines <- dim(effects)[2] + 2
+    ## } else if (dir == "of" && !("of" %in% direction)) {
+    ##   lines <- dim(effects)[2]
+    ## } else if (grepl("on", dir) && direction == "on") {
+    ##   lines <- 2
+    ## }
+
+    ## if (!(grepl("on", dir) && ("of" %in% direction)) && !mute_all_plots) {
+    ##   while (lines > 5) { # früher: 8, dann 6
+    ##     lines = lines / 2
+    ##   }
+    ##   par(mfrow=c(ceiling(lines), columns))
+    ## }
+
+    if (("on" %in% direction) && ("of" %in% direction)) {
       lines <- dim(effects)[2] + 2
-    } else if (dir == "of" && !("of" %in% direction)) {
+    } else if (("of" %in% direction) && !("on" %in% direction)) {
       lines <- dim(effects)[2]
-    } else if (grepl("on", dir) && direction == "on") {
+    } else if (any(grepl("on", direction)) && !("of" %in% direction)) {
       lines <- 2
     }
 
