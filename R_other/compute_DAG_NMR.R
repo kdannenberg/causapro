@@ -1,6 +1,6 @@
 source("~/.configuration_code.R")
 
-# source_all_function_scripts()
+source_all_function_scripts()
 
 # source("functions_causal_effects.R")
 # source("functions_ci_tests.R")
@@ -19,16 +19,23 @@ source("configuration_data.R")
 
 # data_set = "inact",
 
-debug(plot_graph_new)
+# debug(causal_effects_ida)
+# debug(plot_graph_new)
 # debug(protein_causality)
+# debug(estimate_DAG_from_numerical_data)
+# debug(compute_if_not_existent)
+# debug(compute_all_pairwise_effects)
+# debug(compare_effects_per_position)
 
 
 results_p38g <- protein_causality_p38g(data_set = "inact",
-                                      alpha = 0.2, min_pos_var = 0, # show_variance_cutoff_plot = TRUE,
-                                      ranked = TRUE, plot_no_isolated_nodes = FALSE, plot_with_graphviz = TRUE,
+                                      alpha = 0.9, min_pos_var = 0, # show_variance_cutoff_plot = TRUE,
+                                      ranked = TRUE, pc_indepTest = "jt", plot_no_isolated_nodes = TRUE, plot_with_graphviz = TRUE,
                                       pymol_sort_connected_components_by_length = FALSE, pymol_mix_connected_components = FALSE,
-                                      print_connected_components = TRUE, coloring = "FS3-pie", compute_pc_anew = TRUE,
-                                      cor_cov_FUN = ""
+                                      print_connected_components = TRUE, linkcommunities = FALSE, causal_analysis = TRUE,
+                                      coloring = "FS3-pie",
+                                      compute_pc_anew = FALSE,
+                                      # cor_cov_FUN = ""
                                       # rank_obs_per_pos = FALSE,
                                       # linkcommunities_k = 4,
                                       # data_set = "inact", only_cols = c("26", "78", "89", "109", "112", "170", "116", "119", "161"), only_cols_label = "Fig.7a.1"
