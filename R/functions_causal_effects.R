@@ -8,12 +8,12 @@ library(colorspace)  # for mixcolor, hex
 plot_init <-  function(...) {
   ##----------------------------
   lines <- 1 # lines in plot_space
-  
+
   if (direction == "both") {
     direction <- c("of", "on")
     lines <- 2
   }
-    
+
   if (!mute_all_plots) {
     graphics.off()
     # lines <- 6 # 1/2 für of, 2 für on (min, max)
@@ -32,7 +32,7 @@ plot_causal_effects_ida <- function(...) {
   ## plot.new()
   ## title("My 'Title' in a strange place", side = 3, line = -21, outer = TRUE)
   ## mtext( "Centered Overall Title", outer = TRUE )
-  
+
   vector_effects <- as.vector(current_effects)
   is.na(vector_effects) <- sapply(vector_effects, is.infinite)   # set infinite values to NA
   names(vector_effects) <- rownames(current_effects)
@@ -125,15 +125,15 @@ compute_causal_effects_ida <- function(data, perturbed_position, direction = "bo
     effects <- cbind(effects_max, effects_min)
     colnames(effects) <- c("max", "min")
     rownames(effects) <- colnames(data)
-    
+
     if (grepl(pattern = "reset", tolower(causal_effects_function))) {
       effects <- apply(X = effects, MARGIN = 2, FUN = set_effects_of_unconnected_positions_to_zero,
                        graph = graph, perturbed_position = perturbed_position, dir = dir)
     }
-    
+
     if (grepl("mean", weight_effects_on_by)) { # (weight_effects_on_by == "mean_abs_effect") {
       dir <- "on-rel-to-mean"
-      
+
       if (grepl(pattern = "ida", tolower(causal_effects_function))) {
         ## IDA
         ## means <- sapply(1:dim(data)[2], function(pos) {mean(abs(idaFast(pos, 1:dim(data)[2], data, graph)))})
@@ -183,10 +183,10 @@ compute_causal_effects_ida <- function(data, perturbed_position, direction = "bo
         medians <- sapply(1:dim(data)[2], function(pos) {median(abs(pseudo_idaFast_by_causalEffect(pos, 1:dim(data)[2],
                                                                                                    cov(data), graph, outpath = outpath)))})
       }
-      
+
       names(medians) <- colnames(data)
       medians = medians / medians[as.character(perturbed_position)]
-      
+
       if (grepl(pattern = "reset", tolower(causal_effects_function))) {
         medians_m <- as.matrix(medians)
         rownames(medians_m) <- colnames(data)
@@ -238,7 +238,7 @@ tmp_causal_effects_ida <- function(data, perturbed_position, direction = "both",
 
     scaled_effects <- matrix(nrow = dim(effects)[1], ncol = 0)
     rownames(scaled_effects) <- rownames(effects)
-    
+
     if (dir == "of" && ("of" %in% direction)) {
       lines <- dim(effects)[2] + 2
     } else if (dir == "of" && !("of" %in% direction)) {
@@ -541,7 +541,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
 
     scaled_effects <- matrix(nrow = dim(effects)[1], ncol = 0)
     rownames(scaled_effects) <- rownames(effects)
-    
+
     ## if (dir == "of" && ("of" %in% direction)) {
     ##   lines <- dim(effects)[2] + 2
     ## } else if (dir == "of" && !("of" %in% direction)) {

@@ -70,9 +70,9 @@ estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath
     # }
   }
 
-  # debug(indepTest)
+  undebug(indepTest)
 
-  # sink(paste(outpath, ".txt", sep = ""))
+  sink(paste(outpath, ".txt", sep = ""))
     # pc <- pc(suffStat, indepTest = ci_test_cor, alpha = alpha, labels = V, verbose = TRUE) #p=dim(MSA)[2]
     # without solve.confl = true, cycles can emerge in the final CPD"A"G.
     pc <- pc(suffStat, indepTest = indepTest, alpha = alpha, labels = V, verbose = TRUE,

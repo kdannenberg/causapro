@@ -44,7 +44,7 @@ protein_causality <- function(
   #
   # pc_solve_conflicts = FALSE,
   # pc_u2pd = "retry",
-  cor_cov_FUN = cov,
+  cor_cov_FUN = "",
   # a STRNG; default:
   # cor_cov_FUN = "", i.e. cor in pc, cov in ida
   # cor_cov_FUN = "cov" -> cov everywhere
@@ -444,14 +444,23 @@ protein_causality <- function(
       #                                                                             {return(dim(all_pairwise_effects)[1] == dim(data)[2])}))
       #
       if (conflict_edges(results$pc@graph)$conflict == 0) {
+        loaded_object_ok = function(all_pairwise_effects, data)
+        {return(
+          # dim(all_pairwise_effects)[1] == dim(data)[2] &&
+          dim(all_pairwise_effects)[2] == dim(data)[2]
+        )}
+
+        fun_loaded_object_ok <- function_set_parameters(loaded_object_ok, parameters = list(data = data))
+
+
         all_pairwise_effects <- compute_if_not_existent(filename = paste(outpath, "pairwise_effects", sep="-"),
                                                         # FUN = function_set_parameters(FUN, parameters = c(results = results)),
                                                         FUN = function_set_parameters(compute_all_pairwise_effects,
                                                                                       parameters = list(data = data, ida_function_w_o_pos = ida_function_w_o_pos)),
                                                         obj_name = "all_pairwise_effects",
-                                                        fun_loaded_object_ok = function(all_pairwise_effects)
-                                                        {return(dim(all_pairwise_effects)[1] == dim(data)[2])})
+                                                        fun_loaded_object_ok = fun_loaded_object_ok)
                                                         # {return(FALSE)})
+        results$all_pairwise_effects <- all_pairwise_effects
 
         results <- cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects, k = effects_cluster_k,
                                  cluster_method = effects_cluster_method, hclust_method = effects_hclust_method,
