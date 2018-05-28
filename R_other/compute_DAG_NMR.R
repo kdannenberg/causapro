@@ -30,7 +30,7 @@ source("configuration_data.R")
 
 results_p38g <- protein_causality_p38g(data_set = "inact",
                                       alpha = 0.9, min_pos_var = 0, # show_variance_cutoff_plot = TRUE,
-                                      ranked = TRUE, pc_indepTest = "jt", plot_no_isolated_nodes = TRUE, plot_with_graphviz = TRUE,
+                                      ranked = FALSE, pc_indepTest = "jt", plot_no_isolated_nodes = TRUE, plot_with_graphviz = TRUE,
                                       pymol_sort_connected_components_by_length = FALSE, pymol_mix_connected_components = FALSE,
                                       print_connected_components = TRUE, linkcommunities = FALSE, causal_analysis = TRUE,
                                       coloring = "FS3-pie",
