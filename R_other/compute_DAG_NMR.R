@@ -25,16 +25,15 @@ source("configuration_data.R")
 # debug(estimate_DAG_from_numerical_data)
 # debug(compute_if_not_existent)
 # debug(compute_all_pairwise_effects)
-# debug(compare_effects_per_position)
 
 
 results_p38g <- protein_causality_p38g(data_set = "inact",
-                                      alpha = 0.9, min_pos_var = 0, # show_variance_cutoff_plot = TRUE,
-                                      ranked = FALSE, pc_indepTest = "jt", plot_no_isolated_nodes = TRUE, plot_with_graphviz = TRUE,
+                                      alpha = 0.1, min_pos_var = 0.01, # show_variance_cutoff_plot = TRUE,
+                                      ranked = FALSE, pc_indepTest = NULL, plot_no_isolated_nodes = TRUE, plot_with_graphviz = TRUE,
                                       pymol_sort_connected_components_by_length = FALSE, pymol_mix_connected_components = FALSE,
                                       print_connected_components = TRUE, linkcommunities = FALSE, causal_analysis = TRUE,
                                       coloring = "FS3-pie",
-                                      compute_pc_anew = FALSE,
+                                      compute_pc_anew = FALSE
                                       # cor_cov_FUN = ""
                                       # rank_obs_per_pos = FALSE,
                                       # linkcommunities_k = 4,

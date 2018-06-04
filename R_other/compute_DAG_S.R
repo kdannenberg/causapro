@@ -43,11 +43,12 @@ source("configuration_data.R")
 # par(mfrow = c(1,4))
 results_S <- protein_causality_S(#alpha = 0.25, min_pos_var = 0, #data_set = "bin_approx",
                                  #alpha = 0.08, min_pos_var = 0.01,
-                                 alpha = 1, min_pos_var = 0.01, cor_cov_FUN = "", # cor_cov_FUN = "none",
-                                 ranked = TRUE, pc_indepTest = "jt", plot_no_isolated_nodes = TRUE,
+                                 alpha = 0.01, min_pos_var = 0.01, cor_cov_FUN = "", # cor_cov_FUN = "none",
+                                 ranked = FALSE, pc_indepTest = NULL, plot_no_isolated_nodes = TRUE,
                                  show_variance_cutoff_plot = FALSE, max_conflict_edges = 15,
                                  causal_analysis = FALSE, pc_maj_rule = TRUE, pc_solve_confl = TRUE,
                                  for_combined_plot = TRUE, data_in_results = TRUE, plot_with_graphviz = TRUE,
+                                 compute_pc_anew = FALSE,
                                  #plot_clusters = TRUE,
                                  linkcommunities = FALSE, evaluation = FALSE)
 # results_S <- protein_causality_S(type_of_data = "DS", alpha = 0.01, min_pos_var = 0.01, analysis = TRUE, pc_maj_rule = TRUE, pc_solve_confl = TRUE,

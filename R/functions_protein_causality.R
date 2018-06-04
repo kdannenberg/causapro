@@ -757,7 +757,7 @@ protein_causality_S <- function(
   only_cols = NULL,
   only_cols_label = "",
   ## data-dependent graphical parameters
-  graph_output_formats = "ps",
+  graph_output_formats = NULL,
   plot_with_graphviz = TRUE,
   graph_layout = "dot", # "circo", "fdp", "neato", "osage", "twopi"
   graph_layout_igraph = NULL,
