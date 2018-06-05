@@ -1,5 +1,60 @@
 library(stringr) # for str_sub
 
+#' Apply fucntion for different values of its parameters alpha and minposvar, select the maximum
+#' of the (numerical) results
+partuning_over_alpha_and_minposvar <- function(FUN, alphas, minposvars, best = max, fillcolor = NULL, ...) {#"#000000", ...) {
+  results <- matrix(nrow = length(alphas), ncol = length(minposvars))
+  rownames(results) <- alphas
+  colnames(results) <- minposvars
+
+  par(mfrow = c(length(alphas),length(minposvars)))
+
+  for (alpha in alphas) {
+    for (minposvar in minposvars) {
+      result <- FUN(alpha, minposvar)
+      results[as.character(alpha), as.character(minposvar)] <- result$value
+
+      # plot_graph(graph = result$graph, caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar, ", result = ", result), ...)
+
+      lines_needed_for_subcaption <- 1
+      mgp <- par()$mgp  # get current value
+      mgp[1] <- 2 + lines_needed_for_subcaption
+      mar <- par()$mar # get current value
+      mar[1] <- 3 + lines_needed_for_subcaption
+      par(mar = mar, mgp = mgp)
+
+      # if (caption_as_subcaption) {
+      #   caption = caption
+      #   main_caption = NULL  # soll missing sein
+      # } else {
+      #   main_caption = caption
+      #   caption = NULL
+      # }
+
+      plot_text(paste0("alpha = ", alpha, ", minposvar = ", minposvar), caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
+
+      sub <- paste("Value:", result$value, "\n")
+      title(sub = sub)
+      # dev.off()
+    }
+  }
+
+  best <-  which(results == best(results), arr.ind = TRUE)
+  best_alpha <- rownames(results)[best[1]]
+  best_minposvar <- colnames(results)[best[2]]
+  return(list(best_alpha = best_alpha, best_minposvar = best_minposvar))
+
+}
+
+example_function <- function(alpha, minposvar) {
+  m <- matrix(c(4,3,2,1), ncol = 2, byrow = TRUE)
+  rownames(m) <- c(0.01, 0.1)
+  colnames(m) <- c(0.001, 0.01)
+  return(list(graph = graphNEL(nodes = c("*")), value = m[as.character(alpha), as.character(minposvar)]))
+}
+
+
+
 tune_alpha_bnlearn <- function(data, pc_func_w_o_alpha, alphas, outpath, compute_pc_anew) {
   scores <- c()
   for (alpha in alphas) {

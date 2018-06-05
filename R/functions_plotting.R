@@ -185,7 +185,7 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
 #' @param output_formats A character string, the desired output format. All standard R plotting options are available.
 #' @param mute_all_plots A boolean, if TRUE the structure will not be plotted.
 #' @return No return value.
-plot_structure <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="",
+plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=NULL, caption="", graph_layout="dot", outpath="",
                            plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL,
                            output_formats = "pdf", mute_all_plots = mute_all_plots) {
 
@@ -402,8 +402,8 @@ plot_infeasible <- function(caption = "") {
   plot_text(text = "infeasible", caption = caption)
 }
 
-plot_text <- function(text, caption = "") {
-  plot(c(0, 1), c(0, 1), xlab = "", ylab = "", bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n', main = caption)
+plot_text <- function(text, caption = "", ...) {
+  plot(c(0, 1), c(0, 1), xlab = "", ylab = "", bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n', main = caption, ...)
   text(x = 0.5, y = 0.5, text, cex = 1.6, col = "black")
 }
 

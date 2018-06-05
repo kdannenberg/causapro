@@ -73,34 +73,34 @@ if (new_whole || !file.exists(file)) {
     data_set = strsplit(measure_type_sub, "-")[[1]][3]
     if (is.na(subtype_of_data)) {
       subtype_of_data <- ""
-    } 
+    }
     if (is.na(data_set)) {
       data_set <- ""
     }
-    
+
     if (grepl("none", data_set)) {
       cor_cov_FUN = "none"
       data_set = gsub("none", "", data_set)
     } else {
       cor_cov_FUN = cor_cov_FUN_default
     }
-    
+
     if (grepl("bin_approx", data_set)) {
       perturbed_position = "98"
     } else {
       perturbed_position = "372"
     }
-    
-    protein_causality_FUN <- function_set_parameters(get(paste0("protein_causality_", measure)), 
-      parameters = list(mute_all_plots = TRUE,
-                        cor_cov_FUN = cor_cov_FUN,
-                        type_of_data = strsplit(measure_type_sub, "-")[[1]][1],
-                        subtype_of_data = subtype_of_data,
-                        data_set = data_set))
-    
-    ida_FUN <- function_set_parameters(causal_effects_ida, 
-       parameters = list(perturbed_position = perturbed_position, cov_FUN = cor_cov_FUN))
-    
+
+    protein_causality_FUN <- function_set_parameters(get(paste0("protein_causality_", measure)),
+                                                     parameters = list(mute_all_plots = TRUE,
+                                                                       cor_cov_FUN = cor_cov_FUN,
+                                                                       type_of_data = strsplit(measure_type_sub, "-")[[1]][1],
+                                                                       subtype_of_data = subtype_of_data,
+                                                                       data_set = data_set))
+
+    ida_FUN <- function_set_parameters(causal_effects_ida,
+                                       parameters = list(perturbed_position = perturbed_position, cov_FUN = cor_cov_FUN))
+
     # all_effects[[measure_type_sub]] <- tryCatch(analyse_graphs_for_alphas_and_minposvars(measure = measure,
     #                                                 # type_of_data = strsplit(measure_type_sub, "-")[[1]][1],
     #                                                 # subtype_of_data = subtype_of_data,
@@ -109,7 +109,6 @@ if (new_whole || !file.exists(file)) {
     #                                                 protein_causality_function = protein_causality_FUN,
     #                                                 ida_function = ida_FUN,
     #                                                 new = new_single_runs, save = save_single_runs), finally = plot_text(text = "Error."))
-    # plot_text(text = "Jo.")
     all_effects[[measure_type_sub]] <- analyse_graphs_for_alphas_and_minposvars(measure = measure,
                                                     # type_of_data = strsplit(measure_type_sub, "-")[[1]][1],
                                                     # subtype_of_data = subtype_of_data,
@@ -137,12 +136,12 @@ if (new_whole || !file.exists(file)) {
 #     }
 #     res[[measure_type_sub]] <- FUN(measure = measure, type_of_data = strsplit(measure_type_sub, "-")[[1]][1],
 #                                    subtype_of_data = subtype_of_data)
-#     
+#
 #   }
 #   return(res)
 # }
-# 
-# 
+#
+#
 # analyse_graphs_fct <- set_parameters(analyse_graphs_for_alphas_and_minposvars, parameters = list(alphas = alphas, min_pos_vars = min_pos_vars))
 # all_effects_do <- do_for_measures(analyse_graphs_fct, measures)
 

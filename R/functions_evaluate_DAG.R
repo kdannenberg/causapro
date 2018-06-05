@@ -258,7 +258,7 @@ plot_structure_evaluation<- function(results, stages, plot_types = c("localTests
       }
     }
   }
-  # TODO: einfach rausgenommen. ist das ok?
+  # TODO: einfach rausgenommen. ist das ok?
   # if (!(outpath == "" || is.null(outpath))) {
   #   dev.off()
   # }

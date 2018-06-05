@@ -13,7 +13,7 @@ source("configuration_data.R")
 
 # debug(get_outpath)
 # debug(protein_causality)
-# debug(plot_graph)
+debug(plot_graph)
 # debug(analyse_set_of_graphs)
 # debug(determine_set_of_graphs)
 # debug(pymol_mean_effects)

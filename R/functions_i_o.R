@@ -129,6 +129,16 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
         type_of_data <- paste(type_of_data, "ranked-obs-per-pos", sep = "-")
       }
     }
+    singular <- apply(data, 2, function(v) length(unique(v)) == 1)
+    if (length(singular) > 0) {
+      # cat("\n")
+      print(paste("Removed columns:", paste(colnames(data)[singular], collapse = ", ")))
+      if (keep_quadratic) {
+        data <- data[!singular, !singular]
+      } else {
+        data <- data[, !singular]
+      }
+    }
   }
   return(data)
 }
