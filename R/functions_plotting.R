@@ -185,9 +185,9 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
 #' @param output_formats A character string, the desired output format. All standard R plotting options are available.
 #' @param mute_all_plots A boolean, if TRUE the structure will not be plotted.
 #' @return No return value.
-plot_structure <- function(graph, fillcolor, edgecolor=NULL, drawnode, caption="", graph_layout="dot", outpath="",
+plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawAgNode, caption="", graph_layout="dot", outpath="",
                            plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL,
-                           output_formats = "pdf", mute_all_plots = mute_all_plots) {
+                           output_formats = "pdf", mute_all_plots = FALSE) {
 
   nAttrs <- list()
   nAttrs$fillcolor <- fillcolor
