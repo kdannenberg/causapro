@@ -122,8 +122,8 @@ protein_causality <- function(
   plot_with_graphviz = TRUE, # NEW!
   #
   pymol_show_int_pos = TRUE,                        # NEW!
-  pymol_sort_connected_components_by_length = TRUE, # NEW!
-  pymol_mix_connected_components = FALSE,           # NEW!
+  pymol_sort_connected_components_by_length = FALSE, # NEW!
+  pymol_mix_connected_components = TRUE,           # NEW!
   #
   print_connected_components = FALSE,               # NEW!
   #
@@ -141,7 +141,8 @@ protein_causality <- function(
   file_separator = "/",
   graph_cluster_methods = c("edge_betweenness", "infomap"),
   add_cluster_of_conserved_positions = TRUE,
-  filename
+  filename,
+  compare_effects = FALSE
   ) {
   if(!missing(filename)) {
     argList <-  as.list(match.call(expand.dots = TRUE)[-1])
@@ -329,14 +330,15 @@ protein_causality <- function(
                                     )
 
     # numerical <- (type_of_variables == "continuous")
-    plot_pc(graph = results$pc@graph, caption = caption, outpath = outpath, protein = protein, position_numbering = position_numbering,
-            plot_types = plot_types, coloring = coloring, colors = colors,
-            graph_layout = graph_layout, graph_layout_igraph = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs,
-            plot_only_subgraphs = plot_only_subgraphs,unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console,
-            lines_in_abbr_of_r = lines_in_abbr_of_r, compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew,
-            graph_output_formats = graph_output_formats, numerical = TRUE, mute_all_plots = mute_all_plots,
-            plot_no_isolated_nodes = plot_no_isolated_nodes, plot_with_graphviz = plot_with_graphviz)
-
+    if (!mute_all_plots) {
+      plot_pc(graph = results$pc@graph, caption = caption, outpath = outpath, protein = protein, position_numbering = position_numbering,
+              plot_types = plot_types, coloring = coloring, colors = colors,
+              graph_layout = graph_layout, graph_layout_igraph = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs,
+              plot_only_subgraphs = plot_only_subgraphs,unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console,
+              lines_in_abbr_of_r = lines_in_abbr_of_r, compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew,
+              graph_output_formats = graph_output_formats, numerical = TRUE, mute_all_plots = mute_all_plots,
+              plot_no_isolated_nodes = plot_no_isolated_nodes, plot_with_graphviz = plot_with_graphviz)
+    }
 
     #### some statistics
     graph <- results$pc@graph
@@ -356,13 +358,13 @@ protein_causality <- function(
   # Evaluation
                                         # if ("evaluation" %in% steps) {
   if (evaluation) {
-    results <- analysis_after_pc(results$pc, data, outpath = outpath, protein = protein, position_numbering = position_numbering,  stages = stages,
-                                 unabbrev_r_to_info = unabbrev_r_to_info,
+    results <- analysis_after_pc(results, data, outpath = outpath, protein = protein, position_numbering = position_numbering,
+                                 stages = stages, unabbrev_r_to_info = unabbrev_r_to_info,
                                  print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
                                  compute_localTests_anew = compute_localTests_anew, print = print_analysis)
     ## print_analysis <- FALSE
     ## plot_analysis <- FALSE
-    if(plot_analysis) {
+    if(plot_analysis && !mute_all_plots) {
           plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
           coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
           combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
@@ -555,8 +557,10 @@ protein_causality <- function(
         # results_copy$outpath = outpath
         # analyse_set_of_graphs(results = results_copy, protein = "PDZ")
       }
-      compare_effects_per_position(results, hclust_method = effects_hclust_method,
-                                   dist_measure = effects_dist_method, nboot = effects_pv_nboot)
+      if (compare_effects) {
+        compare_effects_per_position(results, hclust_method = effects_hclust_method,
+                                     dist_measure = effects_dist_method, nboot = effects_pv_nboot)
+      }
     } else {
       if (conflict_edges(results$pc@graph)$conflict == 0) {
         results <- ida_function_w_o_pos(perturbed_position = intervention_position)

@@ -26,18 +26,16 @@ results_NoV <- protein_causality_NoV(type_of_data = type_of_data,
                                      subtype_of_data = subtype_of_data,
                                      # pc_conservative = FALSE, pc_maj_rule = TRUE,
                                      # pc_u2pd = "relaxed", pc_solve_confl = TRUE,
-                                     causal_analysis = FALSE, #min_pos_var = 0.01,
-                                     evaluation = TRUE,
-                                     alpha = 0.1, min_pos_var = 0,
+                                     causal_analysis = TRUE, #min_pos_var = 0.01,
+                                     # evaluation = TRUE,
+                                     alpha = 0.6, min_pos_var = 0,
                                      # only_cols = c(272, 278, 281, 301, 330, 416, 418, 419, 431, 472, 486, 527),
                                      # ranked = TRUE, pc_indepTest = "copula",
                                      plot_no_isolated_nodes = TRUE, plot_with_graphviz = TRUE,
-                                     pymol_sort_connected_components_by_length = FALSE, pymol_mix_connected_components = TRUE,
                                      print_connected_components = TRUE, plot_clusters = FALSE)
 # sink()
-print(conflict_edges(results_NoV$pc@graph))
 
-
-print(sum((results_NoV$orig$localTests$r$estimate)^2))
+# print(conflict_edges(results_NoV$pc@graph))
+# print(sum((results_NoV$orig$localTests$r$estimate)^2))
 
 
