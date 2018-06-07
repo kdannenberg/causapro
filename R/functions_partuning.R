@@ -1,5 +1,95 @@
 library(stringr) # for str_sub
 
+#' Apply fucntion for different values of its parameters alpha and minposvar, select the maximum
+#' of the (numerical) results
+partuning_over_alpha_and_minposvar <- function(FUN, alphas, minposvars, best = max,
+                                               plot = TRUE, plot_labels_as_rows_and_cols = alphas >=5, ...) {#"#000000", ...) {
+  results_m <- matrix(nrow = length(alphas), ncol = length(minposvars))
+  rownames(results_m) <- alphas
+  colnames(results_m) <- minposvars
+
+  # par(mfrow = c(length(alphas),length(minposvars)))
+
+  if (plot) {
+    plot.new()
+    oma <- c( 2, 0, 2, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
+    if (length(alphas) <= 5) {
+
+      par(mfrow = c(length(alphas), length(minposvars)), oma = oma)
+    } else {
+      par(mfrow = c(4, length(minposvars)), oma = oma)
+    }
+
+    # plot row labels
+    if (plot_labels_as_rows_and_cols) {
+      #inc row and cols
+      par(mfrow = par()$mfrow + 1)
+      plot.new()
+      # legend('center', legend = c(names(edge_types[[1]][[1]][[1]][[1]]), "sum"), col = c('red','green','orange', 'black'), lty = c(1,1,1,1), lwd = 1 )
+      for (minposvar in minposvars) {
+        plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+        text(x = 0.5, y = 0.5, paste("min_pos_var \n=", minposvar),
+             cex = 1.6, col = "black")
+      }
+    }
+  }
+
+  for (alpha in alphas) {
+    if (plot) {
+      # plot row labels
+      if (plot_labels_as_rows_and_cols) {
+        plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+        # text(x = 0.5, y = 0.5, paste("alpha \n=", alpha), cex = 1.6, col = "black")
+        text(x = 0.5, y = 0.5, paste("alpha =", alpha), cex = 1.6, col = "black")
+      }
+    }
+    for (minposvar in minposvars) {
+      result <- FUN(alpha, minposvar)
+      results_m[as.character(alpha), as.character(minposvar)] <- result$value
+
+      plot_structure(graph = result$graph, caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
+
+
+
+      lines_needed_for_subcaption <- 1
+      mgp <- par()$mgp  # get current value
+      mgp[1] <- 2 + lines_needed_for_subcaption
+      mar <- par()$mar # get current value
+      mar[1] <- 3 + lines_needed_for_subcaption
+      par(mar = mar, mgp = mgp)
+
+      # if (caption_as_subcaption) {
+      #   caption = caption
+      #   main_caption = NULL  # soll missing sein
+      # } else {
+      #   main_caption = caption
+      #   caption = NULL
+      # }
+
+      # plot_text(paste0("alpha = ", alpha, ", minposvar = ", minposvar), caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
+
+      sub <- paste("Value:", result$value, "\n")
+      title(sub = sub)
+      # dev.off()
+    }
+  }
+
+  best <-  which(results_m == best(results_m), arr.ind = TRUE)
+  best_alpha <- rownames(results_m)[best[1]]
+  best_minposvar <- colnames(results_m)[best[2]]
+  return(list(best_alpha = best_alpha, best_minposvar = best_minposvar))
+
+}
+
+example_function <- function(alpha, minposvar) {
+  m <- matrix(c(4,3,2,1), ncol = 2, byrow = TRUE)
+  rownames(m) <- c(0.01, 0.1)
+  colnames(m) <- c(0.001, 0.01)
+  return(list(graph = graphNEL(nodes = c("a", "b")), value = m[as.character(alpha), as.character(minposvar)]))
+}
+
+
+
 tune_alpha_bnlearn <- function(data, pc_func_w_o_alpha, alphas, outpath, compute_pc_anew) {
   scores <- c()
   for (alpha in alphas) {
@@ -310,7 +400,8 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure, # type_of_data, su
 
   effects <- list()
 
-  graphics.off()
+  # graphics.off
+  plot.new()
   oma <- c( 2, 0, 2, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
   if (length(alphas) <= 4) {
     par(mfrow = c(length(alphas), length(min_pos_vars)), oma = oma)

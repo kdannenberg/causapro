@@ -61,7 +61,7 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
                         only_cols_grep = FALSE,
                         remove_low_variance = FALSE, zero_var_fct, min_var = 0.01, keep_quadratic = FALSE, mute_plot = TRUE) {
 
-  if (!length(only_cols) == 0) {
+  if (length(only_cols) > 0) {
     # grep the right cols
     if (only_cols_grep) {
     only_cols_ind <- sapply(only_cols, function(x) which(grepl(as.character(x), colnames(data))))
@@ -74,6 +74,8 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
     only_cols <- colnames(data)[unlist(only_cols_ind)]
     } else {
       cols_not_found <- setdiff(as.character(only_cols), colnames(data))
+      removed_cols <- setdiff(colnames(data), as.character(only_cols))
+      print(paste("Column(s)", paste(removed_cols, collapse = ", "), "removed by only_cols."))
       if (length(cols_not_found) > 0) {
         warning(paste("Column(s)", paste(cols_not_found, collapse = ", "), "not found!"))
       }
@@ -127,6 +129,16 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
       }
       if (!missing(type_of_data)) {
         type_of_data <- paste(type_of_data, "ranked-obs-per-pos", sep = "-")
+      }
+    }
+    singular <- apply(data, 2, function(v) length(unique(v)) == 1)
+    if (length(singular) > 0) {
+      # cat("\n")
+      print(paste("Removed columns:", paste(colnames(data)[singular], collapse = ", ")))
+      if (keep_quadratic) {
+        data <- data[!singular, !singular]
+      } else {
+        data <- data[, !singular]
       }
     }
   }

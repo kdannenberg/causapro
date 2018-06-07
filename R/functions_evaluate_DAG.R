@@ -11,17 +11,17 @@ library("dagitty")
 # results$orig$localTests_results$r_interesting --> r_int
 # results$orig$localTests_results$r_int_alpha --> r_int_sign
 # results$orig$localTests_results$r_int_bad -- r_int_sign_bad
-analysis_after_pc <- function(pc, data, outpath, protein, position_numbering,
-                               stages = c("orig", "anc"),
-                               unabbrev_r_to_info, print_r_to_console,
+analysis_after_pc <- function(results, data, outpath, protein, position_numbering,
+                              stages = c("orig", "anc"),
+                              unabbrev_r_to_info, print_r_to_console,
                               lines_in_abbr_of_r, compute_localTests_anew = FALSE, print = TRUE) {
-  results <- list()
-  results$pc <- pc
+  # results <- list()
+  # results$pc <- pc
+  #
+  # results$orig <- list()
+  # results$orig$graph$NEL <- pc@graph
 
-  results$orig <- list()
-  results$orig$graph$NEL <- pc@graph
-
-  graph_dagitty <- conv_to_r(pc@graph, type_of_graph = "pdag", nodename_prefix = "P")
+  graph_dagitty <- conv_to_r(results$pc@graph, type_of_graph = "pdag", nodename_prefix = "P")
 
   results$orig$graph$dagitty <- graph_dagitty
 
@@ -36,7 +36,7 @@ analysis_after_pc <- function(pc, data, outpath, protein, position_numbering,
     print("SUBGRAPH...")
     # outpath_subgraph = paste(outpath, "-sub", sep = "")
 
-    subgraph <- subgraph_of_interesting_positions(pc@graph, protein = protein, position_numbering = position_numbering)
+    subgraph <- subgraph_of_interesting_positions(results$pc@graph, protein = protein, position_numbering = position_numbering)
     # if (!((plotstages == "sub") && (plot_types == "graph"))) {
     #   garbage <- graphics.off()
     # }
@@ -82,7 +82,7 @@ analysis_after_pc <- function(pc, data, outpath, protein, position_numbering,
 # only for Gauss-distributed data
 # bad_alpha_threshold: alpha above which the estimate given by localTests(...) is not regarded
 # estimate_margin: margin around zero, in which estimates given by localTests(...) are regarded "bad"
-evaluate_DAG <- function(data, graph, results, protein, position_numbering = NULL, outpath, stage = "orig", plot = TRUE,
+evaluate_DAG <- function(data, graph, results, protein, position_numbering = NULL, outpath, stage = "orig",
                          bad_alpha_threshold = 0.01, estimate_margin = 0.4, compute_localTests_anew) {
   if (!(stage == "" || is.null(stage))) {
     outpath <- paste(outpath, stage, sep = "-")
@@ -258,7 +258,7 @@ plot_structure_evaluation<- function(results, stages, plot_types = c("localTests
       }
     }
   }
-  # TODO: einfach rausgenommen. ist das ok?
+  # TODO: einfach rausgenommen. ist das ok?
   # if (!(outpath == "" || is.null(outpath))) {
   #   dev.off()
   # }
