@@ -141,20 +141,25 @@ protein_causality <- function(
   file_separator = "/",
   graph_cluster_methods = c("edge_betweenness", "infomap"),
   add_cluster_of_conserved_positions = TRUE,
+<<<<<<< HEAD
+  filename = NULL
+=======
   filename,
   compare_effects = FALSE
+>>>>>>> 50de840ffacb869c0b6f4ed556916a97eb51bbe7
   ) {
   if(!missing(filename)) {
     argList <-  as.list(match.call(expand.dots = TRUE)[-1])
+    source(paste0("Data/", filename, ".R"), local = TRUE)
+    list2env(argList, env = environment())
   }
-  ## filename + cls, R
   # INIT
   if (!(mute_all_plots || for_combined_plot)) {
     graphics.off()
 
     if (!((plot_analysis && causal_analysis) || (plot_ida && evaluation))) {
       if (plot_clusters) {
-        cols <- length(graph_graph_cluster_methods) + 1
+        cols <- length(graph_cluster_methods) + 1
       } else {
         cols <- 1
       }
