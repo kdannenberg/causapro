@@ -164,10 +164,14 @@ protein_causality <- function(
 
   # if (!missing(filename)) {
   argList <-  as.list(match.call(expand.dots = TRUE)[-1])
-  source(paste0("Data/", filename, ".R"), local = TRUE)
+  tryCatch(source(paste0("Data/", filename, ".R"), local = TRUE), error = function(cond) {
+    message("Conf file could not be read, maybe it does not exist?")
+  }, warning = function(cond) {
+    message("Conf file could not be read, maybe it does not exist?")
+  })
   list2env(argList, env = environment())
   # }
-
+  print(graph_layout)
   ## filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
   ## include option to read_data from alignment
   start_with_alignment <- FALSE
