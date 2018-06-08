@@ -141,18 +141,9 @@ protein_causality <- function(
   file_separator = "/",
   graph_cluster_methods = c("edge_betweenness", "infomap"),
   add_cluster_of_conserved_positions = TRUE,
-<<<<<<< HEAD
-  filename = NULL
-=======
-  filename,
+  filename = NULL,
   compare_effects = FALSE
->>>>>>> 50de840ffacb869c0b6f4ed556916a97eb51bbe7
   ) {
-  if(!missing(filename)) {
-    argList <-  as.list(match.call(expand.dots = TRUE)[-1])
-    source(paste0("Data/", filename, ".R"), local = TRUE)
-    list2env(argList, env = environment())
-  }
   # INIT
   if (!(mute_all_plots || for_combined_plot)) {
     graphics.off()
@@ -167,12 +158,20 @@ protein_causality <- function(
     }
   }
 
-  data_description <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set)
+  if (missing(filename)) {
+    filename <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set)
+  }
+
+  # if (!missing(filename)) {
+  argList <-  as.list(match.call(expand.dots = TRUE)[-1])
+  source(paste0("Data/", filename, ".R"), local = TRUE)
+  list2env(argList, env = environment())
+  # }
 
   ## filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
   ## include option to read_data from alignment
   start_with_alignment <- FALSE
-  if(data_set == "bin_approx") {
+  if (data_set == "bin_approx") {
     start_with_alignment <- TRUE
   }
 
@@ -182,10 +181,13 @@ protein_causality <- function(
       position_numbering <- "alignment"
     }
     alignment <- readAlignment(filename = paste0("Data", file_separator, protein, "_ALN"))
-    data_orig <- compute_data_from_alignment(alignment = alignment, data_description = data_description)
+    data_orig <- compute_data_from_alignment(alignment = alignment, filename = filename)
   } else {
-    data_orig <- read_data(data_description, transpose = transpose_data)
+    data_orig <- read_data(filename, transpose = transpose_data)
   }
+
+
+
   data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos, only_cols = only_cols,
                       min_var = min_pos_var, keep_quadratic = (cor_cov_FUN == "none"),
                       mute_plot = !show_variance_cutoff_plot)
@@ -197,9 +199,9 @@ protein_causality <- function(
   }
 
   if (missing(type_of_variables)) {
-    if (grepl("ALN", data_description)) {
+    if (grepl("ALN", filename)) {
       type_of_variables <- "nominal"
-    } else if (grepl("rank", data_description) || ranked) {
+    } else if (grepl("rank", filename) || ranked) {
       type_of_variables <- "ordinal"
     } else {
       type_of_variables <- "continuous"
@@ -210,7 +212,7 @@ protein_causality <- function(
   }
 
 
-  data_description <- adjust_data_description(data_description = data_description, ranked = ranked)
+  filename <- adjust_data_description(data_description = filename, ranked = ranked)
 
 
   removed_cols <- setdiff(colnames(data_orig), colnames(data))
@@ -258,7 +260,7 @@ protein_causality <- function(
   if (for_combined_plot) {
     chars_per_line <- 35
   }
-  caption <- get_caption(protein = protein, data = data_description, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = chars_per_line) #TODO rem_gaps_threshold hinzufuegen
+  caption <- get_caption(protein = protein, data = filename, alpha = alpha, min_pos_var = min_pos_var, chars_per_line = chars_per_line) #TODO rem_gaps_threshold hinzufuegen
   # TODO Marcel: add all the new ones
   parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering,
                                                        only_cols = only_cols, coloring = coloring, colors = colors, #outpath = paste(output_dir, filename, sep = file_separator)

@@ -4,10 +4,10 @@ source_all_function_scripts()
 
 source("configuration_data.R")
 
-# debug(protein_causality)
+debug(protein_causality)
 # debug(analysis_after_pc)
 # debug(evaluate_DAG)
-debug(plot_structure_evaluation)
+# debug(plot_structure_evaluation)
 # debug(adjust_data)
 # debug(plot_clusters_in_pymol)
 # debug(protein_graph_clustering)
@@ -29,7 +29,7 @@ results_NoV <- protein_causality_NoV(type_of_data = type_of_data,
                                      # pc_u2pd = "relaxed", pc_solve_confl = TRUE,
                                      causal_analysis = TRUE, #min_pos_var = 0.01,
                                      evaluation = TRUE,
-                                     alpha = 0.0001, min_pos_var = 0,
+                                     alpha = 0.5, min_pos_var = 0,
                                      # only_cols = c(272, 278, 281, 301, 330, 416, 418, 419, 431, 472, 486, 527),
                                      # ranked = TRUE, pc_indepTest = "copula",
                                      plot_no_isolated_nodes = TRUE, plot_with_graphviz = TRUE,
