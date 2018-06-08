@@ -1,6 +1,7 @@
 library(pvclust)
 
 protein_causality <- function(
+  filename = NULL,
   # Data parameters
   #
   # available data:
@@ -31,7 +32,7 @@ protein_causality <- function(
   #
   # Analysis parameters
   # remove_positions_with_low_variance = TRUE,
-  min_pos_var = 0.03,
+  min_pos_var = 0,
   show_variance_cutoff_plot = FALSE,
   only_cols = NULL,
   only_cols_label = "",
@@ -141,7 +142,6 @@ protein_causality <- function(
   file_separator = "/",
   graph_cluster_methods = c("edge_betweenness", "infomap"),
   add_cluster_of_conserved_positions = TRUE,
-  filename = NULL,
   compare_effects = FALSE
   ) {
   # INIT
@@ -162,6 +162,8 @@ protein_causality <- function(
     filename <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set)
   }
 
+  print(paste("Data:", filename))
+
   # if (!missing(filename)) {
   argList <-  as.list(match.call(expand.dots = TRUE)[-1])
   tryCatch(source(paste0("Data/", filename, ".R"), local = TRUE), error = function(cond) {
@@ -171,7 +173,7 @@ protein_causality <- function(
   })
   list2env(argList, env = environment())
   # }
-  print(graph_layout)
+  # print(graph_layout)
   ## filename_data <- paste("Data/", source_of_data, ".csv", sep = "")
   ## include option to read_data from alignment
   start_with_alignment <- FALSE
@@ -195,6 +197,8 @@ protein_causality <- function(
   data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos, only_cols = only_cols,
                       min_var = min_pos_var, keep_quadratic = (cor_cov_FUN == "none"),
                       mute_plot = !show_variance_cutoff_plot)
+
+  # print(colnames(data))
 
   if (cor_cov_FUN == "none" && (dim(data)[1] != dim(data)[2])) {
     warning("Data matrix is not quadratic and can thus not be interpreted as a correlation/covariance matix.
@@ -377,11 +381,11 @@ protein_causality <- function(
     ## plot_analysis <- FALSE
     if(plot_analysis && !mute_all_plots) {
           plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-          coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
-          combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
+              coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
+              combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
           plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-          coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
-          combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
+              coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
+              combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
     }
   }
 
@@ -597,6 +601,7 @@ protein_causality <- function(
 }
 
 protein_causality_G <- function(
+  filename = NULL,
   # Data parameters
   #
   # available data:
@@ -689,8 +694,9 @@ protein_causality_G <- function(
   output_parameters_in_results = NULL,
   file_separator = NULL
   ) {
-    argList <-  as.list(match.call(expand.dots = TRUE)[-1])
+  argList <-  as.list(match.call(expand.dots = TRUE)[-1])
   # Enforce inclusion of non-optional arguments
+  argList$filename <- filename
   argList$type_of_variables <- type_of_variables
   argList$protein = protein
   argList$type_of_data = type_of_data
@@ -764,6 +770,7 @@ protein_causality_G <- function(
 }
 
 protein_causality_S <- function(
+  filename = NULL,
   # data parameters
   type_of_variables = "continuous",
   protein = "PDZ",
@@ -847,6 +854,7 @@ protein_causality_S <- function(
 
   argList <-  as.list(match.call(expand.dots = TRUE)[-1])
   # Enforce inclusion of non-optional arguments
+  argList$filename <- filename
   argList$type_of_variables <- type_of_variables
   argList$protein = protein
   argList$type_of_data = type_of_data
@@ -920,6 +928,7 @@ protein_causality_S <- function(
 }
 
 protein_causality_p38g <- function(
+  filename = NULL,
   # data parameters
   type_of_variables = "continuous",
   protein = "p38g",
@@ -1004,6 +1013,7 @@ protein_causality_p38g <- function(
 
   argList <-  as.list(match.call(expand.dots = TRUE)[-1])
   # Enforce inclusion of non-optional arguments
+  argList$filename <- filename
   argList$type_of_variables <- type_of_variables
   argList$protein = protein
   argList$type_of_data = type_of_data
@@ -1078,6 +1088,7 @@ protein_causality_p38g <- function(
 }
 
 protein_causality_NoV <- function(
+  filename = NULL,
   # data parameters
   # available data:
   # "NoV_NMR-Tit_B4S"
@@ -1167,9 +1178,9 @@ protein_causality_NoV <- function(
   ida_percentile = "11",
   file_separator = NULL
 ) {
-
   argList <-  as.list(match.call(expand.dots = TRUE)[-1])
   # Enforce inclusion of non-optional arguments
+  argList$filename <- filename
   argList$type_of_variables <- type_of_variables
   argList$protein = protein
   argList$type_of_data = type_of_data

@@ -21,6 +21,8 @@ analysis_after_pc <- function(results, data, outpath, protein, position_numberin
   # results$orig <- list()
   # results$orig$graph$NEL <- pc@graph
 
+  results$orig$graph$NEL <- results$pc@graph
+
   graph_dagitty <- conv_to_r(results$pc@graph, type_of_graph = "pdag", nodename_prefix = "P")
 
   results$orig$graph$dagitty <- graph_dagitty
@@ -199,7 +201,7 @@ pairs_of_pos <- function(r) {
 # plotstages: "main", "sub", "anc", "all"
 plot_structure_evaluation<- function(results, stages, plot_types = c("localTests", "graphs"), graph_layout,
                   plot_as_subgraphs = FALSE, plot_only_subgraphs = FALSE, coloring, colors,
-                  outpath = "", caption = "", graph_output_formats = graph_output_formats,
+                  outpath = "", caption = "", graph_output_formats,
                   combined_plot = FALSE, position_numbering, protein = protein) {
   if (!(outpath == "" || is.null(outpath))) {
     for (format in graph_output_formats) {
@@ -211,6 +213,7 @@ plot_structure_evaluation<- function(results, stages, plot_types = c("localTests
     }
   } else if (!combined_plot) {
     graphics.off()
+    # plot.new()
   }
 
   if (!combined_plot) {
@@ -237,7 +240,7 @@ plot_structure_evaluation<- function(results, stages, plot_types = c("localTests
       }
     }
 
-    if ("graphs" %in% plot_types){
+    if ("graphs" %in% plot_types || "graph" %in% plot_types){
       if (!is.null(results[[stage]]$graph$NEL)) {
         plot_graph(graph = results[[stage]]$graph$NEL, caption = caption, protein = protein, position_numbering = position_numbering,
                    graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
@@ -254,14 +257,14 @@ plot_structure_evaluation<- function(results, stages, plot_types = c("localTests
       } else if (!is.null(results[[stage]]$graph$dagitty)) {
         plot(results[[stage]]$graph$dagitty, main = current_alpha)
       } else {
-        print("No graph found.")
+        plot_text("No graph found.")
       }
     }
   }
   # TODO: einfach rausgenommen. ist das ok?
-  # if (!(outpath == "" || is.null(outpath))) {
-  #   dev.off()
-  # }
+  if (!(outpath == "" || is.null(outpath))) {
+    dev.off()
+  }
 
   if (!combined_plot) {
     par(old_par)

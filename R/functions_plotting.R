@@ -156,7 +156,7 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         if (missing(edgecolor)) {
           edgecolor <- get_eAttrs(graph)
         }
-        if (!is.null(coloring) && !(coloring == "")) {
+        if (!(nchar(outpath) == 0) && !(is.null(coloring)) && !(coloring == "")) {
           outpath <- paste(outpath, "_", graph_layout, "_colored-", coloring, sep = "")
         }
         plot_structure(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode,

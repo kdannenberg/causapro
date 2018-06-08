@@ -59,7 +59,20 @@ analyse_data <- function(data, int_pos, min_var) {
 #   That is, per position, over all observations?
 adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, only_cols = NULL,
                         only_cols_grep = FALSE,
-                        remove_low_variance = FALSE, zero_var_fct, min_var = 0.01, keep_quadratic = FALSE, mute_plot = TRUE) {
+                        remove_low_variance = FALSE, zero_var_fct, min_var = 0.01,
+                        keep_quadratic = FALSE, mute_plot = TRUE,
+                        adjust_colnames = TRUE) {
+
+  if (adjust_colnames) {
+    remove_three_letter_aa_prefixes <- function(string) {
+      if (grepl('^[ARG|ASN|ASP|CYS|GLN|GLU|HIS|ILE|LEU|LYS|MET|PHE|PRO|SER|THR|TRP|TYR|VAL]', string)) {
+        return(substring(string, 4))
+      } else {
+        return(string)
+      }
+    }
+    colnames(data) <- sapply(colnames(data), remove_three_letter_aa_prefixes, USE.NAMES = FALSE)
+  }
 
   if (length(only_cols) > 0) {
     # grep the right cols
@@ -357,8 +370,8 @@ compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_an
   return(get(obj_name))
 }
 
-compute_data_from_alignment <- function(alignment, data_description) {
-  if(grepl("bin_approx", data_description)) {
+compute_data_from_alignment <- function(alignment, filename) {
+  if(grepl("bin_approx", filename)) {
     return(alignment_to_binary_matrix(alignment = alignment))
   }
 }
