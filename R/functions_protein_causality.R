@@ -141,12 +141,8 @@ protein_causality <- function(
   file_separator = "/",
   graph_cluster_methods = c("edge_betweenness", "infomap"),
   add_cluster_of_conserved_positions = TRUE,
-<<<<<<< HEAD
-  filename = NULL
-=======
-  filename,
+  filename = NULL,
   compare_effects = FALSE
->>>>>>> 50de840ffacb869c0b6f4ed556916a97eb51bbe7
   ) {
   if(!missing(filename)) {
     argList <-  as.list(match.call(expand.dots = TRUE)[-1])
