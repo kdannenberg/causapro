@@ -20,7 +20,7 @@ protein_causality <- function(
   type_of_data,
   #
   # subtype_of_data = "all",
-  subtype_of_data,
+  subtype_of_data = NULL,
   # subtype_of_data = "10",
   #
   data_set,
@@ -36,6 +36,7 @@ protein_causality <- function(
   show_variance_cutoff_plot = FALSE,
   only_cols = NULL,
   only_cols_label = "",
+  every_n_th_row = 1,
   #
   alpha = 0.01,
   ranked = FALSE,
@@ -64,7 +65,8 @@ protein_causality <- function(
   #
   #
   # Graphical parameters
-  graph_output_formats = c("ps", "svg", "pdf"),
+  # graph_output_formats = c("ps", "svg", "pdf"),
+  graph_output_formats = "pdf",
   ## graph_layout = "dot", # "dot", "circo", "fdp", "neato", "osage", "twopi"
   ## "layout_nicely" uses recommended layouts
   ## "layout_with_sugiyama" plots layered dags
@@ -118,7 +120,7 @@ protein_causality <- function(
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
   plot_ida = FALSE,                                  # NEW!
-  plot_clusters = TRUE,                              # NEW!
+  graph_clustering = TRUE,                              # NEW!
   plot_no_isolated_nodes = TRUE,  # TODO: make true possible even for edgeless -> empty graphs
   plot_with_graphviz = TRUE, # NEW!
   #
@@ -148,8 +150,9 @@ protein_causality <- function(
   if (!(mute_all_plots || for_combined_plot)) {
     graphics.off()
 
+    # TOunDO: graph_clustering_funktion bauen, da rein
     if (!((plot_analysis && causal_analysis) || (plot_ida && evaluation))) {
-      if (plot_clusters) {
+      if (graph_clustering) {
         cols <- length(graph_cluster_methods) + 1
       } else {
         cols <- 1
@@ -158,6 +161,7 @@ protein_causality <- function(
     }
   }
 
+  # Data file description
   if (missing(filename)) {
     filename <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set)
   }
@@ -195,11 +199,18 @@ protein_causality <- function(
 
 
   data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos, only_cols = only_cols,
-                      min_var = min_pos_var, keep_quadratic = (cor_cov_FUN == "none"),
+                      every_n_th_row = every_n_th_row, min_var = min_pos_var,
+                      keep_quadratic = (cor_cov_FUN == "none"),
                       mute_plot = !show_variance_cutoff_plot)
 
+  #TODO:
+  # data_set <- adjust_data_set(...)
+  if (!(missing(every_n_th_row)) && !is.null(every_n_th_row) && !(every_n_th_row == 1)) {
+    data_set <- pastes(data_set, paste("every", every_n_th_row, "th-row", sep = "-"), sep = "_")
+  }
   # print(colnames(data))
 
+  # Parameter checks and adjustment
   if (cor_cov_FUN == "none" && (dim(data)[1] != dim(data)[2])) {
     warning("Data matrix is not quadratic and can thus not be interpreted as a correlation/covariance matix.
             Option cor_cov_FUN == \"none\" is ignored.")
@@ -215,6 +226,7 @@ protein_causality <- function(
       type_of_variables <- "continuous"
     }
   }
+
   if (ranked) {
     type_of_variables <- "ordinal"
   }
@@ -392,7 +404,7 @@ protein_causality <- function(
   # Pymol
   if (graph_computation) {
     # if (!is.null(clustering)) {
-    if (plot_clusters) {
+    if (graph_clustering) {
       protein_graph_clustering(results = results, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, outpath = outpath, output_formats = graph_output_formats, file_separator = file_separator,
                                caption = caption, mute_all_plots = mute_all_plots, cluster_methods = graph_cluster_methods,
                                add_cluster_of_conserved_positions = add_cluster_of_conserved_positions, removed_cols = removed_cols)
@@ -586,8 +598,19 @@ protein_causality <- function(
         # results_copy$summary$outpath = outpath
         ida_function_w_o_results <- function_set_parameters(ida_function_w_o_pos_and_results,
                                       parameters = list(perturbed_position = intervention_position))
-        results$effects <- analyse_set_of_graphs(results = results_copy, type_of_data = type_of_data,
-                                                 subtype_of_data = subtype_of_data,
+                                      #direction = "both" nötig, damit mean berechnet werden kann
+        # TODO: das funktioniert nicht mehr!
+        # results$effects <- analyse_set_of_graphs(results = results_copy, type_of_data = type_of_data,
+        #                                          subtype_of_data = subtype_of_data,
+        #                                          measure = substr(type_of_data, nchar(type_of_data), nchar(type_of_data)),
+        #                                          protein = "PDZ", perturbed_position = intervention_position,
+        #                                          weight_effects_on_by = weight_effects_on_by,
+        #                                          ida_function = ida_function_w_o_results,
+        #                                          outpath = outpath, caption = caption)
+        results$effects <- analyse_set_of_graphs(results = results_copy,
+                                                 # type_of_data = type_of_data,
+                                                 # subtype_of_data = subtype_of_data,
+                                                 direction = ida_direction,
                                                  measure = substr(type_of_data, nchar(type_of_data), nchar(type_of_data)),
                                                  protein = "PDZ", perturbed_position = intervention_position,
                                                  weight_effects_on_by = weight_effects_on_by,
@@ -626,6 +649,7 @@ protein_causality_G <- function(
   # data-related parameters
   only_cols = NULL,
   only_cols_label = "",
+  every_n_th_row = 1,
   # data-dependent graphical parameters
   graph_output_formats = NULL,
   plot_with_graphviz = TRUE,
@@ -684,7 +708,7 @@ protein_causality_G <- function(
   plot_analysis = NULL,
   plot_types = NULL,
   plot_no_isolated_nodes = TRUE,
-  plot_clusters = FALSE,
+  graph_clustering = FALSE,
   compute_pc_anew = NULL,
   compute_localTests_anew = NULL,
   unabbrev_r_to_info = NULL,
@@ -707,6 +731,7 @@ protein_causality_G <- function(
   argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
+  argList$every_n_th_row = every_n_th_row
   argList$alpha = alpha
   argList$pc_indepTest = pc_indepTest
   argList$pc_suffStat = pc_suffStat
@@ -749,7 +774,7 @@ protein_causality_G <- function(
   argList$plot_analysis = plot_analysis
   argList$plot_types = plot_types
   argList$plot_ida = plot_ida                                 # NEW!
-  argList$plot_clusters = plot_clusters                             # NEW!
+  argList$graph_clustering = graph_clustering                             # NEW!
   argList$plot_no_isolated_nodes = plot_no_isolated_nodes  # NEW!
   argList$plot_with_graphviz = plot_with_graphviz
   argList$pymol_show_int_pos = pymol_show_int_pos    # NEW!
@@ -783,6 +808,7 @@ protein_causality_S <- function(
   # data-related parameters
   only_cols = NULL,
   only_cols_label = "",
+  every_n_th_row = 1,
   ## data-dependent graphical parameters
   graph_output_formats = NULL,
   plot_with_graphviz = TRUE,
@@ -841,7 +867,7 @@ protein_causality_S <- function(
   plot_analysis = NULL,
   plot_types = NULL,
   plot_no_isolated_nodes = TRUE,
-  plot_clusters = FALSE,
+  graph_clustering = FALSE,
   compute_pc_anew = NULL,
   compute_localTests_anew = NULL,
   unabbrev_r_to_info = NULL,
@@ -865,6 +891,7 @@ protein_causality_S <- function(
   argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
+  argList$every_n_th_row = every_n_th_row
   argList$alpha = alpha
   argList$pc_indepTest = pc_indepTest
   argList$pc_suffStat = pc_suffStat
@@ -907,7 +934,7 @@ protein_causality_S <- function(
   argList$plot_analysis = plot_analysis
   argList$plot_types = plot_types
   argList$plot_ida = plot_ida                                 # NEW!
-  argList$plot_clusters = plot_clusters                             # NEW!
+  argList$graph_clustering = graph_clustering                             # NEW!
   argList$plot_no_isolated_nodes = plot_no_isolated_nodes  # NEW!
   argList$plot_with_graphviz = plot_with_graphviz
   argList$pymol_show_int_pos = pymol_show_int_pos    # NEW!
@@ -942,6 +969,7 @@ protein_causality_p38g <- function(
   # data-related parameters
   only_cols = NULL,
   only_cols_label = "",
+  every_n_th_row = 1,
   # data-dependent graphical parameters
   graph_output_formats = NULL,
   plot_with_graphviz = TRUE,
@@ -1000,7 +1028,7 @@ protein_causality_p38g <- function(
   plot_analysis = NULL,
   plot_types = NULL,
   plot_no_isolated_nodes = TRUE,
-  plot_clusters = FALSE,
+  graph_clustering = FALSE,
   compute_pc_anew = NULL,
   compute_localTests_anew = NULL,
   unabbrev_r_to_info = NULL,
@@ -1025,6 +1053,7 @@ protein_causality_p38g <- function(
   argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
+  argList$every_n_th_row = every_n_th_row
   argList$alpha = alpha
   argList$pc_indepTest = pc_indepTest
   argList$pc_suffStat = pc_suffStat
@@ -1067,7 +1096,7 @@ protein_causality_p38g <- function(
   argList$plot_analysis = plot_analysis
   argList$plot_types = plot_types
   argList$plot_ida = plot_ida                                 # NEW!
-  argList$plot_clusters = plot_clusters                             # NEW!
+  argList$graph_clustering = graph_clustering                             # NEW!
   argList$plot_no_isolated_nodes = plot_no_isolated_nodes  # NEW!
   argList$plot_with_graphviz = plot_with_graphviz
   argList$pymol_show_int_pos = pymol_show_int_pos    # NEW!
@@ -1116,6 +1145,7 @@ protein_causality_NoV <- function(
   show_variance_cutoff_plot = NULL,
   only_cols = NULL,
   only_cols_label = "",
+  every_n_th_row = 1,
   alpha = 0.05,
   pc_indepTest = NULL,
   pc_suffStat = NULL,
@@ -1143,7 +1173,7 @@ protein_causality_NoV <- function(
   plot_as_subgraphs = NULL,
   plot_only_subgraphs = NULL, # 1 is another option
   plot_ida = NULL,                                  # NEW!
-  plot_clusters = NULL,                              # NEW!
+  graph_clustering = NULL,                              # NEW!
   plot_no_isolated_nodes = NULL,  # TODO: make true possible even for edgeless -> empty graphs #NEW
   for_combined_plot = NULL,
   mute_all_plots = NULL,
@@ -1191,6 +1221,7 @@ protein_causality_NoV <- function(
   argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
   argList$only_cols_label = only_cols_label
+  argList$every_n_th_row = every_n_th_row
   argList$alpha = alpha
   argList$pc_indepTest = pc_indepTest
   argList$pc_suffStat = pc_suffStat
@@ -1231,7 +1262,7 @@ protein_causality_NoV <- function(
   argList$plot_analysis = plot_analysis
   argList$plot_types = plot_types
   argList$plot_ida = plot_ida                                 # NEW!
-  argList$plot_clusters = plot_clusters                             # NEW!
+  argList$graph_clustering = graph_clustering                             # NEW!
   argList$plot_no_isolated_nodes = plot_no_isolated_nodes  # NEW!
   argList$plot_with_graphviz = plot_with_graphviz
   argList$pymol_show_int_pos = pymol_show_int_pos    # NEW!

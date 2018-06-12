@@ -1,5 +1,6 @@
 library(stringr) # for str_replace_all
 
+
 get_data_description <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "") {
   data_description <- ""
   if (is.null(subtype_of_data) || subtype_of_data != "") {
@@ -18,20 +19,35 @@ get_data_description <- function(protein, type_of_data, subtype_of_data = "", da
 
 read_data <- function(files, path_to_data = "Data/", extension = ".csv", filename, transpose = FALSE) {
   read <- function (file) {
-    filename <- paste(path_to_data, file, extension, sep = "")
-    data_i = read.csv2(filename, row.names = 1, check.names = FALSE) # if check.names, an X is prepended to numerical column-names
-    i <- which(files == file)
-    if ((length(transpose) > i && transpose[i]) || (length(transpose) == 1 && transpose[1])) {
-      data_i <- t(data_i)
-    }
-    rownames(data_i) <- paste(file, rownames(data_i), sep = "-")
+    # if (file.exists(paste0(path_to_data, file, ".RData"))) {
+    #   load(paste0(path_to_data, file, ".RData"))
+    #   print(paste(paste0(path_to_data, file, ".RData"), "loaded instead of", paste0(path_to_data, file, extension)))
+    # } else {
+      filename <- paste0(path_to_data, file, extension)
+      data_i = read.csv2(filename, row.names = 1, check.names = FALSE) # if check.names, an X is prepended to numerical column-names
+      i <- which(files == file)
+      if ((length(transpose) > i && transpose[i]) || (length(transpose) == 1 && transpose[1])) {
+        data_i <- t(data_i)
+      }
+      rownames(data_i) <- paste(file, rownames(data_i), sep = "-")
+      save(data_i, file = paste0(path_to_data, file, ".RData"))
+    # }
     return(data_i)
   }
 
+  read_or_get_data <- function(file) {
+    FUN <- function_set_parameters(read, parameters = list(file = file))
+    data <- compute_if_not_existent(filename = paste0(path_to_data, file), FUN = FUN,
+                                    obj_name = "data_i")
+  }
+
+
+
   if (length(files) == 1) {   # for very mysterious reasons, the matrixs gets transposed by do.call(rbind, data_i) otherwise (rbind(data_i) does NOT transpose the matrix!)
-    data <- read(files[1])
+    # data <- read(files[1])
+    data <- read_or_get_data(files[1])
   } else {
-    data <- do.call(rbind, lapply(files, read))
+    data <- do.call(rbind, lapply(files, read_or_get_data))
   }
 
   # data <- matrix()
@@ -57,11 +73,16 @@ analyse_data <- function(data, int_pos, min_var) {
 
 # rank_obs_per_pos: should the ranking be done the other way round?
 #   That is, per position, over all observations?
-adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE, only_cols = NULL,
-                        only_cols_grep = FALSE,
+adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE,
+                        only_cols = NULL, only_cols_grep = FALSE,
+                        every_n_th_row = 1,
                         remove_low_variance = FALSE, zero_var_fct, min_var = 0.01,
                         keep_quadratic = FALSE, mute_plot = TRUE,
                         adjust_colnames = TRUE) {
+
+  if (!(missing(every_n_th_row)) && !is.null(every_n_th_row)) {
+    data <- data[seq(from = 1, to = dim(data)[1], by = every_n_th_row),]
+  }
 
   if (adjust_colnames) {
     remove_three_letter_aa_prefixes <- function(string) {
@@ -195,7 +216,7 @@ subtype_of_data_after_adjustment <- function(data, subtype_of_data, rank = FALSE
 
 
 get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "",
-                        alpha, min_pos_var, only_cols_label = "", pc_indepTest = "",
+                        alpha, min_pos_var, only_cols_label = "", every_n_th_row, pc_indepTest = "",
                         cor_cov_FUN, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/",
                         filename_suffix, main_dir = "Outputs") {   ## last two options: only for get_old_outpath
   dir_1 <- protein
@@ -226,11 +247,12 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
   if (!missing(filename_suffix)) {
     filename <- paste0(filename, filename_suffix)
   } else {
-    if (only_cols_label != "") {
-      filename <- paste0(filename, "_")
-    }
-    filename <- paste0(filename, only_cols_label)
-
+    # if (only_cols_label != "") {
+    #   filename <- paste0(filename, "_")
+    # }
+    # filename <- paste0(filename, only_cols_label)
+    filename <- pastes(filename, only_cols_label, sep = "_")
+    # pc indep Test sollte erst später angehängt werden!
     if (typeof(pc_indepTest) == "closure") {
       pc_indepTest <- deparse(substitute(pc_indepTest))
     }

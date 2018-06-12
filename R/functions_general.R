@@ -109,8 +109,10 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
     } else if (tolower(protein) == "nov") {
       bind_ligand <- c(444, 443, 344, 345, 374, 442)
       others <- c(347, 396, 348, 391, 392, 375)
+      bile_acid <- c(509)
       list <- list("#69A019" = bind_ligand,            # green
-                   "#FFD700" = others)                  # yellow
+                   "#FFD700" = others,                 # yellow
+                   "#CC0000" = bile_acid)              # red
     } else if (protein == "p38g") {
       if (coloring == "FS4") {
         blue_ <- c(53, 161, 215, 116, 137, 159, 154, 120, 130, 167, 219, 283, 125, 220, 209, 216, 212, 291, 287)

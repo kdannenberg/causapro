@@ -4,7 +4,7 @@ source_all_function_scripts()
 
 source("configuration_data.R")
 
-# debug(protein_causality)
+debug(protein_causality)
 # debug(analysis_after_pc)
 # debug(evaluate_DAG)
 # debug(adjust_data)
@@ -48,7 +48,7 @@ partuning_n_edges <- function_set_parameters(function(pc_FUN, alpha, minposvar) 
 }, parameters = list(pc_FUN = pc_fun))
 
 
-partuning_avg_degree_2 <- partuning_n_edges <- function_set_parameters(function(pc_FUN, alpha, minposvar) {
+partuning_avg_degree_2 <- function_set_parameters(function(pc_FUN, alpha, minposvar) {
   results_NoV <- pc_fun(alpha = alpha, min_pos_var = minposvar)
 
   result <- list()
@@ -60,8 +60,8 @@ partuning_avg_degree_2 <- partuning_n_edges <- function_set_parameters(function(
 
 # debug(partuning_Nov_NMR_2018_06_01)
 
-# alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, seq(0.2, 1, 0.1))
-alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, 0.001, seq(0.01, 0.09, 0.02), 0.1, 0.15, seq(0.2, 0.9, 0.1))
+alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, seq(0.2, 1, 0.1))
+# alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, 0.001, seq(0.01, 0.09, 0.02), 0.1, 0.15, seq(0.2, 0.9, 0.1))
 # alphas <- c(0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
 # alphas = c(0.001, 0.01, 0.05, 0.1)
 # alphas <- c(1e-10, 1e-5, 0.0001)

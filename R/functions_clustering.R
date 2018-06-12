@@ -1,8 +1,14 @@
 #' Cluster by Causal Structure (Graph Clustering)
-# TODO: singuläre Cluster entfernen!
-protein_graph_clustering <- function(results, protein, position_numbering, coloring, colors, outpath,output_formats, file_separator,
-                                     mute_all_plots, caption, cluster_methods, add_cluster_of_conserved_positions,
-                                     removed_cols, more_levels_of_conservedness = FALSE, sort_clusters = length) {
+#' @param monochromatic_removed_cols all removed_cols are given (the same shade of) white as color
+#' @param more_levels_of_conservedness (bacause of too little variacne) removed positions are
+#' clored in shades of white with increasing amounts of blue with increasing variance
+protein_graph_clustering <- function(results, protein, position_numbering, coloring, colors, outpath, output_formats,
+                                     file_separator, mute_all_plots, caption, cluster_methods,
+                                     remove_singular_clusters = TRUE,
+                                     merge_singular_clusters = FALSE, add_cluster_of_conserved_positions = TRUE,
+                                     removed_cols, monochromatic_removed_cols = TRUE,
+                                     more_levels_of_conservedness = FALSE,
+                                     sort_clusters = length) {
 
   ## sort_clusters = "DDS-SVD") {
   if (add_cluster_of_conserved_positions) {
@@ -12,14 +18,23 @@ protein_graph_clustering <- function(results, protein, position_numbering, color
 
     if (more_levels_of_conservedness) {
       removed_cols <- (removed_cols / max(removed_cols)) / 0.9999
+    } else if (monochromatic_removed_cols) {
+      removed_cols <- removed_cols * 0
     }
 
     if (!length(removed_cols) == 0) {
+
       colors_for_rem_pos <- color_by_effect(effects = removed_cols, int_pos = "", color_for_other_positions = "#000000", mode = "#FFFFFF")
 
       add_clusters <- sapply(names(table(colors_for_rem_pos)),
                              FUN = function(color) {return(names(colors_for_rem_pos[which(colors_for_rem_pos == color)]))},
                              simplify = FALSE, USE.NAMES = TRUE)
+
+      # TODO ergibt hier keinen Sinn, oder?
+      # if (remove_singular_clusters) {
+      #   node_clustering <- remove_singular_clusters(node_clustering)
+      # }
+
     }
   }
 
@@ -40,7 +55,11 @@ protein_graph_clustering <- function(results, protein, position_numbering, color
     node_clustering <- groups(cl)
     node_clustering <- unname(node_clustering)  # otherwise interpreted as colors
 
-
+    if (remove_singular_clusters) {
+      node_clustering <- remove_singular_clusters(node_clustering)
+    } else if (merge_singular_clusters) {
+      node_clustering <- merge_singular_clusters(node_clustering)
+    }
 
     if (!is.null(sort_clusters)) {
       # if ((length(which(names(node_clustering) != "")) == 1)
@@ -79,9 +98,32 @@ protein_graph_clustering <- function(results, protein, position_numbering, color
       type <- "igraph"
     }
 
+    # print(node_clustering)
+
     plot_clusters_in_pymol(node_clustering = node_clustering, protein = protein, outpath = outpath,
                            file_separator = file_separator, type_of_clustering = type)
   }
+}
+
+remove_singular_clusters <- function(clustering) {
+  clustering <- clustering[sapply(clustering,
+    function(cluster) {
+      length(cluster) > 1
+    })]
+  return(clustering)
+}
+
+merge_singular_clusters <- function(clustering) {
+  non_singular <- sapply(clustering,
+                         function(cluster) {
+                           length(cluster) > 1
+                         })
+  others <- unlist(clustering[!non_singular])
+  clustering <- clustering[non_singular]
+  clustering <- c(clustering, list("#000000" = others))
+  # clustering[[length(clustering) + 1]] <- others
+  # names(clustering)[[length(clustering)]] <- "#FFFFFF"
+  return(clustering)
 }
 
 #' Cluster by Causal Effects

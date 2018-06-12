@@ -3,7 +3,8 @@ library(stringr) # for str_sub
 #' Apply fucntion for different values of its parameters alpha and minposvar, select the maximum
 #' of the (numerical) results
 partuning_over_alpha_and_minposvar <- function(FUN, alphas, minposvars, best = max,
-                                               plot = TRUE, plot_labels_as_rows_and_cols = alphas >=5, ...) {#"#000000", ...) {
+                                               plot = TRUE, plot_labels_as_rows_and_cols = alphas >=5,
+                                               plot_no_isolated_nodes = TRUE, ...) {#"#000000", ...) {
   results_m <- matrix(nrow = length(alphas), ncol = length(minposvars))
   rownames(results_m) <- alphas
   colnames(results_m) <- minposvars
@@ -47,7 +48,12 @@ partuning_over_alpha_and_minposvar <- function(FUN, alphas, minposvars, best = m
       result <- FUN(alpha, minposvar)
       results_m[as.character(alpha), as.character(minposvar)] <- result$value
 
-      plot_structure(graph = result$graph, caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
+      if (plot_no_isolated_nodes) {
+        graph <- kernalize(graph)
+      } else {
+        graph <- result$graph
+      }
+      plot_structure(graph = graph, caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
 
 
 
@@ -87,6 +93,61 @@ example_function <- function(alpha, minposvar) {
   colnames(m) <- c(0.001, 0.01)
   return(list(graph = graphNEL(nodes = c("a", "b")), value = m[as.character(alpha), as.character(minposvar)]))
 }
+
+
+partune_alpha_minposvar_square_localTests_estimate <- function(pc_FUN, alpha, minposvar) {
+  pc_fun_ <- function_set_parameters(pc_FUN, parameters = list(evaluation = TRUE))
+
+  results <- pc_fun_(alpha = alpha, min_pos_var = minposvar)
+
+  # print(conflict_edges(results_NoV$pc@graph))
+  # print(sum((results_NoV$orig$localTests$r$estimate)^2))
+  result <- list()
+  result$value <- sum((results$orig$localTests$r$estimate)^2)
+  result$graph <- results$pc@graph
+  return(result)
+}
+
+partune_alpha_minposvar_n_edges <- function(pc_FUN, alpha, minposvar) {
+  results <- pc_fun(alpha = alpha, min_pos_var = minposvar)
+
+  # print(conflict_edges(results_NoV$pc@graph))
+  # print(sum((results_NoV$orig$localTests$r$estimate)^2))
+  result <- list()
+  result$value <- results$summary$edges$sum
+  result$graph <- results$pc@graph
+  return(result)
+}
+
+partune_alpha_minposvar_avg_degree_2 <- function(pc_FUN, alpha, minposvar) {
+  results <- pc_fun(alpha = alpha, min_pos_var = minposvar)
+
+  result <- list()
+  avg_degree <- (2 * results$summary$edges$sum / results$summary$nodes$sum)
+  result$value <- abs(avg_degree - 2)
+  result$graph <- results$pc@graph
+  return(result)
+}
+
+partune_alpha_minposvar_conflict_edges <- function(pc_FUN, alpha, minposvar) {
+  results <- pc_fun(alpha = alpha, min_pos_var = minposvar)
+
+  result <- list()
+  result$value <- results$summary$edges$conflict
+  result$graph <- results$pc@graph
+  return(result)
+}
+
+partune_alpha_minposvar_edges_type_distr <- function(pc_FUN, alpha, minposvar, weight_of_conflict_edges = NULL) {
+  results <- pc_fun(alpha = alpha, min_pos_var = minposvar)
+
+  result <- list()
+  result$value <- quality_of_edge_distribution(unlist(results_G$summary$edges)[2:4],
+                                               weight_of_conflict_edges = weight_of_conflict_edges)
+  result$graph <- results$pc@graph
+  return(result)
+}
+
 
 
 
@@ -478,13 +539,17 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure, # type_of_data, su
 
 # QUALITY MEASURES
 # BY EDGES
-quality_of_edge_distribution <- function(edge_types, weight_of_conflict_edges = 1) {
+quality_of_edge_distribution <- function(edge_types, weight_of_conflict_edges = 1, difference = FALSE) {
   if (edge_types["conflict"] > 15) {
     return(0)                 # infeasible
   } else if (sum(edge_types) == 0) {  # no edges
     return(0)
   } else {
-    return(edge_types["directed"]/(edge_types["undirected"] + weight_of_conflict_edges * edge_types["conflict"]))
+    if (difference) {
+      return(edge_types["directed"] - (edge_types["undirected"] + weight_of_conflict_edges * edge_types["conflict"]))
+    } else {
+      return(edge_types["directed"] / (edge_types["undirected"] + weight_of_conflict_edges * edge_types["conflict"]))
+    }
   }
 }
 

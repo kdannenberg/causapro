@@ -436,7 +436,8 @@ color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874
     }
   }
 
-  pos_with_colors <- int_pos_to_color_vector(pos = pos, int_pos = int_pos, color_for_other_positions = "#1874CD")
+  # pos_with_colors <- int_pos_to_color_vector(pos = pos, int_pos = int_pos, color_for_other_positions = "#1874CD")
+  pos_with_colors <- int_pos_to_color_vector(pos = pos, int_pos = int_pos, color_for_other_positions = color_for_other_positions)
   # pos_with_colors <- sapply(rownames(effects), base_color)
   pos_with_colors <- cbind(pos_with_colors, effects)
 
@@ -453,7 +454,8 @@ color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874
     # with white
     color_function <- function(vector) {
       if (is.na(vector[2])) {
-        vector <- c("#FF6347", 1)
+        # vector <- c("#FF6347", 1) # wieso rot (#FF6347)?
+        vector <- c(vector, 1)
       }
       if (vector[2] >= 0) {
         return(hex(mixcolor(alpha = vector[2], color1 = hex2RGB(mode), color2 = hex2RGB(vector[1]))))

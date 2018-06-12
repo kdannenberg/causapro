@@ -8,11 +8,6 @@ library(colorspace)  # for mixcolor, hex
 plot_init <-  function(direction = "both", caption, effects, dir) {
   lines <- 1 # lines in plot_space
 
-  if (direction == "both") {
-    direction <- c("of", "on")
-    lines <- 2
-  }
-
   graphics.off()
   ## lines <- 6 # 1/2 für of, 2 für on (min, max)
   columns <- 2
@@ -241,6 +236,11 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
     graph = results
   } else {
     graph = results$pc@graph
+  }
+
+  if ((length(direction) == 1) && !grepl("on|of", direction)) {
+    direction <- c("of", "on")
+    lines <- 2
   }
 
   cat("\n")

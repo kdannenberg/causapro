@@ -40,7 +40,7 @@ analyse_set_of_graphs <- function(
   # weight_effects_on_by = "var",
   # weight_effects_on_by = "mean",
   weight_effects_on_by = "median",  # sieht (in der Summe) am besten aus
-  # perturbed_position = "372", # ist in ida_FUN schon gesetzt
+  perturbed_position = NULL, # ist in ida_FUN schon gesetzt
   causal_effects_function = "IDA-reset",
   scale_effects_on_so_372_equals_1 = TRUE,
   # if dir == "on": only effects on
@@ -104,14 +104,16 @@ analyse_set_of_graphs <- function(
   outpath,
   caption
 ) {
-  ida_func <- function_set_parameters(ida_function,
-                                          parameters = list(data = data, direction = "both", weight_effects_on_by = weight_effects_on_by,
-                                                            protein = protein, coloring = coloring, no_colors = no_colors_in_pymol_ida, outpath = outpath,
-                                                            amplification_exponent = amplification_exponent, amplification_factor = amplification_factor,
-                                                            rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode,
-                                                            pymol = FALSE, pymol_bg_color = pymol_bg_color, caption = caption, show_neg_causation = show_neg_causation,
-                                                            neg_effects = neg_effects_in_scaling, analysis = TRUE, causal_effects_function = "IDA-reset",
-                                                            percentile = ida_percentile, mute_all_plots = for_combined_plot))
+  # ida_func <- function_set_parameters(ida_function,
+  #                                         parameters = list(data = data, direction = "both", weight_effects_on_by = weight_effects_on_by,
+  #                                                           protein = protein, coloring = coloring, no_colors = no_colors_in_pymol_ida, outpath = outpath,
+  #                                                           amplification_exponent = amplification_exponent, amplification_factor = amplification_factor,
+  #                                                           rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode,
+  #                                                           pymol = FALSE, pymol_bg_color = pymol_bg_color, caption = caption, show_neg_causation = show_neg_causation,
+  #                                                           neg_effects = neg_effects_in_scaling, analysis = TRUE, causal_effects_function = "IDA-reset",
+  #                                                           percentile = ida_percentile, mute_all_plots = for_combined_plot))
+  # kann man doch alles schon von außen in der ida_function setzen!
+  ida_func <- ida_function
 
   if (!missing(results)) {
     type_of_graph_set == "conflict"
@@ -171,9 +173,12 @@ analyse_set_of_graphs <- function(
 
 
 
-  set_of_graphs <- determine_set_of_graphs(results = results, data = data, type_of_graph_set = type_of_graph_set, pc_function = pc_function, ida_function = ida_func,
+  set_of_graphs <- determine_set_of_graphs(results = results, data = data, type_of_graph_set = type_of_graph_set,
+                                           pc_function = pc_function, ida_function = ida_func,
+                                           direction = paste(direction, collapse = "+"),
                                            s = s, new = new, save = save, outpath = outpath,
-                                           pc_maj_rule_conflict = pc_maj_rule_conflict, pc_conservative_conflict = pc_conservative_conflict)
+                                           pc_maj_rule_conflict = pc_maj_rule_conflict,
+                                           pc_conservative_conflict = pc_conservative_conflict)
   if (is.null(set_of_graphs) && for_combined_plot) {
     if (caption_as_subcaption) {
       caption = caption
@@ -190,7 +195,7 @@ analyse_set_of_graphs <- function(
 
 
   # determine default colors for barplot
-  all_one_effects <- as.matrix(all_results[[1]]$ida[[perturbed_position]][[1]]$effects[,1])
+  all_one_effects <- as.matrix(all_results[[1]]$ida[[1]][[1]]$effects[,1])
   all_one_effects[,] <- 1
   colors_for_barplot <- color_by_effect(all_one_effects, int_pos, mode = "#FFFFFF")
 
@@ -222,7 +227,8 @@ analyse_set_of_graphs <- function(
     for (i in best_graphs) {
       # i= 28
       cat(paste0("BEST GRAPH #", which(best_graphs == i), ": ", i))
-      causal_effects_ida(data = data, perturbed_position = perturbed_position, direction = "both", weight_effects_on_by = weight_effects_on_by,
+      causal_effects_ida(data = data, perturbed_position = perturbed_position, direction = "both",
+                         weight_effects_on_by = weight_effects_on_by,
                          protein = protein, results = all_results[[i]], coloring = "all", no_colors = FALSE, outpath = outpath,
                          amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE, effect_to_color_mode = "#FFFFFF",
                          pymol_bg_color = "grey", barplot = TRUE,
@@ -322,18 +328,19 @@ pymol_mean_effects <- function(effects_over_all_graphs_on_of, protein, int_pos, 
 }
 
 # data is only necessary to check wether a loades graph has the right number of nodes
-determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_function, ida_function, s, new, save, outpath,
+determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_function, ida_function, direction,
+                                    s, new, save, outpath,
                                     pc_maj_rule_conflict, pc_conservative_conflict, suffix_effects_type = "",
                                     suffix_graphs = "graphs", suffix_results = "results-ida-reset",
                                     max_conflict_edges = 11, no_results = FALSE) {
   start_new <- new
   if (type_of_graph_set == "retry") {
     suffix_retry_conflict = "-pc-retry_"
-    suffix_results = pastes(suffix_effects_type, suffix_results, sep = "_")
+    suffix_results = pastes(suffix_effects_type, direction, suffix_results, sep = "_")
     # infix <- pastes("-pc-retry", suffix_effects_type, sep = "_")
     # infix <- paste0(infix, "_")
     filename_graphs <- paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData")
-    filename_results <- filename_results
+    filename_results <- paste0(outpath, suffix_retry_conflict, suffix_results, ".RData")
     # if (suffix_effects_type == "" || suffix_effects_type == "372") {
       outpath_where_graphs_exist <- get_old_outpath(outpath, suffix = suffix_retry_conflict, suffix_graphs, ".RData")
       outpath_where_results_exist <- get_old_outpath(outpath, suffix = suffix_retry_conflict, suffix_results, ".RData")
@@ -412,7 +419,7 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
     # TODO: rename: -rel_conflict_graph_set
   } else if (type_of_graph_set == "conflict") {
     suffix_retry_conflict = "-all_confl_comb_"
-    suffix_results = pastes(suffix_effects_type, suffix_results, sep = "_")
+    suffix_results = pastes(suffix_effects_type, direction, suffix_results, sep = "_")
     # infix <- pastes("-pc-retry", suffix_effects_type, sep = "_")
     # infix <- paste0(infix, "_")
     filename_graphs <- paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData")
