@@ -12,7 +12,7 @@ source("configuration_data.R")
 # debug(protein_graph_clustering)
 
 # debug(partuning_over_alpha_and_minposvar)
-# debug(partune_alpha_minposvar_empir_cor_dev_from_zero_per_edge)
+# debug(obj_function_est_per_edges_times_mean_estimate_no_conflict)
 
 
 # NoV_NMR-Tit_B3S-with-unass
@@ -49,85 +49,59 @@ pc_fun_with_eval <- function_set_parameters(protein_causality_NoV, parameters =
                                          mute_all_plots = TRUE))
 
 
-# alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, seq(0.2, 0.9, 0.1))
+alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, seq(0.2, 0.9, 0.1))
 # alphas <- c(0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
 # alphas = c(0.001, 0.01, 0.05, 0.1)
-alphas = c(0.001, 0.8)
+# alphas = c(0.001, 0.8)
 # alphas <- c(1e-10, 1e-5, 0.0001)
 # alphas <- c(0.8)
-min_pos_vars = c(0, 0.08) # kleinste vorhandene Varianz: 0.059
+min_pos_vars = c(0, 0.1) # kleinste vorhandene Varianz: 0.059
 
 # dev_of_edges_from_2 <- tune_alpha_mpv_dev_of_edges_from_2(pc_fun = pc_fun,
 #                                                           alphas = alphas,
 #                                                           minposvars = min_pos_vars)
-# # localTest estimate per (squared/...) edge(s)
-# estimate_per_edges <- tune_alpha_mpv_estimate_per_edges(pc_fun = pc_fun,
-#                                                         alphas = alphas,
-#                                                         minposvars = min_pos_vars)
-
-
-mean_estimate <-  tune_alpha_mpv_mean_empir_cor(pc_fun = pc_fun_with_eval,
-                                                          alphas = alphas,
-                                                          minposvars = min_pos_vars)
-
-stop("fertig")
-
-partuning_mean_empir_cor <- function_set_parameters(partune_alpha_minposvar_mean_empir_cor,
-                                                                    parameters = list(pc_FUN = pc_fun))
-print(partune_alpha_minposvar_mean_empir_cor)
-
-
-
-# localTests_n_edges_obj_fct <- function(array) {
-#   v <- apply(array, c(1,2), function(x) {sum(abs(x))})
-#   return(list(value = min(v), index = (which(v ==  min(v), arr.ind = TRUE))))
-# }
-
-# localTests_sep_estimate_obj_fct <- function_set_parameters(array_obj_function,
-#                     parameters = list(fun_over_components_of_value = function(x) {sum(abs(x))},
-#                                       fun_over_results_of_other_fun = min))
-
-array_obj_function <- function(array, fun_over_components_of_value, fun_over_results_of_other_fun) {
-  v <- apply(array, c(1,2), fun_over_components_of_value)
-  best_v <- fun_over_results_of_other_fun(v)
-  return(list(value = best_v, index = (which(v ==  best_v, arr.ind = TRUE))))
-}
-
-localTests_sep_estimate_n_edges_obj_fct <-
-  function_set_parameters(array_obj_function,
-  parameters = list(fun_over_components_of_value = function(v) {v[1]/v[2]},
-                    fun_over_results_of_other_fun = min))
-
-
-
-
-# debug(partuning_Nov_NMR_2018_06_01)
-
-
-
-
-
-# opt <- partuning_over_alpha_and_minposvar(FUN = partuning_Nov_NMR_2018_06_01_square_empir_cor, alphas = alphas, minposvars = min_pos_vars, best = min)
-# opt <- partuning_over_alpha_and_minposvar(FUN = partuning_Nov_NMR_2018_06_01_n_edges, alphas = alphas, minposvars = min_pos_vars, best = max)
-# opt <- partuning_over_alpha_and_minposvar(FUN = partuning_empir_cor_per_edge, alphas = alphas, minposvars = min_pos_vars, best = min)
+# print(dev_of_edges_from_2)
 
 # localTest estimate per (squared/...) edge(s)
-estimate_per_edges <- partuning_over_alpha_and_minposvar(FUN = partuning_sep_empir_cor_n_edge,
-                                          alphas = alphas, minposvars = min_pos_vars,
-                                          best = localTests_sep_estimate_n_edges_obj_fct, best_in_array = FALSE)
+# estimate_per_edges <- tune_alpha_mpv_estimate_per_edges(pc_fun = pc_fun_with_eval,
+#                                                         alphas = alphas,
+#                                                         minposvars = min_pos_vars)
+# print(estimate_per_edges)
 
-# zero mean localTests estimate
-mean_estimate <- partuning_over_alpha_and_minposvar(FUN = partuning_mean_empir_cor,
-                                          alphas = alphas, minposvars = min_pos_vars,
-                                          best = function(x) {min(abs(x), na.rm = TRUE)})
+# mean_estimate <-  tune_alpha_mpv_mean_empir_cor(pc_fun = pc_fun_with_eval,
+#                                                 alphas = alphas,
+#                                                 minposvars = min_pos_vars)
+# print(mean_estimate)
+
+# CONFLICTS YIELD (MINIMIZED) SCORE INFINITY
+# abs_empir_cor_per_edges_times_mean_empir_cor_no_conflict <-
+#   tune_alpha_mpv_abs_empir_cor_per_edges_times_mean_empir_cor_no_conflict(pc_fun = pc_fun_with_eval,
+#                                                                           alphas = alphas,
+#                                                                           minposvars = min_pos_vars)
+# print(abs_empir_cor_per_edges_times_mean_empir_cor_no_conflict)
+# # TODO: make that possible:
+# plot_partuning(abs_empir_cor_per_edges_times_mean_empir_cor_no_conflict$all_values)
+
+
+# # CONFLICTS MULTIPLIED WITH (MINIMIZED) SCORE
+abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict <-
+  tune_alpha_mpv_abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict_plus_1(pc_fun = pc_fun_with_eval,
+                                                                          alphas = alphas,
+                                                                          minposvars = min_pos_vars)
+print(abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict)
+plot_partuning(abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict$all_values)
+
 
 # best partuning so far:
 # estimate_per_edges_mat * abs(mean_est_mat)^2 und alles mit konfliktkanten ausschließen (z.B. alpha = 0.7, bei minposvar = )
 
 # print(opt)
 
+# TODO: Kann man das wieder fixen?
 # for localTest estimate per (squared/...) edge(s)
 # debug(plot_different_measures_of_all_results)
-measures <- c(function(v) {v[1]}, function(v) {v[1]/sqrt(v[2])}, function(v) {v[1]/v[2]}, function(v) {v[1]/v[2]^2}, function(v) {v[1]/sqrt(v[2])^v[2]})
-par(mfrow = c(1, length(measures)))
-plot_different_measures_of_all_results(all_results = estimate_per_edges$all_results, measures = measures, print = TRUE)
+# measures <- c(function(v) {v[1]}, function(v) {v[1]/sqrt(v[2])}, function(v) {v[1]/v[2]}, function(v) {v[1]/v[2]^2}, function(v) {v[1]/sqrt(v[2])^v[2]})
+# par(mfrow = c(1, length(measures)))
+# plot_different_measures_of_all_results(all_results = estimate_per_edges$all_results, measures = measures, print = TRUE)
+
+# TODO: Eine funktion schrieben, die solche plots macht
