@@ -97,7 +97,7 @@ protein_causality <- function(
   # steps = c("evaluation", "analysis"),
   graph_computation = TRUE,
   evaluation = FALSE,
-  intervention_position = "372",
+  intervention_position = "all",
   causal_effects_function = "IDA-reset", # "IDA", "causalEffects"
   ida_direction = "of",
   ida_percentile = "11", # top 11
@@ -120,7 +120,7 @@ protein_causality <- function(
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
   plot_ida = FALSE,                                  # NEW!
-  graph_clustering = TRUE,                              # NEW!
+  graph_clustering = FALSE,                          # NEW!
   plot_no_isolated_nodes = TRUE,  # TODO: make true possible even for edgeless -> empty graphs
   plot_with_graphviz = TRUE, # NEW!
   #
@@ -193,13 +193,13 @@ protein_causality <- function(
     alignment <- readAlignment(filename = paste0("Data", file_separator, protein, "_ALN"))
     data_orig <- compute_data_from_alignment(alignment = alignment, filename = filename)
   } else {
-    data_orig <- read_data(filename, transpose = transpose_data)
+    data_orig <- read_data(filename, transpose = transpose_data, every_n_th_row = every_n_th_row)
   }
 
 
 
   data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos, only_cols = only_cols,
-                      every_n_th_row = every_n_th_row, min_var = min_pos_var,
+                      min_var = min_pos_var,
                       keep_quadratic = (cor_cov_FUN == "none"),
                       mute_plot = !show_variance_cutoff_plot)
 
@@ -386,18 +386,23 @@ protein_causality <- function(
                                         # if ("evaluation" %in% steps) {
   if (evaluation) {
     results <- analysis_after_pc(results, data, outpath = outpath, protein = protein, position_numbering = position_numbering,
-                                 stages = stages, unabbrev_r_to_info = unabbrev_r_to_info,
+                                 stages = stages, #max_number_of_edges_in_graph = 70,
+                                 unabbrev_r_to_info = unabbrev_r_to_info,
                                  print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
                                  compute_localTests_anew = compute_localTests_anew, print = print_analysis)
     ## print_analysis <- FALSE
     ## plot_analysis <- FALSE
-    if(plot_analysis && !mute_all_plots) {
+    if (plot_analysis && !mute_all_plots) {
+      if (is.null(results$orig$graph$dagitty)) { # wird in analysis_after_pc gesetzt, wenn der Graph nicht zu groß war
+        plot_text("Too many edges in the graph. Graph evaluation (probably) infeasible.")
+      } else {
           plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
               coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
               combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
           plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
               coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
               combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
+      }
     }
   }
 
@@ -466,7 +471,7 @@ protein_causality <- function(
     ida_function_w_o_pos <- function_set_parameters(ida_function_w_o_pos_and_results,
                                                     parameters = list(results = results))
 
-    outpath = paste0(outpath, "_", causal_effects_function)
+    outpath = paste0(outpath, "_", causal_effects_function, "_interv-at-", intervention_position)
 
     # plot.new()  # TODO: Muss das sein?!
     if (intervention_position == "all") {
@@ -508,6 +513,7 @@ protein_causality <- function(
                                                  s = s, new = FALSE, save = TRUE, outpath = outpath,
                                                  pc_maj_rule_conflict = pc_maj_rule_conflict,
                                                  pc_conservative_conflict = pc_conservative_conflict,
+                                                 direction = ida_direction, # darf ws nicht "both" sein!
                                                  suffix_effects_type = paste0("pos-", intervention_position),
                                                  max_conflict_edges = max_conflict_edges, no_results = TRUE)
 
@@ -856,7 +862,7 @@ protein_causality_S <- function(
   # technical parameters
   graph_computation = NULL,
   evaluation = NULL,
-  intervention_position = "all",
+  intervention_position = "372",
   causal_effects_function = NULL,
   ida_direction = NULL,
   linkcommunities = NULL,

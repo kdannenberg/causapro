@@ -12,7 +12,7 @@ library("dagitty")
 # results$orig$localTests_results$r_int_alpha --> r_int_sign
 # results$orig$localTests_results$r_int_bad -- r_int_sign_bad
 analysis_after_pc <- function(results, data, outpath, protein, position_numbering,
-                              stages = c("orig", "anc"),
+                              stages = c("orig", "anc"), max_number_of_edges_in_graph = 70,
                               unabbrev_r_to_info, print_r_to_console,
                               lines_in_abbr_of_r, compute_localTests_anew = FALSE, print = TRUE) {
   # results <- list()
@@ -20,64 +20,70 @@ analysis_after_pc <- function(results, data, outpath, protein, position_numberin
   #
   # results$orig <- list()
   # results$orig$graph$NEL <- pc@graph
+  if (sum(unlist(conflict_edges(results$pc@graph))) <= 70) {
+    results$orig$graph$NEL <- results$pc@graph
 
-  results$orig$graph$NEL <- results$pc@graph
+    graph_dagitty <- conv_to_r(results$pc@graph, type_of_graph = "pdag", nodename_prefix = "P")
 
-  graph_dagitty <- conv_to_r(results$pc@graph, type_of_graph = "pdag", nodename_prefix = "P")
+    results$orig$graph$dagitty <- graph_dagitty
 
-  results$orig$graph$dagitty <- graph_dagitty
+    if (("main" %in% stages) || ("orig" %in% stages)) {
+    # if (originalgraph) {
+      print("ORIGINAL GRAPH...")
+      results$orig$localTests <- evaluate_DAG(data = data, graph = graph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, compute_localTests_anew = compute_localTests_anew)
+    }
 
-  if (("main" %in% stages) || ("orig" %in% stages)) {
-  # if (originalgraph) {
-    print("ORIGINAL GRAPH...")
-    results$orig$localTests <- evaluate_DAG(data = data, graph = graph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, compute_localTests_anew = compute_localTests_anew)
-  }
+    if ("sub" %in% stages) {
+    # if (subgraph) {
+      print("SUBGRAPH...")
+      # outpath_subgraph = paste(outpath, "-sub", sep = "")
 
-  if ("sub" %in% stages) {
-  # if (subgraph) {
-    print("SUBGRAPH...")
-    # outpath_subgraph = paste(outpath, "-sub", sep = "")
-
-    subgraph <- subgraph_of_interesting_positions(results$pc@graph, protein = protein, position_numbering = position_numbering)
-    # if (!((plotstages == "sub") && (plot_types == "graph"))) {
-    #   garbage <- graphics.off()
-    # }
-    # plot(subgraph)
-    results$sub$graph$NEL <- subgraph
-    subgraph_dagitty <- conv_to_r(subgraph, type_of_graph = "pdag", nodename_prefix = "P")
-    results$sub$localTests <- evaluate_DAG(data = data, graph = subgraph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, stage = "sub", plot = TRUE, compute_localTests_anew = compute_localTests_anew)
-  }
-
-  if ("anc" %in% stages) {
-  # if (ancestorgraph) {
-    print("ANCESTOR GRAPH...")
-    # outpath_ancestor = paste(outpath, "-anc", sep = "")
-
-    ancestor_graph_dagitty <- ancestorgraph_of_interesting_positions(graph_dagitty = graph_dagitty, protein = protein, position_numbering = position_numbering, nodename_prefix = "P")
-    if (!is.null(ancestor_graph_dagitty)) {
-      # if (!((plotstages == "ancestor") && (plot_types == "graph"))) {
+      subgraph <- subgraph_of_interesting_positions(results$pc@graph, protein = protein, position_numbering = position_numbering)
+      # if (!((plotstages == "sub") && (plot_types == "graph"))) {
       #   garbage <- graphics.off()
       # }
-      # plot(dagitty::graphLayout(ancestor_graph_dagitty))
-      results$anc$graph$dagitty <- dagitty::graphLayout(ancestor_graph_dagitty)
-      results$anc$localTests <- evaluate_DAG(data = data, graph = ancestor_graph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, stage = "anc", plot = TRUE, compute_localTests_anew = compute_localTests_anew)
-    } else {
-      print("Ancestor graph is NULL!")
+      # plot(subgraph)
+      results$sub$graph$NEL <- subgraph
+      subgraph_dagitty <- conv_to_r(subgraph, type_of_graph = "pdag", nodename_prefix = "P")
+      results$sub$localTests <- evaluate_DAG(data = data, graph = subgraph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, stage = "sub", plot = TRUE, compute_localTests_anew = compute_localTests_anew)
     }
-  }
 
-  ## if (plot) {
-  ##   plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-  ##         coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
-  ##         combined_plot = combined_plot, position_numbering = position_numbering)
-  ##   plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-  ##         coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
-  ##         combined_plot = combined_plot, position_numbering = position_numbering)
-  ## }
-  if (print) {
-    results$r_statistics <- print_evaluation_results_to_info_file(results = results, outpath = outpath, stages, unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r)
+    if ("anc" %in% stages) {
+    # if (ancestorgraph) {
+      print("ANCESTOR GRAPH...")
+      # outpath_ancestor = paste(outpath, "-anc", sep = "")
+
+      ancestor_graph_dagitty <- ancestorgraph_of_interesting_positions(graph_dagitty = graph_dagitty, protein = protein, position_numbering = position_numbering, nodename_prefix = "P")
+      if (!is.null(ancestor_graph_dagitty)) {
+        # if (!((plotstages == "ancestor") && (plot_types == "graph"))) {
+        #   garbage <- graphics.off()
+        # }
+        # plot(dagitty::graphLayout(ancestor_graph_dagitty))
+        results$anc$graph$dagitty <- dagitty::graphLayout(ancestor_graph_dagitty)
+        results$anc$localTests <- evaluate_DAG(data = data, graph = ancestor_graph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, stage = "anc", plot = TRUE, compute_localTests_anew = compute_localTests_anew)
+      } else {
+        print("Ancestor graph is NULL!")
+      }
+    }
+
+    ## if (plot) {
+    ##   plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+    ##         coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
+    ##         combined_plot = combined_plot, position_numbering = position_numbering)
+    ##   plots(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+    ##         coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
+    ##         combined_plot = combined_plot, position_numbering = position_numbering)
+    ## }
+    if (print) {
+      results$r_statistics <- print_evaluation_results_to_info_file(results = results, outpath = outpath, stages, unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r)
+    }
+    return(results)
+  } else {
+    results$orig$localTests$r$estimate <- NA
+    results$anc$localTests$r$estimate <- NA
+    results$sub$localTests$r$estimate <- NA
+    return(results)
   }
-  return(results)
 }
 
 

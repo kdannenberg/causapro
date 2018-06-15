@@ -17,38 +17,57 @@ get_data_description <- function(protein, type_of_data, subtype_of_data = "", da
 }
 
 
-read_data <- function(files, path_to_data = "Data/", extension = ".csv", filename, transpose = FALSE) {
-  read <- function (file) {
+read_data <- function(files, path_to_data = "Data/", extension = ".csv", filename, transpose = FALSE,
+                      every_n_th_row = 1) {
+  read <- function (file, every_n_th_row_ = 1) {
     # if (file.exists(paste0(path_to_data, file, ".RData"))) {
     #   load(paste0(path_to_data, file, ".RData"))
     #   print(paste(paste0(path_to_data, file, ".RData"), "loaded instead of", paste0(path_to_data, file, extension)))
     # } else {
-      filename <- paste0(path_to_data, file, extension)
-      data_i = read.csv2(filename, row.names = 1, check.names = FALSE) # if check.names, an X is prepended to numerical column-names
+      if (!(missing(every_n_th_row_)) && !is.null(every_n_th_row_) && !(every_n_th_row_ == 1)
+          && file.exists(filename = paste0(path_to_data, file, "-every_", every_n_th_row_, "th", extension))) {
+          data_i = read.csv2(filename, row.names = 1, check.names = FALSE) # if check.names, an X is prepended to numerical column-names
+          every_n_th_row_ = 1
+      } else {
+          filename <- paste0(path_to_data, file, extension)
+          data_i = read.csv2(filename, row.names = 1, check.names = FALSE) # if check.names, an X is prepended to numerical column-names
+      }
       i <- which(files == file)
       if ((length(transpose) > i && transpose[i]) || (length(transpose) == 1 && transpose[1])) {
         data_i <- t(data_i)
       }
       rownames(data_i) <- paste(file, rownames(data_i), sep = "-")
-      save(data_i, file = paste0(path_to_data, file, ".RData"))
+      # save(data_i, file = paste0(path_to_data, file, ".RData"))
+
+      if (!(missing(every_n_th_row_)) && !is.null(every_n_th_row_) && !(every_n_th_row_ == 1)) {
+        data_i <- data_i[seq(from = 1, to = dim(data_i)[1], by = every_n_th_row_),]
+      }
+
     # }
     return(data_i)
   }
 
-  read_or_get_data <- function(file) {
-    FUN <- function_set_parameters(read, parameters = list(file = file))
-    data <- compute_if_not_existent(filename = paste0(path_to_data, file), FUN = FUN,
-                                    obj_name = "data_i")
+  # debug(read)
+
+  read_or_get_data <- function(file, every_n_th_row) {
+    func <- function_set_parameters(read, parameters = list(file = file, every_n_th_row = every_n_th_row))
+    filename <- paste0(path_to_data, file)
+    if (!(missing(every_n_th_row)) && !is.null(every_n_th_row) && !(every_n_th_row == 1)) {
+      filename = paste0(filename, "-every_", every_n_th_row, "th")
+    }
+    data <- compute_if_not_existent(filename = filename,
+                                    FUN = func, obj_name = "data_i")
   }
 
-
+  # debug(read_or_get_data)
 
   if (length(files) == 1) {   # for very mysterious reasons, the matrixs gets transposed by do.call(rbind, data_i) otherwise (rbind(data_i) does NOT transpose the matrix!)
     # data <- read(files[1])
-    data <- read_or_get_data(files[1])
+    data <- read_or_get_data(files[1], every_n_th_row = every_n_th_row)
   } else {
     data <- do.call(rbind, lapply(files, read_or_get_data))
   }
+
 
   # data <- matrix()
   # for (file in files) {
@@ -75,14 +94,10 @@ analyse_data <- function(data, int_pos, min_var) {
 #   That is, per position, over all observations?
 adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE,
                         only_cols = NULL, only_cols_grep = FALSE,
-                        every_n_th_row = 1,
+                        # every_n_th_row = 1,
                         remove_low_variance = FALSE, zero_var_fct, min_var = 0.01,
                         keep_quadratic = FALSE, mute_plot = TRUE,
                         adjust_colnames = TRUE) {
-
-  if (!(missing(every_n_th_row)) && !is.null(every_n_th_row)) {
-    data <- data[seq(from = 1, to = dim(data)[1], by = every_n_th_row),]
-  }
 
   if (adjust_colnames) {
     remove_three_letter_aa_prefixes <- function(string) {

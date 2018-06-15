@@ -425,7 +425,7 @@ int_pos_to_color_vector <- function(pos, int_pos, color_for_other_positions = "#
 # either ranked or ampl_factor (or exponent) possible
 # prviously: hue_by_effect
 # color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874CD", mode = "mix") {
-color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874CD", mode = "#FFFFFF") {
+color_by_effect <- function(effects, int_pos, interv_pos, color_for_interv_pos = "#FFFFFF", color_for_other_positions = "#1874CD", mode = "#FFFFFF") {
   # TODO Marcel: Geht das auch eleganter, so dass effects Zeilen-, Spaltenmatrix oder Vektor sein kann?
   pos <- rownames(effects)
   if (is.null(pos)) {
@@ -439,6 +439,11 @@ color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874
   # pos_with_colors <- int_pos_to_color_vector(pos = pos, int_pos = int_pos, color_for_other_positions = "#1874CD")
   pos_with_colors <- int_pos_to_color_vector(pos = pos, int_pos = int_pos, color_for_other_positions = color_for_other_positions)
   # pos_with_colors <- sapply(rownames(effects), base_color)
+
+  if (!missing(interv_pos) && !is.null(interv_pos)) {
+    pos_with_colors[as.character(interv_pos)] <- color_for_interv_pos#"#FF9933"
+  }
+
   pos_with_colors <- cbind(pos_with_colors, effects)
 
   # pos_with_colors <- sapply(colnames(pos_with_colors)),  function(pos) {})

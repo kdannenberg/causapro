@@ -28,8 +28,9 @@ analyse_set_of_graphs <- function(
   plot_effect_quality = TRUE,
   plot_false_pos_neg = TRUE,
   plot_effect_score = TRUE,
-  # effect_hue_by = "effects",
-  effect_hue_by = get_conservation(measure = measure, protein = protein) / max(get_conservation(measure = measure, protein = protein)), # DG/DS
+  effect_hue_by = "effects",
+  # das folgenden geht im Allgemeinen nicht! nur für D-Maße
+  # effect_hue_by = get_conservation(measure = measure, protein = protein) / max(get_conservation(measure = measure, protein = protein)), # DG/DS
   # effect_hue_by = apply(data, 2, var),
   # results <- protein_causality_G(min_pos_var = min_pos_var, alpha = alpha,
   #                           pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
@@ -766,7 +767,7 @@ display_effects <- function(effects, effect_hue_by = "effect", direction = "mean
         dir_print <- paste0(" (", direction, " of: ", pastes("on", weight_effects_on_by, sep = "-rel-to-"), " and of) ")
       }
       if (missing(caption) || is.null(caption)) {
-        caption <- paste0(function_over_all_graphs, " over all graphs of effects", dir_print, "position 372")
+        caption <- paste(function_over_all_graphs, "over all graphs of effects", dir_print, "position", perturbed_position)
 
         # caption <- paste0(function_over_all_graphs, " over all graphs of effects (", direction, " of: ", on, " and of) position 372")
       }
@@ -905,7 +906,7 @@ plot_effects <- function(effects, effect_hue_by = effects, int_pos, scale_in_the
   #   colors_by_effect <- color_by_effect(vars, int_pos, mode = effect_to_color_mode)
   # }
 
-  colors_by_effect <- color_by_effect(scaled_effect_hue_by, int_pos, mode = effect_to_color_mode)
+  colors_by_effect <- color_by_effect(effects = scaled_effect_hue_by, int_pos = int_pos, mode = effect_to_color_mode)
 
   colors <- colors_by_effect[names(effects)]
 

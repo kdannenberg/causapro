@@ -5,12 +5,137 @@
 
 library(colorspace)  # for mixcolor, hex
 
-plot_init <-  function(direction = "both", caption, effects, dir) {
+
+
+causal_effects_ida <- function(data, perturbed_position, direction = "both", weight_effects_on_by = "mean_abs_effect",
+                results, protein, coloring = "all", effect_hue_by = "effect", #effect_hue_by = "variance",
+                outpath, plot_scaled_effects = FALSE, amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE,
+                effect_to_color_mode = "#FFFFFF", pymol = TRUE, pymol_bg_color = "black", caption, no_colors,
+                show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75, mute_all_plots = FALSE,
+                causal_effects_function, cov_FUN) {
+  if (!is.null(slotNames(results)) && all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
+    graph = results
+  } else {
+    graph = results$pc@graph
+  }
+
+  if ((length(direction) == 1) && !grepl("on|of", direction)) {
+    direction <- c("of", "on")
+    lines <- 2
+  }
+
+  cat("\n")
+  for (dir in direction) {
+    ## computation rausgezogen, returned effects
+    effects <- compute_causal_effects_ida(data=data, perturbed_position = perturbed_position, weight_effects_on_by = weight_effects_on_by, outpath = outpath, causal_effects_function= causal_effects_function, cov_FUN = cov_FUN, dir = dir, graph = graph)
+    cat("CAUSAL EFFECTS ")
+    cat(toupper(dir))
+    cat(" POSITION ")
+    cat(perturbed_position)
+    cat("\n")
+
+    int_pos <- interesting_positions(protein = protein, coloring = "")   # nicht "coloring" übergeben, da das "all" enhalten kann, wodurch auch die negtiven int_pos hier bei den positiven dabei wären
+
+    scaled_effects <- matrix(nrow = dim(effects)[1], ncol = 0)
+    rownames(scaled_effects) <- rownames(effects)
+
+    if(!mute_all_plots) {
+      plot_init(direction = direction, caption = caption, effects = effects, dir = dir, plot_scaled_effects = plot_scaled_effects)
+    }
+
+
+    for (i in 1:dim(effects)[2]) {
+      if (is.character(colnames(effects)[i])) {
+        cat(toupper(colnames(effects)[i]))
+      } else {
+        cat("OPTION ")
+        cat(i)
+      }
+      cat("\n")
+
+      current_effects <- as.matrix(effects[,i])
+      rownames(current_effects) <- rownames(effects)
+
+      if (dim(effects)[2] <= 1) {
+        index <- ""
+      } else {
+        index <- i
+      }
+      current_outpath <- outpath_for_ida(outpath = outpath, direction = dir, option_nr = index, neg_effects = neg_effects, perturbed_position = perturbed_position,
+                                 amplification_exponent = amplification_exponent, amplification_factor = amplification_factor,
+                                 no_colors = no_colors, rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode)
+
+      current_scaled_effects <- scale_effects(current_effects, rank = rank_effects, amplification_factor = amplification_factor, neg_effects = neg_effects)
+      scaled_effects <- cbind(scaled_effects, current_scaled_effects)
+
+      if (effect_hue_by == "effect") {
+        colors_by_effect <- color_by_effect(effects = current_scaled_effects, int_pos = int_pos,
+                                            interv_pos = perturbed_position,
+                                            mode = effect_to_color_mode)
+      } else if (effect_hue_by == "variance" || effect_hue_by == "var") {
+        vars <- apply(data, 2, var)
+        colors_by_effect <- color_by_effect(effects = vars, int_pos = int_pos,
+                                            interv_pos = perturbed_position,
+                                            mode = effect_to_color_mode)
+      }
+
+      if (!show_neg_causation) {
+        current_effects <- NULL
+      }
+
+      if (pymol) {
+        plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbed_position = perturbed_position,
+                                    protein = protein, outpath = current_outpath, amplification_exponent = amplification_exponent,
+                                    amplification_factor = amplification_factor, ranked = opacity_ranked,
+                                    index = colnames(effects)[i], no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = current_effects)
+      }
+      if (!mute_all_plots) {
+        plot_causal_effects_ida(perturbed_position = perturbed_position, current_effects = current_effects,
+                                dir = dir, colors_by_effect = colors_by_effect,
+                                type = colnames(effects)[i],
+                                current_scaled_effects = switch(plot_scaled_effects + 1, NULL, current_scaled_effects))
+      }
+      if (analysis) {
+        statistics_of_influenced_positions(effects = current_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
+
+
+        # print("FOR SCALED EFFECTS:")        # sollte es immer gleich sein
+        # statistics_of_influenced_positions(effects = current_scaled_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
+
+        # threshold = quantile(current_scaled_effects, probs = percentile)
+        # most_influenced_positions <- colnames(data[(rownames(current_scaled_effects)[which(current_scaled_effects > threshold)])])
+        # print(paste(length(most_influenced_positions), "positions over the threshold", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
+        # # int_pos <- interesting_positions("PDZ", "crystal")
+        # int_pos_strongly_influenced <- intersect(int_pos, most_influenced_positions)
+        # print(paste("Thereof",  length(int_pos_strongly_influenced), "out of the", length(int_pos), "interesting positions:", paste(sort(int_pos_strongly_influenced), collapse = ", ")))
+        # print(paste("Missing: ", paste(setdiff(int_pos, most_influenced_positions), collapse = ", ")))
+
+      }
+    }
+
+    # results$ida <- list(list(effects = effects, scaled_effects = scaled_effects, pos_colors = colors_by_effect))
+    # names(results$ida) <- perturbed_position
+
+    if (length(slotNames(results)) > 0 && all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))
+        || length(names(results)) > 0 && all(names(results) == "pc")) {
+          results <- list()
+    }
+    results$ida[[perturbed_position]][[dir]] <- list(effects = effects, scaled_effects = scaled_effects, pos_colors = colors_by_effect)
+
+    # print(cbind(effects, current_scaled_effects, colors_by_effect))
+  }
+  if (!mute_all_plots) {
+    title(caption, outer = TRUE)
+  }
+  return(results)
+}
+
+plot_init <-  function(direction = "both", caption, effects, dir, plot_scaled_effects = FALSE) {
   lines <- 1 # lines in plot_space
 
   graphics.off()
   ## lines <- 6 # 1/2 für of, 2 für on (min, max)
-  columns <- 2
+  columns <- ifelse(plot_scaled_effects, 2, 1)
   oma <- c( 0, 0, length(caption) + 1, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
   ## par(mfrow=c(lines, columns), oma = oma)
   par(oma = oma)
@@ -45,7 +170,9 @@ plot_init <-  function(direction = "both", caption, effects, dir) {
   }
 }
 
-plot_causal_effects_ida <- function(perturbed_position, current_effects, dir, colors_by_effect, current_scaled_effects) {
+plot_causal_effects_ida <- function(perturbed_position, current_effects, dir,
+                                    colors_by_effect, current_scaled_effects,
+                                    type = "") {
 
   ## graphics.off()
   ## par(mfrow=c(m,n))
@@ -57,16 +184,18 @@ plot_causal_effects_ida <- function(perturbed_position, current_effects, dir, co
   is.na(vector_effects) <- sapply(vector_effects, is.infinite)   # set infinite values to NA
   names(vector_effects) <- rownames(current_effects)
   ## barplot(vector_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
-  barplot(vector_effects, main = paste("\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
-  vector_scaled_effects <- as.vector(current_scaled_effects)
-  is.na(vector_scaled_effects) <- sapply(vector_scaled_effects, is.infinite)   # set infinite values to NA
-  names(vector_scaled_effects) <- rownames(current_scaled_effects)
-  ## barplot(vector_scaled_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
-  barplot(vector_scaled_effects, main = paste("\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+  barplot(vector_effects, main = paste(type, "total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+  if (!is.null(current_scaled_effects) || missing(current_scaled_effects)) {
+    vector_scaled_effects <- as.vector(current_scaled_effects)
+    is.na(vector_scaled_effects) <- sapply(vector_scaled_effects, is.infinite)   # set infinite values to NA
+    names(vector_scaled_effects) <- rownames(current_scaled_effects)
+    ## barplot(vector_scaled_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+    barplot(vector_scaled_effects, main = paste(type, "total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+  }
 }
 
 compute_causal_effects_ida <- function(data, perturbed_position, weight_effects_on_by = "mean_abs_effect",
-                outpath, causal_effects_function, cov_FUN, dir, graph) {
+                                       outpath, causal_effects_function, cov_FUN, dir, graph) {
   if (dir == "of" || dir == "by" || dir == "from") {
     ## TODO: function: CAUSAL_EFFECTS_OF
     if (grepl(pattern = "ida", tolower(causal_effects_function))) {
@@ -225,119 +354,6 @@ compute_causal_effects_ida <- function(data, perturbed_position, weight_effects_
   effects[is.infinite(effects)] <- 1
   return(effects)
 }
-
-causal_effects_ida <- function(data, perturbed_position, direction = "both", weight_effects_on_by = "mean_abs_effect",
-                results, protein, coloring = "all", effect_hue_by = "effect", #effect_hue_by = "variance",
-                outpath,amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE,
-                effect_to_color_mode = "#FFFFFF", pymol = TRUE, pymol_bg_color = "black", caption, no_colors,
-                show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75, mute_all_plots = FALSE,
-                causal_effects_function, cov_FUN) {
-  if (!is.null(slotNames(results)) && all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
-    graph = results
-  } else {
-    graph = results$pc@graph
-  }
-
-  if ((length(direction) == 1) && !grepl("on|of", direction)) {
-    direction <- c("of", "on")
-    lines <- 2
-  }
-
-  cat("\n")
-  for (dir in direction) {
-    ## computation rausgezogen, returned effects
-    effects <- compute_causal_effects_ida(data=data, perturbed_position = perturbed_position, weight_effects_on_by = weight_effects_on_by, outpath = outpath, causal_effects_function= causal_effects_function, cov_FUN = cov_FUN, dir = dir, graph = graph)
-    cat("CAUSAL EFFECTS ")
-    cat(toupper(dir))
-    cat(" POSITION ")
-    cat(perturbed_position)
-    cat("\n")
-
-    int_pos <- interesting_positions(protein = protein, coloring = "")   # nicht "coloring" übergeben, da das "all" enhalten kann, wodurch auch die negtiven int_pos hier bei den positiven dabei wären
-
-    scaled_effects <- matrix(nrow = dim(effects)[1], ncol = 0)
-    rownames(scaled_effects) <- rownames(effects)
-
-    if(!mute_all_plots) {
-      plot_init(direction = direction, caption = caption, effects = effects, dir = dir)
-    }
-
-
-    for (i in 1:dim(effects)[2]) {
-      cat("OPTION ")
-      cat(i)
-      cat("\n")
-
-      current_effects <- as.matrix(effects[,i])
-      rownames(current_effects) <- rownames(effects)
-
-      if (dim(effects)[2] <= 1) {
-        index <- ""
-      } else {
-        index <- i
-      }
-      current_outpath <- outpath_for_ida(outpath = outpath, direction = dir, option_nr = index, neg_effects = neg_effects, perturbed_position = perturbed_position,
-                                 amplification_exponent = amplification_exponent, amplification_factor = amplification_factor,
-                                 no_colors = no_colors, rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode)
-
-      current_scaled_effects <- scale_effects(current_effects, rank = rank_effects, amplification_factor = amplification_factor, neg_effects = neg_effects)
-      scaled_effects <- cbind(scaled_effects, current_scaled_effects)
-
-      if (effect_hue_by == "effect") {
-        colors_by_effect <- color_by_effect(current_scaled_effects, int_pos, mode = effect_to_color_mode)
-      } else if (effect_hue_by == "variance" || effect_hue_by == "var") {
-        vars <- apply(data, 2, var)
-        colors_by_effect <- color_by_effect(vars, int_pos, mode = effect_to_color_mode)
-      }
-
-      if (!show_neg_causation) {
-        current_effects <- NULL
-      }
-
-      if (pymol) {
-        plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbed_position = perturbed_position,
-                                    protein = protein, outpath = current_outpath, amplification_exponent = amplification_exponent,
-                                    amplification_factor = amplification_factor, ranked = opacity_ranked,
-                                    index = i, no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = current_effects)
-      }
-      if (!mute_all_plots) {
-        plot_causal_effects_ida(perturbed_position = perturbed_position, current_effects = current_effects, dir = dir, colors_by_effect=colors_by_effect, current_scaled_effects = current_scaled_effects)
-      }
-      if (analysis) {
-        statistics_of_influenced_positions(effects = current_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
-
-
-        # print("FOR SCALED EFFECTS:")        # sollte es immer gleich sein
-        # statistics_of_influenced_positions(effects = current_scaled_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
-
-        # threshold = quantile(current_scaled_effects, probs = percentile)
-        # most_influenced_positions <- colnames(data[(rownames(current_scaled_effects)[which(current_scaled_effects > threshold)])])
-        # print(paste(length(most_influenced_positions), "positions over the threshold", threshold, ": ", paste(most_influenced_positions, collapse = ", ")))
-        # # int_pos <- interesting_positions("PDZ", "crystal")
-        # int_pos_strongly_influenced <- intersect(int_pos, most_influenced_positions)
-        # print(paste("Thereof",  length(int_pos_strongly_influenced), "out of the", length(int_pos), "interesting positions:", paste(sort(int_pos_strongly_influenced), collapse = ", ")))
-        # print(paste("Missing: ", paste(setdiff(int_pos, most_influenced_positions), collapse = ", ")))
-
-      }
-    }
-
-    # results$ida <- list(list(effects = effects, scaled_effects = scaled_effects, pos_colors = colors_by_effect))
-    # names(results$ida) <- perturbed_position
-
-    if (length(slotNames(results)) > 0 && all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))
-        || length(names(results)) > 0 && all(names(results) == "pc")) {
-          results <- list()
-    }
-    results$ida[[perturbed_position]][[dir]] <- list(effects = effects, scaled_effects = scaled_effects, pos_colors = colors_by_effect)
-
-    # print(cbind(effects, current_scaled_effects, colors_by_effect))
-  }
-  if (!mute_all_plots) {
-    title(caption, outer = TRUE)
-  }
-  return(results)
-}
-
 
 ## # parameter barplot = TRUE remove, use mute_allplots = FALSE instead
 ## causal_effects_ida <- function(data, perturbed_position, direction = "both", weight_effects_on_by = "mean_abs_effect",
