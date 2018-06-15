@@ -1,11 +1,12 @@
 #' Apply fucntion for different values of its parameters alpha and minposvar, select the maximum
 #' of the (numerical) results
-#' @param best function that computes which of the values returned by FUN for various alphas and minposvars was best
+#' @param objective_fun function that computes which of the values returned by FUN for various alphas and minposvars was best
 #' @param best_in_array is the value that the function best returns one of the values in its input (e.g. for min, max)?
 #' if the function computes an objective function on the values in its input, it must return the $value, and the $index
 #' where this value was obtained
-partuning_over_alpha_and_minposvar <- function(FUN, alphas, minposvars, best = max, best_in_array = TRUE,
-                                               plot = TRUE, plot_labels_as_rows_and_cols = alphas >=5,
+partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun, objective_fun = max, best_in_array = TRUE,
+                                               results_to_value_fun,
+                                               plot = TRUE, plot_labels_as_rows_and_cols = (length(alphas) >= 5),
                                                plot_no_isolated_nodes = TRUE,
                                                max_rows_in_plot = 5,...) { #"#000000", ...) {
 
@@ -13,9 +14,9 @@ partuning_over_alpha_and_minposvar <- function(FUN, alphas, minposvars, best = m
   # rownames(results_m) <- alphas
   # colnames(results_m) <- minposvars
 
-  # The graph must be in result$graph because it is used later, when the FIRST computation is skipped
-  result <- FUN(alphas[1], minposvars[1])
-  first_value <- result$value
+  # The graph must be in results$pc@graph because it is used later, when the FIRST computation is skipped
+  results <- pc_fun(alpha = alphas[1], min_pos_var = minposvars[1])
+  first_value <- results_to_value_fun(results)
   dim_3 <- length(first_value)
 
   results_a <- array(dim = c(length(alphas),length(min_pos_vars), dim_3))
@@ -65,18 +66,16 @@ partuning_over_alpha_and_minposvar <- function(FUN, alphas, minposvars, best = m
       if (any(is.na(results_a[as.character(alpha), as.character(minposvar), ]))) {
         # this must be the first pair results_a[1, 1,], because that is the one filled in earlier.
         # This means that the result (including the graph) is already computed (and has not been overwritten).
-        result <- FUN(alpha, minposvar)
-        results_a[as.character(alpha), as.character(minposvar), ] <- result$value
+        results <- pc_fun(alpha = alpha, min_pos_var = minposvar)
+        results_a[as.character(alpha), as.character(minposvar), ] <- results_to_value_fun(results)
       }
 
       if (plot_no_isolated_nodes) {
-        graph <- kernelize_graph(result$graph)
+        graph <- kernelize_graph(results$pc@graph)
       } else {
-        graph <- result$graph
+        graph <- results$pc@graph
       }
       plot_structure(graph = graph, caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
-
-
 
       lines_needed_for_subcaption <- 1
       mgp <- par()$mgp  # get current value
@@ -95,72 +94,108 @@ partuning_over_alpha_and_minposvar <- function(FUN, alphas, minposvars, best = m
 
       # plot_text(paste0("alpha = ", alpha, ", minposvar = ", minposvar), caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
 
-      sub <- paste("Value:", paste(result$value, collapse = " | "), "\n")
+      sub <- paste("Value:", paste(results_to_value_fun(results), collapse = " | "), "\n")
       title(sub = sub)
       # dev.off()
     }
   }
 
   if (best_in_array) {
-    best_value <- best(results_a)
-    best <-  which(results_a == best_value, arr.ind = TRUE)
+    best_value <- objective_fun(results_a)
+    best_index <-  which(results_a == best_value, arr.ind = TRUE)
   } else {
-    best_both <- best(results_a)
+    best_both <- objective_fun(results_a)
     best_value <- best_both$value
-    best <- best_both$index
+    best_index <- best_both$index
   }
 
-  best_alpha <- rownames(results_a)[best[1]]
-  best_minposvar <- colnames(results_a)[best[2]]
+  best_alpha <- rownames(results_a)[best_index[1]]
+  best_minposvar <- colnames(results_a)[best_index[2]]
   return(list(best_value = best_value, best_alpha = best_alpha, best_minposvar = best_minposvar, all_results = results_a))
-
 }
 
-example_function <- function(alpha, minposvar) {
-  m <- matrix(c(4,3,2,1), ncol = 2, byrow = TRUE)
-  rownames(m) <- c(0.01, 0.1)
-  colnames(m) <- c(0.001, 0.01)
-  return(list(graph = graphNEL(nodes = c("a", "b")), value = m[as.character(alpha), as.character(minposvar)]))
+
+#### Functions to extract relevant characteristics from the results of the pc_fun
+# EDGES
+# maximize for small data sets?
+results_to_n_edges <- function(results) {
+  value <- results$summary$edges$sum
+  return(value)
 }
 
-# should be minimized
-partune_alpha_minposvar_square_localTests_estimate <- function(pc_FUN, alpha, minposvar) {
-  pc_fun_ <- function_set_parameters(pc_FUN, parameters = list(evaluation = TRUE))
+results_to_edges_type_distr <- function(results) {
+  value <- unlist(results$summary$edges)[2:4]
+  return(value)
+}
 
-  results <- pc_fun_(alpha = alpha, min_pos_var = minposvar)
+results_to_conflict_edges <- function(results) {
+  value <- results$summary$edges$conflict
+  return(value)
+}
 
-  # print(conflict_edges(results_NoV$pc@graph))
-  # print(sum((results_NoV$orig$localTests$r$estimate)^2))
-  result <- list()
-  result$value <- sum((results$orig$localTests$r$estimate)^2)
-  result$graph <- results$pc@graph
-  return(result)
+results_to_avg_degree <- function(results) {
+  avg_degree <- (2 * results$summary$edges$sum / results$summary$nodes$sum)
+  return(avg_degree)
+}
+
+
+
+# EMPRIRCAL corELATION
+# should be squared or absoluted and added
+# best_in_array = FALSE
+results_to_sep_empir_cor <- function(results) {
+  est <- results$orig$localTests$r$estimate
+  neg <- sum(est[est < 0])
+  pos <- sum(est[est > 0])
+  value <- c(neg = neg, pos = pos)
+  return(value)
 }
 
 # absolute value / deviation from zero should be minimized
-partune_alpha_minposvar_mean_localTests_estimate <- function(pc_FUN, alpha, minposvar) {
-  pc_fun_ <- function_set_parameters(pc_FUN, parameters = list(evaluation = TRUE))
-
-  results <- pc_fun_(alpha = alpha, min_pos_var = minposvar)
-
-  # print(conflict_edges(results_NoV$pc@graph))
-  # print(sum((results_NoV$orig$localTests$r$estimate)^2))
-  result <- list()
-  result$value <- mean((results$orig$localTests$r$estimate))
-  result$graph <- results$pc@graph
-  return(result)
+results_to_mean_empir_cor <- function(results) {
+  value <- mean((results$orig$localTests$r$estimate))
+  return(value)
 }
 
 # should be minimized
+# requires results to contain results of structure evalutation (evaluation = TRUE in call of pc)
+results_to_square_empir_cor <- function(results) {
+  value <- sum((results$orig$localTests$r$estimate)^2)
+  return(value)
+}
+
+
+# EMPRICAL corELATION AND EDGES
+# should be squared or absoluted and added
+# best_in_array = FALSE
+results_to_sep_empir_cor_n_edges <- function(results) {
+  est <- sum(abs(results$orig$localTests$r$estimate))
+  n_edges <- results$summary$edges$sum
+  value <- c(estimate = est, n_edges = n_edges)
+  return(value)
+}
+
+results_to_sep_empir_cor_edge_types <- function(results) {
+  est <- sum(abs(results$orig$localTests$r$estimate))
+  edge_types <- unlist(results$summary$edges)[2:4]
+  value <- c(estimate = est, edge_types = edge_types)
+  return(value)
+}
+
+
+obj_function_est_per_edges_times_mean_estimate_no_conflict <- function(vector) {
+  est <- vector[estimate]
+  edge_types <- vector[edge_types]
+
+
+}
+
+
+# INCLUDING FUNCTION OF THE CHARACTERISTICS
+# should be minimized
 # TODO forbid conflict edges to get a general partuning fct
-partune_alpha_minposvar_localTests_estimate_dev_from_zero_per_edge <- function(pc_FUN, alpha, minposvar) {
-  pc_fun_ <- function_set_parameters(pc_FUN, parameters = list(evaluation = TRUE))
-
-  results <- pc_fun_(alpha = alpha, min_pos_var = minposvar)
-
-  # print(conflict_edges(results_NoV$pc@graph))
-  # print(sum((results_NoV$orig$localTests$r$estimate)^2))
-  result <- list()
+# preivionsly: results_to_empir_cor_dev_from_zero_per_edge
+results_to_compute_empir_cor_dev_from_zero_per_edge <- function(results) {
   n_edges <- results$summary$edges$sum
   estimate <- results$orig$localTests$r$estimate
   if (!(is.null(estimate))) {
@@ -168,87 +203,78 @@ partune_alpha_minposvar_localTests_estimate_dev_from_zero_per_edge <- function(p
   } else {
     estimate_dev_from_zero <- NA
   }
-  result$value <- estimate_dev_from_zero / sqrt(n_edges)
-  result$graph <- results$pc@graph
-  return(result)
-}
-
-# should be squared or absoluted and added
-# best_in_array = FALSE
-partune_alpha_minposvar_sep_localTests_estimate_n_edges <- function(pc_FUN, alpha, minposvar) {
-  pc_fun_ <- function_set_parameters(pc_FUN, parameters = list(evaluation = TRUE))
-
-  results <- pc_fun_(alpha = alpha, min_pos_var = minposvar)
-
-  result <- list()
-  est <- sum(abs(results$orig$localTests$r$estimate))
-  n_edges <- results$summary$edges$sum
-  result$value <- c(estimate = est, n_edges = n_edges)
-  result$graph <- results$pc@graph
-  return(result)
-}
-
-# should be squared or absoluted and added
-# best_in_array = FALSE
-partune_alpha_minposvar_sep_localTests_estimate <- function(pc_FUN, alpha, minposvar) {
-  pc_fun_ <- function_set_parameters(pc_FUN, parameters = list(evaluation = TRUE))
-
-  results <- pc_fun_(alpha = alpha, min_pos_var = minposvar)
-
-  # print(conflict_edges(results_NoV$pc@graph))
-  # print(sum((results_NoV$orig$localTests$r$estimate)^2))
-  result <- list()
-  est <- results$orig$localTests$r$estimate
-  neg <- sum(est[est < 0])
-  pos <- sum(est[est > 0])
-  result$value <- c(neg = neg, pos = pos)
-  result$graph <- results$pc@graph
-  return(result)
+  value <- estimate_dev_from_zero / sqrt(n_edges)
+  return(value)
 }
 
 
-# maximize for small data sets?
-partune_alpha_minposvar_n_edges <- function(pc_FUN, alpha, minposvar) {
-  results <- pc_fun(alpha = alpha, min_pos_var = minposvar)
-
-  # print(conflict_edges(results_NoV$pc@graph))
-  # print(sum((results_NoV$orig$localTests$r$estimate)^2))
-  result <- list()
-  result$value <- results$summary$edges$sum
-  result$graph <- results$pc@graph
-  return(result)
+#### Functions to determine the best among the results of the pc_fun,
+#### by means of relevant characteristics extracted before
+basic_obj_function <- function(array, fun_over_components_of_value, fun_over_results_of_other_fun) {
+  v <- apply(array, c(1,2), fun_over_components_of_value)
+  best_v <- fun_over_results_of_other_fun(v)
+  return(list(value = best_v, index = (which(v ==  best_v, arr.ind = TRUE))))
 }
 
-partune_alpha_minposvar_avg_degree_2 <- function(pc_FUN, alpha, minposvar) {
-  results <- pc_fun(alpha = alpha, min_pos_var = minposvar)
-
-  result <- list()
-  avg_degree <- (2 * results$summary$edges$sum / results$summary$nodes$sum)
-  result$value <- abs(avg_degree - 2)
-  result$graph <- results$pc@graph
-  return(result)
+obj_fun_min_dev_from <- function(dev_from_what) {
+  dev_fun <- function(vector) {
+    return(abs(vector - dev_from_what))
+  }
+  return(function_set_parameters(basic_obj_function,
+         parameters = list(fun_over_components_of_value = dev_fun,
+                          fun_over_results_of_other_fun = min)))
 }
 
-partune_alpha_minposvar_conflict_edges <- function(pc_FUN, alpha, minposvar) {
-  results <- pc_fun(alpha = alpha, min_pos_var = minposvar)
-
-  result <- list()
-  result$value <- results$summary$edges$conflict
-  result$graph <- results$pc@graph
-  return(result)
+obj_fun_edge_distr <- function(weight_of_conflict_edges = NULL, difference = NULL) {
+  quality_edge_distr <- function_set_parameters(quality_of_edge_distribution,
+                        parameters = list(weight_of_conflict_edges = weight_of_conflict_edges,
+                                          difference = difference))
+  return(function_set_parameters(basic_obj_function,
+         parameters = list(fun_over_components_of_value = quality_edge_distr,
+                           fun_over_results_of_other_fun = max)))
 }
 
-partune_alpha_minposvar_edges_type_distr <- function(pc_FUN, alpha, minposvar,
-                                                     weight_of_conflict_edges = NULL, difference = NULL) {
-  results <- pc_fun(alpha = alpha, min_pos_var = minposvar)
 
-  result <- list()
-  result$value <- quality_of_edge_distribution(unlist(results$summary$edges)[2:4],
-                                               weight_of_conflict_edges = weight_of_conflict_edges,
-                                               difference = difference)
-  result$graph <- results$pc@graph
-  return(result)
-}
+
+obj_fun_est_per_edge <- function_set_parameters(basic_obj_function,
+                        parameters = list(fun_over_components_of_value =  function(v) {v[1]/v[2]},
+                                          fun_over_results_of_other_fun = min))
+
+obj_fun_est_per_squred_edges <- function_set_parameters(basic_obj_function,
+                        parameters = list(fun_over_components_of_value =  function(v) {v[1]/(v[2]^2)},
+                                          fun_over_results_of_other_fun = min))
+
+
+
+
+
+
+# partuning functions with only pc_fun, alphas and min_pos_vars missing
+tune_alpha_mpv_dev_of_edges_from_2 <-
+  function_set_parameters(partuning_over_alpha_and_minposvar,
+            parameters = list(results_to_value_fun = results_to_avg_degree,
+                              objective_fun = obj_fun_min_dev_from(2),
+                              best_in_array = FALSE))
+
+
+tune_alpha_mpv_estimate_per_edges <-
+  function_set_parameters(partuning_over_alpha_and_minposvar,
+                          parameters = list(results_to_value_fun = results_to_value_sep_empir_cor_n_edges,
+                                            objective_fun = obj_fun_est_per_edge,
+                                            best_in_array = FALSE))
+
+tune_alpha_mpv_mean_empir_cor <-
+  function_set_parameters(partuning_over_alpha_and_minposvar,
+                          parameters = list(results_to_value_fun = results_to_mean_empir_cor,
+                                            objective_fun = obj_fun_min_dev_from(0),
+                                            best_in_array = FALSE))
+
+# tune_alpha_mpv_est_per_edges_times_mean_estimate_no_conflict <-
+#   function_set_parameters(partuning_over_alpha_and_minposvar,
+#                           parameters = list(results_to_value_fun = ,
+#                                             objective_fun = min,
+#                                             best_in_array = FALSE))
+
 
 
 plot_different_measures_of_all_results <- function(all_results, measures, print = FALSE) {
