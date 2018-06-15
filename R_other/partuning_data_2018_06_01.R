@@ -91,9 +91,21 @@ abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict <-
 print(abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict)
 plot_partuning(abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict$all_values)
 
+#TODO: vielleciht stattdessen mit dem Score für die edge-types malnehmen???!
+
+# TODO: ist alpha = 0.4 und min_pos_var= 0.1 wirklich so gut? es gibt 4 Konfliktkanten!
+
+# müsste man die Konfliktkanten vllt exponentiell (2^) eingehen lassen, weil sie so böse sind?
+
+# and den Gewichtungen von mean_est-, abs_est_pro_Kanten- und (Konflikt)-Kantenterm rumspielen
+
 
 # best partuning so far:
 # estimate_per_edges_mat * abs(mean_est_mat)^2 und alles mit konfliktkanten ausschließen (z.B. alpha = 0.7, bei minposvar = )
+
+# best_alpha fixen, dann: (aber mute_all_plots_müsste wieder aus!) (und funktioniner für das clustering nicht!!)
+tuned_pars <- abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict$
+pc_fun(alpha = tuned_pars$best_alpha, min_pos_var = tuned_pars$best_minposvar, causal_analysis = TRUE, perturbed_positions = "all")
 
 # print(opt)
 
