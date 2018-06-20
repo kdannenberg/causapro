@@ -388,16 +388,25 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure, # type_of_data, su
 
 # QUALITY MEASURES
 # BY EDGES
-quality_of_edge_distribution <- function(edge_types, weight_of_conflict_edges = 1, difference = FALSE) {
-  if (edge_types["conflict"] > 15) {
-    return(0)                 # infeasible
-  } else if (sum(edge_types) == 0) {  # no edges
-    return(0)
-  } else {
-    if (difference) {
-      return(edge_types["directed"] - (edge_types["undirected"] + weight_of_conflict_edges * edge_types["conflict"]))
+quality_of_edge_distribution <- function(edge_types, weight_of_conflict_edges = 1, difference = FALSE, conflict_to_dir_ratio = FALSE) {
+  if (conflict_to_dir_ratio) {
+    if (edge_types["conflict"] == 0 && edge_types["directed"] == 0) {
+      return(2)
     } else {
-      return(edge_types["directed"] / (edge_types["undirected"] + weight_of_conflict_edges * edge_types["conflict"]))
+      # weight_of_conflict_edges quite useless
+      return((weight_of_conflict_edges * edge_types["conflict"] + edge_types["directed"]) / edge_types["directed"])
+    }
+  } else {
+    if (edge_types["conflict"] > 15) {
+      return(0)                 # infeasible
+    } else if (sum(edge_types) == 0) {  # no edges
+      return(0)
+    } else {
+      if (difference) {
+        return(edge_types["directed"] - (edge_types["undirected"] + weight_of_conflict_edges * edge_types["conflict"]))
+      } else {
+        return(edge_types["directed"] / (edge_types["undirected"] + weight_of_conflict_edges * edge_types["conflict"]))
+      }
     }
   }
 }

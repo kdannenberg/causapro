@@ -192,6 +192,9 @@ plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawA
   nAttrs <- list()
   nAttrs$fillcolor <- fillcolor
   # what happens if edgecolor is NULL
+  if (missing(edgecolor)) {
+    edgecolor <- get_eAttrs(graph)
+  }
   eAttrs <- list()
   eAttrs$color <- edgecolor
 

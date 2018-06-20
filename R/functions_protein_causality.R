@@ -357,7 +357,7 @@ protein_causality <- function(
                                     )
 
     # numerical <- (type_of_variables == "continuous")
-    if (!mute_all_plots) {
+    # if (!mute_all_plots) {
       plot_pc(graph = results$pc@graph, caption = caption, outpath = outpath, protein = protein, position_numbering = position_numbering,
               plot_types = plot_types, coloring = coloring, colors = colors,
               graph_layout = graph_layout, graph_layout_igraph = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs,
@@ -365,7 +365,7 @@ protein_causality <- function(
               lines_in_abbr_of_r = lines_in_abbr_of_r, compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew,
               graph_output_formats = graph_output_formats, numerical = TRUE, mute_all_plots = mute_all_plots,
               plot_no_isolated_nodes = plot_no_isolated_nodes, plot_with_graphviz = plot_with_graphviz)
-    }
+    # }
 
     #### some statistics
     graph <- results$pc@graph
@@ -471,7 +471,8 @@ protein_causality <- function(
     ida_function_w_o_pos <- function_set_parameters(ida_function_w_o_pos_and_results,
                                                     parameters = list(results = results))
 
-    outpath = paste0(outpath, "_", causal_effects_function, "_interv-at-", intervention_position)
+    # outpath = paste0(outpath, "_", causal_effects_function, "_interv-at-", intervention_position)
+    outpath = paste0(outpath, "_", causal_effects_function)
 
     # plot.new()  # TODO: Muss das sein?!
     if (intervention_position == "all") {

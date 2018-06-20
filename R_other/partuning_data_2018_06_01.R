@@ -83,17 +83,56 @@ min_pos_vars = c(0, 0.1) # kleinste vorhandene Varianz: 0.059
 # plot_partuning(abs_empir_cor_per_edges_times_mean_empir_cor_no_conflict$all_values)
 
 
-# # CONFLICTS MULTIPLIED WITH (MINIMIZED) SCORE
-abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict <-
-  tune_alpha_mpv_abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict_plus_1(pc_fun = pc_fun_with_eval,
-                                                                          alphas = alphas,
-                                                                          minposvars = min_pos_vars)
-print(abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict)
-plot_partuning(abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict$all_values)
+# # # CONFLICTS MULTIPLIED WITH (MINIMIZED) SCORE
+# abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict <-
+#   tune_alpha_mpv_abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict_plus_1(pc_fun = pc_fun_with_eval,
+#                                                                           alphas = alphas,
+#                                                                           minposvars = min_pos_vars)
+# print(abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict)
+# plot_partuning(abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict$all_values)
 
+# debug(obj_function_est_per_edges_times_mean_estimate_times_edge_score)
+
+# EDGE SCORE (KONFLICT AND DRIECTED) MULTIPLIED WITH (MINIMIZED) SCORE
+# abs_empir_cor_per_edges_times_mean_empir_cor_times_edge_score <-
+# edge_score_w4 <-
+#   tune_alpha_mpv_abs_empir_cor_per_edges_times_mean_empir_cor_times_edge_score(pc_fun = pc_fun_with_eval,
+#                                                                                     alphas = alphas,
+#                                                                                     minposvars = min_pos_vars)
+# # print(abs_empir_cor_per_edges_times_mean_empir_cor_times_edge_score)
+# print(edge_score_w4)
+# plot.new()
+# # plot_partuning(abs_empir_cor_per_edges_times_mean_empir_cor_times_edge_score$all_values)
+# plot_partuning(edge_score_w4$all_values)
+#
+# mean(abs_empir_cor_per_edges$all_values[3:30,], na.rm = TRUE)  # 164.2603
+# mean(mean_empir_cor$all_values[3:30,], na.rm = TRUE)  # 0.1867485
+# mean(edge_score$all_values[3:30,], na.rm = TRUE)  # 0.1867485
+# mean(edge_score_w4$all_values[3:30,], na.rm = TRUE)  # 0.1867485
+
+
+# EDGE SCORE
+# abs_empir_cor_per_edges_times_mean_empir_cor_times_edge_score <-
+tune_alpha_mpv_edge_score_w4 <- tune_alpha_mpv_edge_score_factory(4)
+edge_score_w4 <-
+  tune_alpha_mpv_edge_score_w4(pc_fun = pc_fun,
+                               alphas = alphas,
+                               minposvars = min_pos_vars)
+
+# print(abs_empir_cor_per_edges_times_mean_empir_cor_times_edge_score)
+print(edge_score_w4)
+plot.new()
+# plot_partuning(abs_empir_cor_per_edges_times_mean_empir_cor_times_edge_score$all_values)
+plot_partuning(edge_score_w4$all_values)
+
+mean(abs_empir_cor_per_edges$all_values[3:30,], na.rm = TRUE)  # 164.2603
+mean(mean_empir_cor$all_values[3:30,], na.rm = TRUE)  # 0.1867485
+mean(edge_score$all_values[3:30,], na.rm = TRUE)  # 0.1867485
+mean(edge_score_w4$all_values[3:30,], na.rm = TRUE)  # 0.1867485
+
+stop("fertig")
 #TODO: vielleciht stattdessen mit dem Score für die edge-types malnehmen???!
 
-# TODO: ist alpha = 0.4 und min_pos_var= 0.1 wirklich so gut? es gibt 4 Konfliktkanten!
 
 # müsste man die Konfliktkanten vllt exponentiell (2^) eingehen lassen, weil sie so böse sind?
 
@@ -104,7 +143,7 @@ plot_partuning(abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict$all_v
 # estimate_per_edges_mat * abs(mean_est_mat)^2 und alles mit konfliktkanten ausschließen (z.B. alpha = 0.7, bei minposvar = )
 
 # best_alpha fixen, dann: (aber mute_all_plots_müsste wieder aus!) (und funktioniner für das clustering nicht!!)
-tuned_pars <- abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict$
+tuned_pars <- abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict
 pc_fun(alpha = tuned_pars$best_alpha, min_pos_var = tuned_pars$best_minposvar, causal_analysis = TRUE, perturbed_positions = "all")
 
 # print(opt)

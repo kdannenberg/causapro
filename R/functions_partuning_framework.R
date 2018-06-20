@@ -7,7 +7,7 @@
 partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
                                                # objective_fun = max, best_in_array = TRUE,
                                                results_to_value_fun,
-                                               fun_over_components_of_value,
+                                               measure_fun,
                                                objective_fun,
                                                plot = TRUE, plot_graphs = TRUE,
                                                plot_no_isolated_nodes = TRUE,
@@ -18,6 +18,9 @@ partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
   # results_m <- matrix(nrow = length(alphas), ncol = length(minposvars))
   # rownames(results_m) <- alphas
   # colnames(results_m) <- minposvars
+
+  # TODO Marcel
+  # wenn !plot, hier versuchen, results_a zu laden
 
   # The graph must be in results$pc@graph because it is used later, when the FIRST computation is skipped
   results <- pc_fun(alpha = alphas[1], min_pos_var = minposvars[1])
@@ -34,6 +37,7 @@ partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
 
 
   # par(mfrow = c(length(alphas),length(minposvars)))
+
 
   if (plot) {
     plot.new()
@@ -75,22 +79,23 @@ partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
         results_a[as.character(alpha), as.character(minposvar), ] <- results_to_value_fun(results)
       }
 
-      if (plot_graphs) {
-        if (plot_no_isolated_nodes) {
-          graph <- kernelize_graph(results$pc@graph)
+      if (plot) {
+        if (plot_graphs) {
+          if (plot_no_isolated_nodes) {
+            graph <- kernelize_graph(results$pc@graph)
+          } else {
+            graph <- results$pc@graph
+          }
+          plot_structure(graph = graph, caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
         } else {
-          graph <- results$pc@graph
+          plot()  # TODO Marcel: hier den Funktionswert plotten
         }
-        plot_structure(graph = graph, caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
-      } else {
-        plot()
-      }
-      lines_needed_for_subcaption <- 1
-      mgp <- par()$mgp  # get current value
-      mgp[1] <- 2 + lines_needed_for_subcaption
-      mar <- par()$mar # get current value
-      mar[1] <- 3 + lines_needed_for_subcaption
-      par(mar = mar, mgp = mgp)
+        lines_needed_for_subcaption <- 1
+        mgp <- par()$mgp  # get current value
+        mgp[1] <- 2 + lines_needed_for_subcaption
+        mar <- par()$mar # get current value
+        mar[1] <- 3 + lines_needed_for_subcaption
+        par(mar = mar, mgp = mgp)
 
       # if (caption_as_subcaption) {
       #   caption = caption
@@ -105,14 +110,19 @@ partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
       sub <- paste("Value:", paste(results_to_value_fun(results), collapse = " | "), "\n")
       title(sub = sub)
       # dev.off()
+      }
     }
   }
 
 
-  # basic_obj_function <- function(array, fun_over_components_of_value, fun_over_results_of_other_fun) {
-  results_m <- apply(results_a, c(1,2), fun_over_components_of_value)
+  # TODO Marcel:
+  # results_a abspeichern (nur, wenn alles da ist? dann alles laden, um teile daraus zu bekommen?)
+  # dafür compute_if_not_existent nutzen
+
+  # basic_obj_function <- function(array, measure_fun, fun_over_results_of_other_fun) {
+  results_m <- apply(results_a, c(1,2), measure_fun)
   best_value <- objective_fun(results_m)
-  best_index <- (which(v ==  best_value, arr.ind = TRUE))
+  best_index <- (which(results_m ==  best_value, arr.ind = TRUE))
     # return(list(value = best_v, index = (which(v ==  best_v, arr.ind = TRUE))))
   # }
 
@@ -220,8 +230,8 @@ results_to_compute_empir_cor_dev_from_zero_per_edge <- function(results) {
 
 #### Functions to determine the best among the results of the pc_fun,
 #### by means of relevant characteristics extracted before
-# basic_obj_function <- function(array, fun_over_components_of_value, fun_over_results_of_other_fun) {
-#   v <- apply(array, c(1,2), fun_over_components_of_value)
+# basic_obj_function <- function(array, measure_fun, fun_over_results_of_other_fun) {
+#   v <- apply(array, c(1,2), measure_fun)
 #   best_v <- fun_over_results_of_other_fun(v)
 #   return(list(value = best_v, index = (which(v ==  best_v, arr.ind = TRUE))))
 # }
@@ -235,17 +245,7 @@ charfun_dev_from <- function(dev_from_what) {
          parameters = list(soll = dev_from_what)))
 }
 
-obj_fun_edge_distr <- function(weight_of_conflict_edges = NULL, difference = NULL) {
-  quality_edge_distr <- function_set_parameters(quality_of_edge_distribution,
-                        parameters = list(weight_of_conflict_edges = weight_of_conflict_edges,
-                                          difference = difference))
-  return(function_set_parameters(basic_obj_function,
-         parameters = list(fun_over_components_of_value = quality_edge_distr,
-                           fun_over_results_of_other_fun = max)))
-}
-
-
-obj_function_est_per_edges_times_mean_estimate_no_conflict <- function(vector) {
+measure_est_per_edges_times_mean_estimate_no_conflict <- function(vector) {
   est_abs <- vector["abs_estimate"]
   est_mean <- vector["mean_estimate"]
   # edge_types <- vector["edge_types"]
@@ -258,13 +258,43 @@ obj_function_est_per_edges_times_mean_estimate_no_conflict <- function(vector) {
   }
 }
 
-obj_function_est_per_edges_times_mean_estimate_times_conflict_plus_1 <- function(vector) {
+measure_est_per_edges_times_mean_estimate_times_conflict_plus_1 <- function(vector) {
   est_abs <- vector["abs_estimate"]
   est_mean <- vector["mean_estimate"]
   # edge_types <- vector["edge_types"]
   edge_types <- vector[grepl("edge_types", names(vector))]
   abs_est_per_n_edges <- est_abs / sum(edge_types)
   return(abs_est_per_n_edges * est_mean * (edge_types[grepl("conflict", names(edge_types))] + 1))
+}
+
+measure_est_per_edges_times_mean_estimate_times_edge_score <- function(vector) {
+  est_abs <- vector["abs_estimate"]
+  est_mean <- abs(vector["mean_estimate"])
+  # edge_types <- vector["edge_types"]
+  edge_types <- vector[grepl("edge_types", names(vector))]
+  names(edge_types) <- sub("edge_types.", "", names(edge_types))
+  q <- quality_of_edge_distribution(edge_types, conflict_to_dir_ratio = TRUE, weight_of_conflict_edges = 10)
+  abs_est_per_n_edges <- est_abs / sum(edge_types)
+  return(abs_est_per_n_edges * est_mean * q)
+  # return(abs_est_per_n_edges)
+  # return(est_mean)
+  # return(q)
+}
+
+measure_edge_score <- function(vector, weight_of_conflict_edges) {
+  edge_types <- vector#[grepl("edge_types", names(vector))]
+  # names(edge_types) <- sub("edge_types.", "", names(edge_types))
+  q <- quality_of_edge_distribution(edge_types, conflict_to_dir_ratio = TRUE, weight_of_conflict_edges = weight_of_conflict_edges)
+  return(q)
+}
+
+measure_quality_of_edge_distr <- function(weight_of_conflict_edges = NULL, difference = NULL) {
+  quality_edge_distr <- function_set_parameters(quality_of_edge_distribution,
+                                                parameters = list(weight_of_conflict_edges = weight_of_conflict_edges,
+                                                                  difference = difference))
+  return(function_set_parameters(basic_obj_function,
+                                 parameters = list(measure_fun = quality_edge_distr,
+                                                   fun_over_results_of_other_fun = max)))
 }
 
 
@@ -275,39 +305,55 @@ na_min <- function_set_parameters(min, parameters = list(na.rm = TRUE))
 tune_alpha_mpv_dev_of_edges_from_2 <-
   function_set_parameters(partuning_over_alpha_and_minposvar,
             parameters = list(results_to_value_fun = results_to_avg_degree,
-                              fun_over_components_of_value = charfun_dev_from(2),
+                              measure_fun = charfun_dev_from(2),
                               objective_fun = na_min))
 
 
 tune_alpha_mpv_estimate_per_edges <-
   function_set_parameters(partuning_over_alpha_and_minposvar,
                           parameters = list(results_to_value_fun = results_to_sep_empir_cor_n_edges,
-                                            fun_over_components_of_value = function(v) {v[1]/v[2]},
+                                            measure_fun = function(v) {v[1]/v[2]},
                                             objective_fun = na_min))
 
 tune_alpha_mpv_estimate_per_square_edges <-
   function_set_parameters(partuning_over_alpha_and_minposvar,
                           parameters = list(results_to_value_fun = results_to_sep_empir_cor_n_edges,
-                                            fun_over_components_of_value = function(v) {v[1]/(v[2]^2)},
+                                            measure_fun = function(v) {v[1]/(v[2]^2)},
                                             objective_fun = na_min))
 
 tune_alpha_mpv_mean_empir_cor <-
   function_set_parameters(partuning_over_alpha_and_minposvar,
                           parameters = list(results_to_value_fun = results_to_mean_empir_cor,
-                                            fun_over_components_of_value = charfun_dev_from(0),
+                                            measure_fun = charfun_dev_from(0),
                                             objective_fun = na_min))
 
 tune_alpha_mpv_abs_empir_cor_per_edges_times_mean_empir_cor_no_conflict <-
   function_set_parameters(partuning_over_alpha_and_minposvar,
                           parameters = list(results_to_value_fun = results_to_sep_abs_and_mean_empir_cor_edge_types,
-                                            fun_over_components_of_value = obj_function_est_per_edges_times_mean_estimate_no_conflict,
+                                            measure_fun = measure_est_per_edges_times_mean_estimate_no_conflict,
                                             objective_fun = na_min))
 
 tune_alpha_mpv_abs_empir_cor_per_edges_times_mean_empir_cor_times_conflict_plus_1 <-
   function_set_parameters(partuning_over_alpha_and_minposvar,
                           parameters = list(results_to_value_fun = results_to_sep_abs_and_mean_empir_cor_edge_types,
-                                            fun_over_components_of_value = obj_function_est_per_edges_times_mean_estimate_times_conflict_plus_1,
+                                            measure_fun = measure_est_per_edges_times_mean_estimate_times_conflict_plus_1,
                                             objective_fun = na_min))
+
+tune_alpha_mpv_abs_empir_cor_per_edges_times_mean_empir_cor_times_edge_score <-
+  function_set_parameters(partuning_over_alpha_and_minposvar,
+                          parameters = list(results_to_value_fun = results_to_sep_abs_and_mean_empir_cor_edge_types,
+                                            measure_fun = measure_est_per_edges_times_mean_estimate_times_edge_score,
+                                            objective_fun = na_min))
+
+tune_alpha_mpv_edge_score_factory <- function(weight_of_conflict_edges) {
+  measure_edge_score_w <- function_set_parameters(measure_edge_score,
+        parameters = list(weight_of_conflict_edges = weight_of_conflict_edges))
+  return(function_set_parameters(partuning_over_alpha_and_minposvar,
+               parameters = list(results_to_value_fun = results_to_edges_type_distr,
+                            measure_fun = measure_edge_score_w,
+                            objective_fun = na_min)))
+}
+
 
 
 plot_different_measures_of_all_results <- function(all_results, measures, print = FALSE) {

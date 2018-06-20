@@ -50,7 +50,7 @@ plot_pc <- function(graph, caption, outpath, protein, position_numbering, plot_t
                plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
   } else {
     call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors,
-                     clusters = FALSE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = FALSE,
+                     clusters = FALSE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = mute_all_plots,
                      layout_str = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs)
   }
 }
