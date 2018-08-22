@@ -616,7 +616,6 @@ outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr,
   if (no_colors) {
     out_file <- paste0(out_file, "-bw")
   }
-  out_file <- paste0(out_file, ".pml")
 
   # print(out_file)
   # if (!mute_all_plots) {    ### HÄÄÄÄ???

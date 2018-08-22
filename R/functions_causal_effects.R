@@ -84,11 +84,13 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
       }
 
       if (pymol) {
+        outpath <- paste0(outpath, ".pml")
         plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbed_position = perturbed_position,
                                     protein = protein, outpath = current_outpath, amplification_exponent = amplification_exponent,
                                     amplification_factor = amplification_factor, ranked = opacity_ranked,
                                     index = colnames(effects)[i], no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = current_effects)
       }
+
       plot_causal_effects_ida(perturbed_position = perturbed_position, current_effects = current_effects,
                                 dir = dir, colors_by_effect = colors_by_effect,
                                 type = colnames(effects)[i],

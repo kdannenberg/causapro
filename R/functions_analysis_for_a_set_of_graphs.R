@@ -197,7 +197,7 @@ analyse_set_of_graphs <- function(
 
 
   # determine default colors for barplot
-  all_one_effects <- as.matrix(all_results[[1]]$ida[[1]][[1]]$effects[,1])
+  all_one_effects <- as.matrix(all_results[[1]]$ida[[perturbed_position]][[1]]$effects[,1])
   all_one_effects[,] <- 1
   colors_for_barplot <- color_by_effect(all_one_effects, int_pos, mode = "#FFFFFF")
 
@@ -793,8 +793,10 @@ display_effects <- function(effects, effect_hue_by = "effect", direction = "mean
         dir_print <- paste0(" (", direction, " of: ", pastes("on", weight_effects_on_by, sep = "-rel-to-"), " and of) ")
       }
       if (missing(caption) || is.null(caption)) {
+        if (typeof(function_over_all_graphs) != "character") {
+          function_over_all_graphs <- deparse(substitute(function_over_all_graphs))      # TODO: fkt nicht!
+        }
         caption <- paste(function_over_all_graphs, "over all graphs of effects", dir_print, "position", perturbed_position)
-
         # caption <- paste0(function_over_all_graphs, " over all graphs of effects (", direction, " of: ", on, " and of) position 372")
       }
       # plot_effects(effects_on_of$overAllGraphs_of, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption, plot_effect_quality = plot_effect_quality, false_pos_neg = stat_sum_dir)
