@@ -40,7 +40,9 @@ plot_pc <- function(graph, caption, outpath, protein, position_numbering, plot_t
     if (!sum(unlist(conflict_edges(graph))) == 0) {
       graph <- kernelize_graph(graph)
     } else {
-      plot_text(text = "No non-isolated nodes. (No Edges.)")
+      if (!mute_all_plots) {
+        plot_text(text = "No non-isolated nodes. (No Edges.)")
+      }
     }
   }
 

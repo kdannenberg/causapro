@@ -389,6 +389,9 @@ analyse_graphs_for_alphas_and_minposvars <- function(measure, # type_of_data, su
 # QUALITY MEASURES
 # BY EDGES
 quality_of_edge_distribution <- function(edge_types, weight_of_conflict_edges = 1, difference = FALSE, conflict_to_dir_ratio = FALSE) {
+  if ((all(is.na(edge_types)))) {
+    return(NA)
+  }
   if (conflict_to_dir_ratio) {
     if (edge_types["conflict"] == 0 && edge_types["directed"] == 0) {
       return(2)

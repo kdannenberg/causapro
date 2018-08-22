@@ -1,11 +1,10 @@
 # set seq_view, 1 # Sequence on
 
-
 pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/", seq_on = TRUE) {
   if (missing(pdb_file)) {
     pdb_file <- paste("..", "..", "..", "", sep = file_separator)
     if (protein == "GTB") {
-      # pdb_file <- "../../../5bxc.pdb" 
+      # pdb_file <- "../../../5bxc.pdb"
       pdb_file <- paste0(pdb_file, "5bxc.pdb")
     } else if (protein == "PDZ" || protein == "pdz") {
       # pdb_file <- "../../../1BE9.pdb"
@@ -14,8 +13,11 @@ pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/",
       # pdb_file <- "../../../1cm8.pdb"
       pdb_file <- paste0(pdb_file, "1cm8.pdb")
       chain = "chain A"
-    } else if (tolower(protein) == "nov") {
+    } else if (tolower(protein) == "pmo") {
       pdb_file <- paste0(pdb_file, "4X06.pdb")
+      # chain = "chain A"
+    } else if (tolower(protein) == "pdi") {
+      pdb_file <- paste0(pdb_file, "4X06-both.pdb")
       # chain = "chain A"
     } else {
       stop("No pdb-file given.")
@@ -29,18 +31,18 @@ pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/",
   if (protein == "GTB") {
     # acceptor
     cat("show sticks, resi 401\n")
-    # cat("show spheres, resi 401\n") 
+    # cat("show spheres, resi 401\n")
     cat("set_color acceptor_green, [", paste(col2rgb("#69A019") / 255, collapse = ","), "] \n", sep = "")
     cat("color acceptor_green, resi 401\n")
     # cat("label  i. 401, \"acc\"\n")
     # donor
     cat("show sticks, resi 403\n")
-    # cat("show spheres, resi 403\n") 
+    # cat("show spheres, resi 403\n")
     cat("set_color donor_yellow, [", paste(col2rgb("#FFD700") / 255, collapse = ","), "] \n", sep = "")
     cat("color donor_yellow, resi 403\n")
     # cat("label  i. 403, \"don\"\n")
     # Mn
-    # cat("show spheres, resi 402\n") 
+    # cat("show spheres, resi 402\n")
     # cat("color grey, resi 402\n")
   } else if (protein == "PDZ" || protein == "pdz") {
     cat("show sticks, chain B\n")
@@ -56,28 +58,43 @@ pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/",
   }
 }
 
+res_str_to_resi_and_chain <- function(colname) {
+  if (grepl("_", colname)) {
+    parts <- str_split(colname, "_")
+    if (grepl(parts[[1]][2], "^1|A$")) {
+      return(paste("resi", parts[[1]][1], "and chain A"))
+    } else if (grepl(parts[[1]][2], "^2|B$")) {
+      return(paste("resi", parts[[1]][1], "and chain B"))
+    } else {
+      warning(paste("Unknown chain:", parts[[1]][2]))
+    }
+  } else {
+    return(paste("resi", colname))
+  }
+}
+
 ## most general; TODO: can the other fucntions (except for the paths) be implemented using this one?
 # length_sort - cluster are sorted din decreasing order of their size
 # mix cluster are mixed so that neigbouring clusters are as long as possible from each other (overrides length_sort)
 ## was macht core?
-plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file, 
+plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file,
                                    label = TRUE, no_colors = FALSE, show_positions = TRUE,
                                    file_separator = "/", type_of_clustering = "", bg_color = "grey",
                                    length_sort = FALSE, mix = FALSE, core = FALSE) {
-  
+
   if (length_sort) {
     node_clustering <- reorder_list_of_lists(node_clustering, ordering = "sort", sort_mode = "length", sort_descending = TRUE)
   }
   if (mix) { ## TODO reorder only lists of same length, if length_sort && mix
     node_clustering <- reorder_list_of_lists(node_clustering, ordering = "mix")
   }
-  
+
   if(!core) {
     out_file <- paste0(outpath, "-", length(node_clustering), pastes("_clusters", type_of_clustering, sep = "-"),".pml")
     ## out_file <- pastes(out_file, type_of_clustering, sep = "-")
     ## out_file <- paste0(out_file, ".pml")
     ## print(out_file)
-    
+
     sink(file = out_file)
     pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
   }
@@ -88,16 +105,17 @@ plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file,
     names(node_clustering)[names(node_clustering) == ""] <- rainbow_colors
     colors <- names(node_clustering)
   }
-  
+
   # if (!is.null(names(node_clustering))) {
   #   colors <- names(node_clustering)
   # } else {
   #   colors <- rainbow(length(node_clustering))
   # }
-  
+
+
   for (i in 1:length(node_clustering)) {
-    cat("create sector_", i, ", (resi ", 
-        paste(node_clustering[[i]], collapse = ","), ") \n", sep = "")
+    cat("create sector_", i, ", (",
+        paste(sapply(node_clustering[[i]], res_str_to_resi_and_chain), collapse = ", "), ") \n", sep = "")
     if (show_positions) {
       cat("show spheres, sector_", i, "\n", sep = "")
     }
@@ -123,14 +141,14 @@ plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file,
 
 # TODO: use file_separator consistently
 # mix_connected_components overrides sort_connected_components_by_length
-plot_connected_components_in_pymol <- function(protein, position_numbering, graph, outpath, label = TRUE, pdb_file, 
-                                               only_int_pos = FALSE,  show_int_pos = TRUE, color_int_pos = TRUE, only_color_int_pos = FALSE, 
-                                               coloring_for_int_pos, no_colors = FALSE, only_dist = FALSE, show_positions = TRUE, 
+plot_connected_components_in_pymol <- function(protein, position_numbering, graph, outpath, label = TRUE, pdb_file,
+                                               only_int_pos = FALSE,  show_int_pos = TRUE, color_int_pos = TRUE, only_color_int_pos = FALSE,
+                                               coloring_for_int_pos, no_colors = FALSE, only_dist = FALSE, show_positions = TRUE,
                                                file_separator = "/", bg_color = "grey", sort_connected_components_by_length = FALSE,
                                                mix_connected_components = TRUE) {
   print(paste("Outpath for pymol-file:", outpath))
   connected_components <- nonsingular_connected_components(graph)
-  
+
   if (length(connected_components) == 0) {
     return(NULL)
   }
@@ -140,7 +158,7 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
       positions[sapply(positions, function(pos) return(
         as.numeric(pos) %in% int_pos_flat))]))
   }
-  
+
   # change this to be able to print for example only the found links between interesting positions, which are colored accordingly
   if (only_color_int_pos) {
     # TODO: outpath aus dem übergebenen outpath konstruieren (per strsplit)
@@ -159,14 +177,14 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
   pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
   colors <- rainbow(length(connected_components))
   if (!only_dist) {
-    plot_clusters_in_pymol(node_clustering = connected_components, protein = protein, outpath = outpath, 
-                           pdb_file = pdb_file, label = label, no_colors = no_colors, show_positions = show_positions, 
-                           file_separator = file_separator, type_of_clustering = "connected_components", 
+    plot_clusters_in_pymol(node_clustering = connected_components, protein = protein, outpath = outpath,
+                           pdb_file = pdb_file, label = label, no_colors = no_colors, show_positions = show_positions,
+                           file_separator = file_separator, type_of_clustering = "connected_components",
                            bg_color = bg_color, length_sort = sort_connected_components_by_length,
                            mix = mix_connected_components, core = TRUE)
     ## # if (!show_int_pos) {
     ## for (i in 1:length(connected_components)) {
-    ##   cat("create sector_", i, ", (resi ", 
+    ##   cat("create sector_", i, ", (resi ",
     ##       paste(connected_components[[i]], collapse = ","), ") \n", sep = "")
     ##   # if (show_positions) {
     ##   cat("show spheres, sector_", i, "\n", sep = "")
@@ -193,8 +211,8 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
       }
       if (!length(int_pos) == 0) {
         for (i in 1:length(int_pos)) {
-          cat("create sector_interesting_", i, ", (resi ",
-              paste(int_pos[[i]], collapse = ","), ") \n", sep = "")
+          cat("create sector_interesting_", i, ", (",
+              paste(sapply(int_pos[[i]], res_str_to_resi_and_chain), collapse = ", "),") \n", sep = "")
           # if (show_positions) {
           cat("show surface, sector_interesting_", i, "\n", sep = "")
           if (color_int_pos) {
@@ -222,10 +240,10 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
     # bereits oben berechnet
     # int_pos_flat <- interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = FALSE)
     edge_list_is_interesting <-  apply(edge_list, 1:2, function(x) return(as.numeric(x) %in% int_pos_flat))
-    # edge_list <- # jeah, what? 
+    # edge_list <- # jeah, what?
   }
   draw_edge <- function(nodes) {
-    cat("distance i.", nodes[1], "and n. CA, i.", nodes[2], "and n. CA\n")
+    cat("distance ", sapply(nodes[1], res_str_to_resi_and_chain), "and n. CA, ", sapply(nodes[2], res_str_to_resi_and_chain), "and n. CA\n")
   }
   apply(edge_list, 1, draw_edge)
   numb_edges <- dim(edge_list)[1]
@@ -240,18 +258,18 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
 }
 
 
-plot_paths_in_pymol <- function(protein, pdb_file, graph, outpath, paths, no_colors = FALSE, label = TRUE, show_positions = TRUE, 
+plot_paths_in_pymol <- function(protein, pdb_file, graph, outpath, paths, no_colors = FALSE, label = TRUE, show_positions = TRUE,
                                 file_separator = "/", bg_color = "grey") {
-  
+
   out_file <- paste(outpath, "-paths.pml", sep = "")  # welche Pfade - hinzufügen
-  
+
   sink(file = out_file)
   pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
   colors <- rainbow(length(paths))
   for (i in 1:length(paths)) {
     if (length(paths[[i]]) > 0) {
-      cat("create sector_path_", i, ", (resi ",
-          paste(paths[[i]], collapse = ","), ") \n", sep = "")
+      cat("create sector_path_", i, ", (",
+          paste(sapply(paths[[i]], res_str_to_resi_and_chain), collapse = ", "),") \n", sep = "")
       if (show_positions) {
         cat("show spheres, sector_path_", i, "\n", sep = "")        #TODO: fix
       }
@@ -265,17 +283,17 @@ plot_paths_in_pymol <- function(protein, pdb_file, graph, outpath, paths, no_col
         # label n. CA and sector_1, resi
         cat("label n. CA and sector_path_", i, ", resi\n", sep = "") # label only CA
       }
-    } 
+    }
   }
-  
+
   sapply(paths, function(path) {mapply(function(x,y) {return(cat("distance i.", x, "and n. CA, i.", y, "and n. CA\n"))}, path[-length(path)], path[-1])})
-  
-  
+
+
   # draw_edge <- function(nodes) {
   #   cat("distance i.", nodes[1], "and n. CA, i.", nodes[2], "and n. CA\n")
   # }
   # apply(edge_list, 1, draw_edge)
-  
+
   numb_edges <- do.call(sum, lapply(paths, function(path) length(path) - 1))
   # number_of_digits_to_pad_to <- ceiling(log(numb_edges, base = 10))  # does not seem to happen
   if (numb_edges > 0) {
@@ -292,34 +310,35 @@ plot_paths_in_pymol <- function(protein, pdb_file, graph, outpath, paths, no_col
 
 # names of positions_with_colors_by_effect are positions, values effect-adjusted colors
 # if original_effects given, and no_colors (otherwise), the negatively influenced positions are colored in red.
-plot_total_effects_in_pymol <- function(positions_with_colors_by_effect, perturbed_position, protein, outpath, label = TRUE, ranked = TRUE,
+plot_total_effects_in_pymol <- function(positions_with_colors_by_effect, pos_with_neg_eff,
+                                        perturbed_position, protein, outpath, label = TRUE, ranked = TRUE,
                                         amplification_exponent = 10, amplification_factor = FALSE, index = "", no_colors = FALSE, bg_color = "black", orig_effects) {
   # out_file <- paste0(outpath, "-total_effects")
-  
+
   sink(file = outpath)
   pymol_header(protein = protein)
-  
+
   if (no_colors && !is.null(orig_effects)) {     # color for negatively influenced positions
     color_neg <- col2rgb("#CC0000")
     color_neg <- color_neg / 255
     cat("set_color col_neg, [", paste(color_neg, collapse = ","), "] \n", sep = "")
-    
+
     color_pos <- col2rgb("#FFD700")
     color_pos <- color_pos / 255
     cat("set_color col_pos, [", paste(color_pos, collapse = ","), "] \n", sep = "")
-  } 
-  
+  }
+
   for (i in 1:length(positions_with_colors_by_effect)) {
-    pos <- names(positions_with_colors_by_effect)[[i]]
-    
-    cat("show spheres, resi ", pos, "\n", sep = "")
-    
+    pos <- res_str_to_resi_and_chain(names(positions_with_colors_by_effect)[[i]])
+
+    cat("show spheres, ", pos, "\n", sep = "")
+
     if (label) {
       # label n. CA and sector_1, resi
-      cat("label n. CA and resi ", pos, ", resi\n", sep = "") # label only CA
+      cat("label n. CA and ", pos, ", resi\n", sep = "") # label only CA
       # cat("label sector_", i, ", resi\n", sep = "")
     }
-    
+
     if (!no_colors || (pos == as.integer(perturbed_position))) {
       if ((no_colors)) {  ## (&& (pos == as.integer(perturbed_position) )
         color <- col2rgb("#69A019")
@@ -328,24 +347,36 @@ plot_total_effects_in_pymol <- function(positions_with_colors_by_effect, perturb
       }
       color <- color / 255
       cat("set_color col_", i, ", [", paste(color, collapse = ","), "] \n", sep = "")
-      cat("color col_", i, ", resi ", pos, "\n", sep = "")
+      cat("color col_", i, ", ", pos, "\n", sep = "")
     } else if (no_colors && !is.null(orig_effects)) {
       if (orig_effects[i] < 0) {
-        cat("color col_neg, resi ", pos, "\n", sep = "")
+        cat("color col_neg, ", pos, "\n", sep = "")
       } else {
-        cat("color col_pos, resi ", pos, "\n", sep = "")
+        cat("color col_pos, ", pos, "\n", sep = "")
       }
     }
-    
+
     alpha <- col2rgb(positions_with_colors_by_effect[i], alpha = TRUE)[4] / 255
-    cat("set sphere_transparency=", (1 - alpha) ^ amplification_exponent, ", resi ", pos, "\n", sep = "")
+    cat("set sphere_transparency=", (1 - alpha) ^ amplification_exponent, ", ", pos, "\n", sep = "")
     # cat("set transparency, 0.4, n. ", pos, "\n", sep = "")
   }
-  
+
   # if (no_colors) {
   #   cat("color black, chain A\n")
   # }
-  
+
+  cat("create perturbed_position, (",
+      paste(res_str_to_resi_and_chain(perturbed_position)), ")\n", sep = "")
+  cat("show surface, perturbed_position\n")
+  cat("color black, perturbed_position\n")
+
+  if (!missing(pos_with_neg_eff)) {
+    cat("create negatively_influenced, (",
+        paste(sapply(pos_with_neg_eff, res_str_to_resi_and_chain), collapse = ", "), ") \n", sep = "")
+    cat("show surface, negatively_influenced\n")
+    cat("color white, negatively_influenced\n")
+  }
+
   cat("\n")
   cat(paste0("bg_color ", bg_color, "\n"))
   cat("set cartoon_color, gray75\n")

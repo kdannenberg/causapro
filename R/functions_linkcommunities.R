@@ -43,16 +43,19 @@ get_meaningful_names_for_clustering <- function(clusters, edge_list) {
 }
 
 node_colors_pie <- function(clustering, nodes) {
-  pie_counts <- sapply(as.list(nodes), function(node) return(
-    sapply(clustering, function(edges) return(
-      length(edges[grepl(paste("\\<", node, "\\>", sep = ""), edges)])))))
-  # for (node in nodes) {
-  #   #grepl grepl "16" in "160" :(
-  #   lapply(clustering, function(edges) return(length(edges[grepl(node, edges)])))
-  # }
-  colnames(pie_counts) <- nodes
+  # count how often each node appears in each cluster;
+  # this results in a distibution of each node among  the clusters
+  pie_counts <-  sapply(as.list(nodes), function(node) return(
+                    sapply(clustering, function(edges) return(
+                    length(edges[grepl(paste("\\<", node, "\\>", sep = ""), edges)])))))
+  if (!is.null(dim(pie_counts))) {
+    pie_counts <- matrix(unlist(pie_counts), ncol = dim(pie_counts)[2], byrow = FALSE, dimnames = list(rownames(pie_counts), nodes))
+  } else {
+    pie_counts <- matrix(unlist(pie_counts), ncol = length(pie_counts), byrow = TRUE, dimnames = list(names(pie_counts)[1], nodes))
+  }
+
   pie_counts <- prop.table(t(pie_counts), 1)
-  rownames(pie_counts) <- nodes
+
   return(pie_counts)
 }
 
@@ -73,15 +76,18 @@ membershiplist_from_clusterlist <- function(clusterlist) {
   return(membershiplist)
 }
 
+#' @param graph igraph in which the link communities are to be computed
 # if cut_k, the dendrogram is cut in such a way that k clusters arise (otherwise, k is ignored)
-compute_link_communities <- function(graph, k, base_colors, plot_bar_plot = FALSE,
-                                     plot_colored_graph = TRUE, classify_nodes = TRUE, round_categories = 2,
-                                     pie_nodes = TRUE, color_edges = TRUE, protein, outpath,
-                                     graph_output_formats = c("ps", "svg", "pdf")) {
+compute_link_communities <- function(graph, data, k, base_colors, plot_barplot = TRUE,
+                                     plot_colored_graph = TRUE, classify_nodes = TRUE,
+                                     round_categories = 2, cluster_method = "ward",
+                                     pie_nodes = TRUE, color_edges = TRUE, protein,
+                                     outpath, caption = "",
+                                     graph_output_formats = c("pdf")) {
   # graph <- results$orig$graph$NEL
   edge_list <- as_edgelist(igraph.from.graphNEL(graph))
   rownames(edge_list) <- paste(edge_list[,1], edge_list[,2], sep = "-")
-  link_comm <- getLinkCommunities(edge_list, hcmethod = "ward", plot = TRUE)
+  link_comm <- getLinkCommunities(edge_list, hcmethod = cluster_method, plot = TRUE, directed = TRUE)
   # print(get_meaningful_names_for_clustering(link_comm$clusters))
   # clusters_cut_cutDendrogram <- cutDendrogramAt(link_comm$hclust, lc = link_comm, cutat = 0.9982)
   if (!(missing(k) || is.null(k))) {
@@ -114,12 +120,12 @@ compute_link_communities <- function(graph, k, base_colors, plot_bar_plot = FALS
   cols[is.na(cols)] <- 0
   # print(cols)
 
-  if (plot_bar_plot) {
+  if (plot_barplot) {
     cols_sort <- cols[,order(apply(cols, 2, sum, decreasing = TRUE))]
     # counts_sort <- counts[,order(apply(counts, 2, sum, decreasing = TRUE))]
     # par(mfrow = c(1,2))
-    barplot(t(cols_sort))
-    # barplot(t(counts_sort))
+    barplot(t(cols_sort), col = base_colors)
+    # barplot((counts_sort))
   }
 
   if (plot_colored_graph) {
@@ -150,11 +156,16 @@ compute_link_communities <- function(graph, k, base_colors, plot_bar_plot = FALS
 
     subgraphs <- subgraphs_from_node_clusters(node_clusters, graph)
     plot.new()
+    plot.new()
     plot_graph(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode,
-               caption = "", numerical = TRUE, outpath = "", plot_as_subgraphs = TRUE,
+               caption = paste(caption, cluster_method, sep = " - "), numerical = TRUE,
+               outpath = paste0(outpath,"-", length(node_clusters), "_", "clusters-", "linkcomm-", cluster_method),
+               plot_as_subgraphs = TRUE,
                subgraphs = subgraphs, output_formats = graph_output_formats)
   # }
-    plot_clusters_in_pymol(node_clustering = node_clusters, protein = protein, outpath = outpath, type_of_clustering = "linkcomm")
+    plot_clusters_in_pymol(node_clustering = node_clusters, protein = protein,
+                           outpath = outpath,
+                           type_of_clustering = paste("linkcomm", cluster_method, sep = "-"))
   return(cols)
 }
 
@@ -181,7 +192,7 @@ classify_nodes <- function(counts, round_categories = 4, plot = TRUE, base_color
   # rounded_counts <- round(counts * round_categories)
   rounded_counts <- floor((counts * round_categories) + 0.5)  # ceil 0.5, which round does not do!
   colnames(rounded_counts) <- base_colors  # sollte schon passiert sein
-  print(rounded_counts)
+  # prints(rounded_counts)
 
   if (mix) {
     nonzero_positions <- function(vector) {

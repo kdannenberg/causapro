@@ -9,10 +9,14 @@ partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
                                                results_to_value_fun,
                                                measure_fun,
                                                objective_fun,
+                                               objective_fun_returns_indices = FALSE,
+                                               protein,
                                                plot = TRUE, plot_graphs = TRUE,
                                                plot_no_isolated_nodes = TRUE,
                                                max_rows_in_plot = 5,
                                                plot_labels_as_rows_and_cols = (length(alphas) <= max_rows_in_plot),
+                                               # TODO: implementieren
+                                               stop_when_more_than_c_conflict_edges = 15,
                                                ...) { #"#000000", ...) {
 
   # results_m <- matrix(nrow = length(alphas), ncol = length(minposvars))
@@ -21,6 +25,9 @@ partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
 
   # TODO Marcel
   # wenn !plot, hier versuchen, results_a zu laden
+
+  stop <- rep(FALSE, length(minposvars))
+  names(stop) <- minposvars
 
   # The graph must be in results$pc@graph because it is used later, when the FIRST computation is skipped
   results <- pc_fun(alpha = alphas[1], min_pos_var = minposvars[1])
@@ -71,12 +78,21 @@ partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
         text(x = 0.5, y = 0.5, paste("alpha =", alpha), cex = 1.6, col = "black")
       }
     }
+    if (all(stop)) {
+      break()
+    }
     for (minposvar in minposvars) {
-      if (any(is.na(results_a[as.character(alpha), as.character(minposvar), ]))) {
+      if (any(is.na(results_a[as.character(alpha), as.character(minposvar), ])) && !stop[as.character(minposvar)]) {
         # this must be the first pair results_a[1, 1,], because that is the one filled in earlier.
         # This means that the result (including the graph) is already computed (and has not been overwritten).
         results <- pc_fun(alpha = alpha, min_pos_var = minposvar)
         results_a[as.character(alpha), as.character(minposvar), ] <- results_to_value_fun(results)
+        ## TODO: HIER stop setzen, wenn mehr als 15 konfliktkanten
+        if (conflict_edges(results$pc@graph)$conflict > 15) {
+          stop[as.character(minposvar)] <- TRUE
+        }
+      } else if (stop[as.character(minposvar)]) {
+        results_a[as.character(alpha), as.character(minposvar), ] <- NA
       }
 
       if (plot) {
@@ -86,7 +102,11 @@ partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
           } else {
             graph <- results$pc@graph
           }
-          plot_structure(graph = graph, caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
+          if (!missing(protein)) {
+            plot_graph(graph = graph, protein = protein, coloring = "auto", caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
+          } else {
+            plot_structure(graph = graph, caption = paste0("alpha = ", alpha, ", minposvar = ", minposvar), ...)
+          }
         } else {
           plot()  # TODO Marcel: hier den Funktionswert plotten
         }
@@ -121,8 +141,15 @@ partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
 
   # basic_obj_function <- function(array, measure_fun, fun_over_results_of_other_fun) {
   results_m <- apply(results_a, c(1,2), measure_fun)
-  best_value <- objective_fun(results_m)
-  best_index <- (which(results_m ==  best_value, arr.ind = TRUE))
+
+  if (objective_fun_returns_indices) {
+    best_index <- objective_fun(results_m)
+    best_value <- results_m[best_index[1], best_index[2]]
+  } else {
+    best_value <- objective_fun(results_m)
+    best_index <- (which(results_m ==  best_value, arr.ind = TRUE))
+  }
+
     # return(list(value = best_v, index = (which(v ==  best_v, arr.ind = TRUE))))
   # }
 
@@ -302,11 +329,75 @@ measure_quality_of_edge_distr <- function(weight_of_conflict_edges = NULL, diffe
 # partuning functions with only pc_fun, alphas and min_pos_vars missing
 na_min <- function_set_parameters(min, parameters = list(na.rm = TRUE))
 
+# remember to set:
+# objective_fun_returns_indices = TRUE
+min_pos_gradient <- function(values) {
+  gradient <- apply(values, 2, function(col) {diff(col)})
+  rownames(gradient) <- rownames(values)[1:nrow(values)-1]
+
+  values[gradient<=0] <- NA
+
+  best <- which(values == max(values, na.rm = TRUE), arr.ind = TRUE)
+
+  if (is.matrix(best)) {   # more than one optimum
+    best <- best[1,]
+  }
+
+  return(best)
+}
+
+# remember to set:
+# objective_fun_returns_indices = TRUE
+max_gradient_value_below_t <- function(values, t) {
+  gradient <- apply(values, 2, function(col) {diff(col)})
+  rownames(gradient) <- rownames(values)[1:nrow(values)-1]
+
+  # drop last line (for which the gradient is unknown)
+  values_gradient_format <- values[1:(nrow(gradient)), ]
+
+  gradient[values_gradient_format > t] <- NA
+
+  best <- which(gradient == max(gradient, na.rm = TRUE), arr.ind = TRUE)
+
+  if (is.matrix(best)) {   # more than one optimum
+    best <- best[1,]
+  }
+
+  return(best)
+}
+
+#TODO
+first_change_of_sign <- function(values, t) {
+}
+
 tune_alpha_mpv_dev_of_edges_from_2 <-
   function_set_parameters(partuning_over_alpha_and_minposvar,
             parameters = list(results_to_value_fun = results_to_avg_degree,
                               measure_fun = charfun_dev_from(2),
                               objective_fun = na_min))
+
+# min value of conflict edges, with an increase directly after
+# # remember to set:
+# objective_fun_returns_indices = TRUE
+tune_alpha_mpv_conflict_edges_local_min <-
+  function_set_parameters(partuning_over_alpha_and_minposvar,
+            parameters = list(results_to_value_fun = results_to_conflict_edges,
+                              measure_fun = identity,
+                              objective_fun = min_pos_gradient))
+
+
+# max gradient in conflict edges, while less than t
+# remember to set:
+# objective_fun_returns_indices = TRUE
+tune_alpha_mpv_max_gradient_of_conflict_edges_below_t_factory <- function(t_max_number_of_conflict_edges) {
+  max_gradient_value_below_6 <- function_set_parameters(max_gradient_value_below_t,
+                                                        parameters = list(t = t_max_number_of_conflict_edges))
+  return(function_set_parameters(partuning_over_alpha_and_minposvar,
+                                 parameters = list(results_to_value_fun = results_to_conflict_edges,
+                                                   measure_fun = identity,
+                                                   objective_fun = max_gradient_value_below_6)))
+}
+
 
 
 tune_alpha_mpv_estimate_per_edges <-

@@ -36,7 +36,7 @@ analyse_set_of_graphs <- function(
   #                           pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
   #                           graph_computation = FALSE, evaluation = FALSE, causal_analysis = FALSE,
   #                           data_in_results = TRUE, output_parameters_in_results = TRUE)
-  ida_percentile = 1 - (length(int_pos) / dim(data)[2]), # top 11
+  ida_percentile = NULL, # top 11
   # weight_effects_on_by = "",          # in der Summe ganz schlecht
   # weight_effects_on_by = "var",
   # weight_effects_on_by = "mean",
@@ -174,7 +174,8 @@ analyse_set_of_graphs <- function(
 
 
 
-  set_of_graphs <- determine_set_of_graphs(results = results, data = data, type_of_graph_set = type_of_graph_set,
+  set_of_graphs <- determine_set_of_graphs(results = results, data = data, perturbed_position = perturbed_position,
+                                           type_of_graph_set = type_of_graph_set,
                                            pc_function = pc_function, ida_function = ida_func,
                                            direction = paste(direction, collapse = "+"),
                                            s = s, new = new, save = save, outpath = outpath,
@@ -252,7 +253,8 @@ analyse_set_of_graphs <- function(
       caption = NULL
     }
 
-    effects_over_all_graphs_on_of <- display_effects(effects = effects_over_all_graphs_on_of, effect_hue_by = effect_hue_by,
+    # effects_over_all_graphs_on_of <-
+      display_effects(effects = effects_over_all_graphs_on_of[[1]], effect_hue_by = effect_hue_by,
                                                      direction = direction, int_pos = int_pos,
                                                      perturbed_position = as.numeric(perturbed_position), scale_in_the_end = scale_in_the_end,
                                                      weight_effects_on_by = weight_effects_on_by,
@@ -279,9 +281,11 @@ analyse_set_of_graphs <- function(
   }
 }
 
-pymol_mean_effects <- function(effects_over_all_graphs_on_of, protein, int_pos, outpath, perturbed_position = "372", amplification_exponent,
-                               amplification_factor, rank_effects = FALSE, effect_hue_by = "effect", effect_to_color_mode = "opacity",
-                               pymol_bg_color = "black", show_neg_causation = TRUE, neg_effects_in_scaling = "sep", no_colors) {
+pymol_mean_effects <- function(effects_over_all_graphs_on_of, protein, int_pos, outpath, perturbed_position = "372",
+                               amplification_exponent, amplification_factor, rank_effects = FALSE,
+                               effect_hue_by = "effect", effect_to_color_mode = "opacity",
+                               pymol_bg_color = "black", show_neg_causation = TRUE,
+                               neg_effects_in_scaling = "sep", no_colors, drop_zero_effects = TRUE) {
 
   for (slot in names(effects_over_all_graphs_on_of)) {
     descr_split <- str_split(string = slot, pattern = "_")[[1]]
@@ -316,12 +320,17 @@ pymol_mean_effects <- function(effects_over_all_graphs_on_of, protein, int_pos, 
       warning(paste0("The pymol file ", pymol_outpath, " does not show the effects but what was explicitly given to the function in effect_hue_by!"))
     }
 
+    if (drop_zero_effects) {
+      current_effect_hue_by <- current_effect_hue_by[which(current_effect_hue_by != 0), , drop = FALSE]
+    }
 
     # scaled_effects <- scale_effects(effect_hue_by, rank = rank_effects, amplification_factor = amplification_factor, neg_effects = neg_effects)
     colors_by_effect <- color_by_effect(as.matrix(current_effect_hue_by), int_pos, mode = effect_to_color_mode)
 
+    pos_with_neg_eff <- rownames(effects)[which(effects < 0)]
 
-    plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbed_position = perturbed_position,
+    plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, pos_with_neg_eff = pos_with_neg_eff,
+                                perturbed_position = perturbed_position,
                                 protein = protein, outpath = pymol_outpath, amplification_exponent = amplification_exponent,
                                 amplification_factor = amplification_factor, ranked = rank_effects,
                                 index = "", no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = effects)
@@ -329,7 +338,8 @@ pymol_mean_effects <- function(effects_over_all_graphs_on_of, protein, int_pos, 
 }
 
 # data is only necessary to check wether a loades graph has the right number of nodes
-determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_function, ida_function, direction,
+determine_set_of_graphs <- function(results, data, perturbed_position, type_of_graph_set,
+                                    pc_function, ida_function, direction,
                                     s, new, save, outpath,
                                     pc_maj_rule_conflict, pc_conservative_conflict, suffix_effects_type = "",
                                     suffix_graphs = "graphs", suffix_results = "results-ida-reset",
@@ -337,7 +347,7 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
   start_new <- new
   if (type_of_graph_set == "retry") {
     suffix_retry_conflict = "-pc-retry_"
-    suffix_results = pastes(suffix_effects_type, direction, suffix_results, sep = "_")
+    suffix_results = pastes(suffix_effects_type, direction, perturbed_position, suffix_results, sep = "_")
     # infix <- pastes("-pc-retry", suffix_effects_type, sep = "_")
     # infix <- paste0(infix, "_")
     filename_graphs <- paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData")
@@ -420,7 +430,7 @@ determine_set_of_graphs <- function(results, data, type_of_graph_set, pc_functio
     # TODO: rename: -rel_conflict_graph_set
   } else if (type_of_graph_set == "conflict") {
     suffix_retry_conflict = "-all_confl_comb_"
-    suffix_results = pastes(suffix_effects_type, direction, suffix_results, sep = "_")
+    suffix_results = pastes(suffix_effects_type, direction, perturbed_position, suffix_results, sep = "_")
     # infix <- pastes("-pc-retry", suffix_effects_type, sep = "_")
     # infix <- paste0(infix, "_")
     filename_graphs <- paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData")
@@ -600,12 +610,19 @@ element_in_most_of_the_6_sets <- function(max_pos_75, max_pos_85, max_pos_95,
   return(as.integer(names(which(table(all) == max(table(all))))))
 }
 
-
+###################!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# TODO: mean(abs) minmax
+#### TODOTODOTODO!!
+###################!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # select for a results object the mean results on and of position 372, respectively
 # and return both as a list
 # mean of min and max?
 # TODO: remove weight_effects_on_by, read from dir instead
-mean_effects_min_max <- function(results, position, weight_effects_on_by, scaled_effects = FALSE, dir = c("on", "of")) {
+# previously: mean_effects_min_max
+combine_effects_min_max <- function(results, position, fun = mean, weight_effects_on_by, scaled_effects = FALSE, dir = c("on", "of")) {
+  if (is.null(results)) {
+    return(NULL)
+  }
   ret_list <- list()
   if ("of" %in% dir) {
     if (scaled_effects) {
@@ -614,11 +631,11 @@ mean_effects_min_max <- function(results, position, weight_effects_on_by, scaled
       of_effects <- results$ida[[position]]$of$effects
     }
     if (is.null(of_effects)) {
-      warning("Effects OF not found (in mean_effects_min_max.")
+      warning("Effects OF not found (in combine_effects_min_max")
     }
     of_max <- apply(of_effects, 1, max)
     of_min <- apply(of_effects, 1, min)
-    ret_list$of <- apply(cbind(of_max, of_min), 1, mean)
+    ret_list$of <- apply(cbind(of_max, of_min), 1, fun)
   }
 
   if ("on" %in% dir) { # bzw. etwas, das "on " enthält -> grepl
@@ -631,9 +648,9 @@ mean_effects_min_max <- function(results, position, weight_effects_on_by, scaled
       on_min <- results$ida[[position]][[on]]$effects[, 2]
     }
     if (is.null(on_min) || is.null(on_max)) {
-      warning("Effects ON not found (in mean_effects_min_max.")
+      warning("Effects ON not found (in combine_effects_min_max")
     }
-    ret_list[[on]] <- apply(cbind(on_max, on_min), 1, mean)
+    ret_list[[on]] <- apply(cbind(on_max, on_min), 1, fun)
   }
 
   return(ret_list)
@@ -643,21 +660,24 @@ mean_effects_min_max <- function(results, position, weight_effects_on_by, scaled
 # should rather be devided by 100, thus mean
 # computes the mean of the effects computed for each graph
 compute_over_all_graphs <- function(all_results, position, weight_effects_on_by, use_scaled_effects_for_sum = FALSE, scale_in_the_end = FALSE,
-                                    function_over_all_graphs = "mean", direction_type = c("on", "of"),
+                                    function_over_all_graphs = "mean", function_combine_effects_min_max = mean,
+                                    direction_type = c("on", "of"),
                                     scale_effects_on = "372" %in% rownames(all_results[[1]]$ida$`372`$of$effects)) {
-  # debug(mean_effects_min_max)
+  # debug(combine_effects_min_max)
   if (length(direction_type) == 1 && !grepl("on|of", direction_type)) {
     direction_type = c("on", "of")
   }
   effects_over_all_graphs_on_of <- list()
   if (!missing(position) &&  !is.na(as.numeric(position))) {
-    # mean_effects_min_max_FUN <- function_set_parameters(mean_effects_min_max, parameters = list(position = position))
-    min_max_mean_effects_on_of <- lapply(all_results, mean_effects_min_max, weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum, dir = direction_type, position = position)
+    # combine_effects_min_max_FUN <- function_set_parameters(combine_effects_min_max, parameters = list(position = position))
+    min_max_combined_effects_on_of <- lapply(all_results, combine_effects_min_max, fun = function_combine_effects_min_max,
+                                             weight_effects_on_by = weight_effects_on_by, scaled_effects = use_scaled_effects_for_sum,
+                                             dir = direction_type, position = position)
   } else {
     warning("No position given in compute_over_all_graphs!")
   }
   if ("of" %in% direction_type) {
-    min_max_mean_effects_of <- do.call(cbind, (lapply(min_max_mean_effects_on_of, function(list) return(list$of))))
+    min_max_mean_effects_of <- do.call(cbind, (lapply(min_max_combined_effects_on_of, function(list) return(list$of))))
     effect_over_all_graphs_of <- apply(min_max_mean_effects_of, 1, function_over_all_graphs)
     effects_over_all_graphs_on_of <- c(effects_over_all_graphs_on_of, list(overAllGraphs_of = effect_over_all_graphs_of))
   }
@@ -670,7 +690,7 @@ compute_over_all_graphs <- function(all_results, position, weight_effects_on_by,
   # }
   if ("on" %in% direction_type) { # bzw. etwas, das "on " enthält -> grepl
     on <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
-    min_max_mean_effects_on <- do.call(cbind, (lapply(min_max_mean_effects_on_of, function(list) return(list[[on]]))))
+    min_max_mean_effects_on <- do.call(cbind, (lapply(min_max_combined_effects_on_of, function(list) return(list[[on]]))))
     effect_over_all_graphs_on <- apply(min_max_mean_effects_on, 1, function_over_all_graphs)
     if (scale_effects_on) {
       effect_over_all_graphs_on <- effect_over_all_graphs_on / effect_over_all_graphs_on[as.character(position)]
@@ -689,11 +709,17 @@ display_effects <- function(effects, effect_hue_by = "effect", direction = "mean
                             plot_false_pos_neg = TRUE, plot_effect_score = TRUE, barplot_contour_black = TRUE,
                             plot_to_canvas = TRUE, outpath, output_formats = c()) {
 
-  if (missing(ida_percentile)) {
+  if (perturbed_position == "372" && length(int_pos) == 11) {
+    int_pos_soll <- int_pos
+  } else if (perturbed_position %in% int_pos) {
+    int_cluster <- names(which(int_pos == perturbed_position))
+    int_pos_soll <- int_pos[names(int_pos) == int_cluster]
+  }
+  if (missing(ida_percentile) || is.null(ida_percentile)) {
     if (!is.null(dim(effects))) {
-      ida_percentile <- 1 - (length(int_pos) / dim(effects)[1])
+      ida_percentile <- 1 - (length(int_pos_soll) / dim(effects)[1])
     } else {
-      ida_percentile <- 1 - (length(int_pos) / length(effects))
+      ida_percentile <- 1 - (length(int_pos_soll) / length(effects))
     }
   }
 
@@ -736,9 +762,9 @@ display_effects <- function(effects, effect_hue_by = "effect", direction = "mean
 
     if (print || plot_effect_quality) {
       false_pos_neg <- statistics_of_influenced_positions(effects_dir, percentile = ida_percentile,
-                                                          interesting_positions = int_pos, print = FALSE, return_list = TRUE)
-      effect_quality <- quality_of_effects_distibution(effects = effects_dir, int_pos = int_pos)
-      score <- score_for_effects(effects = effects_dir, int_pos = int_pos, perturbed_position = perturbed_position,
+                                                          interesting_positions = int_pos_soll, print = FALSE, return_list = TRUE)
+      effect_quality <- quality_of_effects_distibution(effects = effects_dir, int_pos = int_pos_soll)
+      score <- score_for_effects(effects = effects_dir, int_pos = int_pos_soll, perturbed_position = perturbed_position,
                                  effect_quality, length(false_pos_neg$fn))
     }
 
@@ -749,7 +775,7 @@ display_effects <- function(effects, effect_hue_by = "effect", direction = "mean
         print(paste0("SUM EFFECTS ", toupper(dir), ":"))
       }
       statistics_of_influenced_positions(effects_dir, percentile = ida_percentile,
-                                         interesting_positions = int_pos, print = TRUE)
+                                         interesting_positions = int_pos_soll, print = TRUE)
 
       writeLines(paste("Quality of effects:", effect_quality))
                        # quality_of_effects_distibution(effects = effects_over_all_graphs_on_of$overAllGraphs_mean_on_of,
@@ -782,7 +808,7 @@ display_effects <- function(effects, effect_hue_by = "effect", direction = "mean
         false_pos_neg = NULL
       } else {
         false_pos_neg <- statistics_of_influenced_positions(effects_dir, percentile = ida_percentile,
-                                                            interesting_positions = int_pos, print = FALSE, return_list = FALSE) #neu belegen, diesmal mit String
+                                                            interesting_positions = int_pos_soll, print = FALSE, return_list = FALSE) #neu belegen, diesmal mit String
       }
       plot_effects(effects_dir, effect_hue_by = effect_hue_by, int_pos = int_pos, scale_in_the_end = scale_in_the_end, caption = caption,
                    effect_quality = effect_quality, false_pos_neg = false_pos_neg, score = score, barplot_contour_black = barplot_contour_black,
@@ -996,7 +1022,7 @@ deviation_from_mean <- function(all_results, dir, weight_effects_on_by, plot_gra
     dir <- pastes("on", weight_effects_on_by, sep = "-rel-to-")
   }
 
-  all_mean_effects_all <- lapply(all_results, mean_effects_min_max, weight_effects_on_by = weight_effects_on_by, dir = dir)
+  all_mean_effects_all <- lapply(all_results, combine_effects_min_max, weight_effects_on_by = weight_effects_on_by, dir = dir)
   all_mean_effects <- do.call(cbind, (lapply(all_mean_effects_all, function(list) return(list[[dir]]))))
   mean_effect <- apply(all_mean_effects, 1, sum) / length(all_results)
 

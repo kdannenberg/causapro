@@ -106,13 +106,20 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
                    "#69A019" = bind_acceptor,          # green
                    "#FF9933" = c(close_to_bind_donor, bind_donor_indirect_H2O, bind_donor_indirct_Mn),    # orange
                    "#6B8E23" = close_to_bind_donor)    # olive
-    } else if (tolower(protein) == "nov") {
+    } else if (tolower(protein) == "pmo") {
       bind_ligand <- c(444, 443, 344, 345, 374, 442)
-      others <- c(347, 396, 348, 391, 392, 375)
-      bile_acid <- c(509)
+      others <- c(333, 347, 396, 348, 391, 392, 375)
+      bile_acid <- c(486, 505, 506, 507, 508, 509)
       list <- list("#69A019" = bind_ligand,            # green
                    "#FFD700" = others,                 # yellow
                    "#CC0000" = bile_acid)              # red
+    } else if (tolower(protein) == "pdi") {
+        bind_ligand <- in_both_monomers(c(444, 443, 344, 345, 374, 442))
+        others <-  in_both_monomers(c(347, 396, 348, 391, 392, 375))
+        bile_acid <-  in_both_monomers(c(509))
+        list <- list("#69A019" = bind_ligand,            # green
+                     "#FFD700" = others,                 # yellow
+                     "#CC0000" = bile_acid)              # red
     } else if (protein == "p38g") {
       if (coloring == "FS4") {
         blue_ <- c(53, 161, 215, 116, 137, 159, 154, 120, 130, 167, 219, 283, 125, 220, 209, 216, 212, 291, 287)
@@ -255,6 +262,10 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
   }
 }
 
+in_both_monomers <- function(positions) {
+  return(c(paste0(positions, "_1"), paste0(positions, "_2")))
+}
+
 ## it seems much easier to convert from the for_coloring version to the other one,
 ## so for simplicity's sake I do it that way for now
 ## that means that the standardized way to pass int_pos would be the for_coloring version
@@ -317,7 +328,7 @@ get_pc <- function(pc_fun, outpath, compute_pc_anew, parameters_for_info, data) 
 
 scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, neg_effects = "pos") {  neg_effects = "abs"
 
-  amplify_with_factor <- function(effects, element_that_should_be_scaled_to = 2,
+  amplify_with_factor <- function(effects, element_that_should_be_scaled_to = 1,
                                   value_the_element_should_be_scaled_to = 0.9, cut_values_at = 1) {
     sorted_effects <- sort(effects, decreasing = TRUE)
     if (sorted_effects[element_that_should_be_scaled_to] == 0) {
@@ -404,7 +415,7 @@ scale_effects <- function(effects, rank = FALSE, amplification_factor = FALSE, n
 
   effects <- rbind(effects, effects_na)
 
-  effects <- effects[order(rownames(effects)), , drop = FALSE]
+  effects <- effects[order(as.numeric(rownames(effects))), , drop = FALSE]
   # effects <- effects
 
   return(effects)

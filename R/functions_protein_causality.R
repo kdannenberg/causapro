@@ -23,7 +23,7 @@ protein_causality <- function(
   subtype_of_data = NULL,
   # subtype_of_data = "10",
   #
-  data_set,
+  data_set = "",
   # data_set = "SVD",
   # data_set = "372",
   transpose_data = FALSE,
@@ -40,7 +40,7 @@ protein_causality <- function(
   #
   alpha = 0.01,
   ranked = FALSE,
-  rank_obs_per_pos = FALSE,
+  rank_obs_per_pos = TRUE,
   pc_indepTest = NULL,
   pc_suffStat = NULL,
   #
@@ -56,14 +56,6 @@ protein_causality <- function(
   pc_u2pd = "relaxed",
   pc_conservative = FALSE,
   pc_maj_rule = TRUE,
-  #
-  # weight_effects_on_by = "",
-  # weight_effects_on_by = "var",
-  # weight_effects_on_by = "mean",
-  weight_effects_on_by = "median",
-  #
-  #
-  #
   # Graphical parameters
   # graph_output_formats = c("ps", "svg", "pdf"),
   graph_output_formats = "pdf",
@@ -96,26 +88,45 @@ protein_causality <- function(
   # Technical parameters (print, plot, save, analysis)
   # steps = c("evaluation", "analysis"),
   graph_computation = TRUE,
+  # evaluation with localTests
   evaluation = FALSE,
+  max_edges_for_evaluation = 68,
+  stages = c("orig"), # c("orig", "sub"), # "sub"
+  # causal effects
+  causal_analysis = FALSE,
   intervention_position = "all",
   causal_effects_function = "IDA-reset", # "IDA", "causalEffects"
   ida_direction = "of",
+  # weight_effects_on_by = "",
+  # weight_effects_on_by = "var",
+  # weight_effects_on_by = "mean",
+  weight_effects_on_by = "median",
   ida_percentile = "11", # top 11
   # ida_percentile = 0.75, # top 75%
   #
-  causal_analysis = FALSE,#!pc_solve_conflicts,
+  # handling of conflics edges
   max_conflict_edges = 11,
+  function_over_effects_of_conflict_graphs = function(x) {return(mean(abs(x)))},
+  conflict_graph_from_index = 1,
+  conflict_graph_to_index = Inf,
+  # graph clustering
+  weighted_graph_for_clusterings = TRUE, # even for linkcommunities
+  graph_cluster_methods = c("edge_betweenness", "infomap"),
+  add_cluster_of_conserved_positions = TRUE,
   linkcommunities = FALSE,
   linkcommunities_k = NULL,
+  linkcommunities_roundcategories = 3, # defines how grained the rounding of the fractions of
+  # membership of the nodes is (in linkcommunities); the higher, the fine, and more clusters.
   # linkcommunities_base_colors = ifelse(k==4, c("#FFD700", "#1874CD", "#CC0000",  "#69A019"), rainbow(linkcommunities_k)),
   linkcommunities_base_colors = NULL,
+  linkcommunities_cluster_method = "ward",
+  # effects clustering
   effects_cluster_k = 3,
   effects_cluster_method = "pv",
   effects_hclust_method = "ward.D2",  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = "euclidean",
   effects_pv_nboot = 1000,
   effects_cluster_alpha = 0.95,
-  stages = c("orig"), # c("orig", "sub"), # "sub"
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
@@ -142,8 +153,6 @@ protein_causality <- function(
   # output_parameters_in_results = FALSE,
   #
   file_separator = "/",
-  graph_cluster_methods = c("edge_betweenness", "infomap"),
-  add_cluster_of_conserved_positions = TRUE,
   compare_effects = FALSE
   ) {
   # INIT
@@ -310,7 +319,7 @@ protein_causality <- function(
     results$general$int_pos <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
   # }
 
-  # CAUSAL STRUCTURE LEARNING
+  ###### CAUSAL STRUCTURE LEARNING ######
   if (graph_computation) {
     directories <- strsplit(outpath, file_separator)
     # filename <- directories[[1]][length(directories[[1]])]
@@ -389,7 +398,8 @@ protein_causality <- function(
                                  stages = stages, #max_number_of_edges_in_graph = 70,
                                  unabbrev_r_to_info = unabbrev_r_to_info,
                                  print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
-                                 compute_localTests_anew = compute_localTests_anew, print = print_analysis)
+                                 compute_localTests_anew = compute_localTests_anew, print = print_analysis,
+                                 max_number_of_edges_in_graph = max_edges_for_evaluation)
     ## print_analysis <- FALSE
     ## plot_analysis <- FALSE
     if (plot_analysis && !mute_all_plots) {
@@ -406,14 +416,10 @@ protein_causality <- function(
     }
   }
 
-  # Pymol
+  # CLUSTERING, PYMOL, LINKCOMM
   if (graph_computation) {
     # if (!is.null(clustering)) {
-    if (graph_clustering) {
-      protein_graph_clustering(results = results, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, outpath = outpath, output_formats = graph_output_formats, file_separator = file_separator,
-                               caption = caption, mute_all_plots = mute_all_plots, cluster_methods = graph_cluster_methods,
-                               add_cluster_of_conserved_positions = add_cluster_of_conserved_positions, removed_cols = removed_cols)
-    }
+    # set_edge_weights_for_graph(graph, cov(data))
 
     if (!is.null(plot_only_subgraphs)) {
       # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
@@ -427,8 +433,9 @@ protein_causality <- function(
     plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = graph,
                                        outpath = outpath, show_int_pos = pymol_show_int_pos, show_positions = TRUE,
                                        file_separator = file_separator, sort_connected_components_by_length =
-                                       pymol_sort_connected_components_by_length,
+                                         pymol_sort_connected_components_by_length,
                                        mix_connected_components = pymol_mix_connected_components)
+
     if (print_connected_components) {
       conn_comp <- nonsingular_connected_components(graph)
       if (length(conn_comp) > 0) {
@@ -436,15 +443,49 @@ protein_causality <- function(
         print(conn_comp)
       }
     }
+    graphs <- list()
+    if (graph_clustering || (linkcommunities && sum(unlist(conflict_edges(results$pc@graph))) > 0)) {
+      outpath_clustering <- outpath
+      if (weighted_graph_for_clusterings) {
+        weighted_graph <- compute_if_not_existent(filename = paste0(outpath_clustering, "-weighted_graph"),
+                                                  FUN = function_set_parameters(set_edge_weights_for_graph,
+                                                                                parameters = list(graph = graph, cov = cov(data))),
+                                                  obj_name = "weighted_graph")
 
-    if (linkcommunities && sum(unlist(conflict_edges(results$pc@graph))) > 0) {
-      cols <- compute_link_communities(results$pc@graph, k = linkcommunities_k, plot_bar_plot = FALSE,
-                                       classify_nodes = TRUE, pie_nodes = FALSE, color_edges = TRUE,
-                                       round_categories = 1, base_colors = linkcommunities_base_colors , protein = protein,
-                                       outpath = outpath)
+        outpath_clustering <- paste0(outpath_clustering, "-wgt")
+        results$graph$weighted <- weighted_graph
+        graphs$cluster <- weighted_graph
+        graphs$plot <- results$pc@graph
 
+      } else {
+        graphs$cluster <- results$pc@graph
+        graphs$plot <- results$pc@graph
+      }
+
+
+      if (graph_clustering) {
+        protein_graph_clustering(graphs, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors,
+                                 outpath = outpath_clustering, output_formats = graph_output_formats, file_separator = file_separator,
+                                 caption = caption, mute_all_plots = mute_all_plots, cluster_methods = graph_cluster_methods,
+                                 add_cluster_of_conserved_positions = add_cluster_of_conserved_positions, removed_cols = removed_cols)
+      }
+
+
+
+
+      if (linkcommunities && sum(unlist(conflict_edges(results$pc@graph))) > 0) {
+        cols <- compute_link_communities(graphs$cluster, data = data, k = linkcommunities_k, plot_barplot = FALSE,
+                                         classify_nodes = TRUE, cluster_method = linkcommunities_cluster_method,
+                                         pie_nodes = FALSE, color_edges = TRUE,
+                                         round_categories = linkcommunities_roundcategories,
+                                         base_colors = linkcommunities_base_colors , protein = protein,
+                                         outpath = outpath_clustering, caption = caption)
+        results$linkcomm <- cols
+
+      }
     }
   }
+
 
 
 
@@ -452,7 +493,7 @@ protein_causality <- function(
   # plot_paths_in_pymol(protein = protein, graph = results$orig$graph$NEL, outpath = outpath, paths = paths, no_colors = FALSE,
   #                     label = TRUE, show_positions = FALSE, file_separator = file_separator)
 
-  # Analysis
+  # CAUSAL ANALYSIS
   # if ("analysis" %in% steps) {
   if (causal_analysis) {
     ida_function_w_o_pos_and_results <-
@@ -467,6 +508,8 @@ protein_causality <- function(
                                                 show_neg_causation = TRUE, neg_effects = "sep",
                                                 analysis = TRUE, percentile = ida_percentile,
                                                 causal_effects_function = "IDA-reset", cov_FUN = cor_cov_FUN))
+
+    # debug(ida_function_w_o_pos_and_results)
     # ida_function_w_o_pos_and_results
     ida_function_w_o_pos <- function_set_parameters(ida_function_w_o_pos_and_results,
                                                     parameters = list(results = results))
@@ -484,6 +527,9 @@ protein_causality <- function(
       #                                                                             {return(dim(all_pairwise_effects)[1] == dim(data)[2])}))
       #
       if (conflict_edges(results$pc@graph)$conflict == 0) {
+        if (conflict_graph_from_index != 1 || conflict_graph_to_index != Inf) {
+          warning("There are no conflict edges. conflict_graph_from_index and conflict_graph_to_index ar ignored")
+        }
         loaded_object_ok = function(all_pairwise_effects, data)
         {return(
           # dim(all_pairwise_effects)[1] == dim(data)[2] &&
@@ -509,7 +555,8 @@ protein_causality <- function(
 
       } else {
 
-        set_of_graphs <- determine_set_of_graphs(results = results, data = data, type_of_graph_set = "conflict",
+        set_of_graphs <- determine_set_of_graphs(results = results, data = data, perturbed_position = intervention_position,
+                                                 type_of_graph_set = "conflict",
                                                  pc_function = pc_function, ida_function = NULL,
                                                  s = s, new = FALSE, save = TRUE, outpath = outpath,
                                                  pc_maj_rule_conflict = pc_maj_rule_conflict,
@@ -527,7 +574,21 @@ protein_causality <- function(
         # all_results <- pblapply(all_graphs, graph_to_results, ida_function = ida_function_w_o_results)   ## schneller (?) # library("pbapply")
         if (length(all_graphs) > 0) {
           all_results <- list()
-          for (i in 1:length(all_graphs)) {
+          first_graph_i <- max(conflict_graph_from_index, 1)
+          last_graph_i <- min(conflict_graph_to_index, length(all_graphs))
+          regarded_graphs_indices <- first_graph_i:last_graph_i
+          if (first_graph_i > 1 || last_graph_i < length(all_graphs)) {
+            if (length(regarded_graphs_indices) == 0) {
+              stop("All conflict graphs excluded by first_graph_i and last_graph_i")
+            }
+            if (length(regarded_graphs_indices) == 1) {
+              outpath <- paste0(outpath, "-G", regarded_graphs_indices)
+            }
+            if (length(regarded_graphs_indices) > 1) {
+              outpath <- paste0(outpath, "-G", first_graph_i, "-", last_graph_i)
+            }
+          }
+          for (i in regarded_graphs_indices) {
           # for (i in 1:2) {
             print(paste("GRAPH", i, "VON", length(all_graphs)))            ## mit Angabe des aktuellen Durchlaufs
             # all_results[[i]] <- list()
@@ -557,8 +618,9 @@ protein_causality <- function(
 
 
           # all_pairwise_effects_over_all_graphs <- list()
-          all_pairwise_effects_over_all_graphs <- matrix(ncol = 0, nrow = length(all_results[[1]]$ida))
-          for (position in names(all_results[[1]]$ida)) {
+          any_graph_index <- first_graph_i
+          all_pairwise_effects_over_all_graphs <- matrix(ncol = 0, nrow = length(all_results[[any_graph_index]]$ida))
+          for (position in names(all_results[[any_graph_index]]$ida)) {
             all_pairwise_effects_over_all_graphs <- cbind(all_pairwise_effects_over_all_graphs,
               unlist(compute_over_all_graphs(all_results = all_results, position = position,
                                       weight_effects_on_by = weight_effects_on_by,
@@ -619,8 +681,9 @@ protein_causality <- function(
                                                  # subtype_of_data = subtype_of_data,
                                                  direction = ida_direction,
                                                  measure = substr(type_of_data, nchar(type_of_data), nchar(type_of_data)),
-                                                 protein = "PDZ", perturbed_position = intervention_position,
+                                                 protein = protein, perturbed_position = intervention_position,
                                                  weight_effects_on_by = weight_effects_on_by,
+                                                 function_over_all_graphs = function_over_effects_of_conflict_graphs,
                                                  ida_function = ida_function_w_o_results,
                                                  outpath = outpath, caption = caption)
       }
@@ -702,20 +765,24 @@ protein_causality_G <- function(
   pymol_sort_connected_components_by_length = NULL, # NEW!
   pymol_mix_connected_components = NULL,  # NEW!
   print_connected_components = NULL,
-  # technical parameters
-  graph_computation = NULL,
-  evaluation = NULL,
-  causal_analysis = NULL,
-  max_conflict_edges = NULL,
+  # graph clustering
+  weighted_graph_for_clusterings = TRUE, # even for linkcommunities
+  graph_cluster_methods = c("edge_betweenness", "infomap"),
+  add_cluster_of_conserved_positions = TRUE,
   linkcommunities = NULL,
   linkcommunities_k = NULL,
   linkcommunities_base_colors = NULL,
+  # technical parameters
+  graph_computation = NULL,
+  evaluation = NULL,
+  max_edges_for_evaluation = NULL,
+  causal_analysis = NULL,
+  max_conflict_edges = NULL,
   stages = NULL,
   print_analysis = NULL,
   plot_analysis = NULL,
   plot_types = NULL,
   plot_no_isolated_nodes = TRUE,
-  graph_clustering = FALSE,
   compute_pc_anew = NULL,
   compute_localTests_anew = NULL,
   unabbrev_r_to_info = NULL,
@@ -768,6 +835,7 @@ protein_causality_G <- function(
   argList$other = other
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
+  argList$max_edges_for_evaluation = max_edges_for_evaluation
   argList$causal_analysis = causal_analysis
   argList$max_conflict_edges = max_conflict_edges
   argList$intervention_position = intervention_position
@@ -834,7 +902,7 @@ protein_causality_S <- function(
   alpha = NULL,
   pc_indepTest = NULL,
   pc_suffStat = NULL,
-  cor_cov_FUN = NULL,
+  cor_cov_FUN = "none",
   pc_solve_conflicts = TRUE,
   pc_u2pd = NULL,
   pc_conservative = NULL,
@@ -860,15 +928,20 @@ protein_causality_S <- function(
   pymol_sort_connected_components_by_length = NULL, # NEW!
   pymol_mix_connected_components = NULL, # NEW!
   print_connected_components = NULL,
-  # technical parameters
-  graph_computation = NULL,
-  evaluation = NULL,
-  intervention_position = "372",
-  causal_effects_function = NULL,
-  ida_direction = NULL,
+  # graph clustering
+  weighted_graph_for_clusterings = TRUE, # even for linkcommunities
+  graph_cluster_methods = c("edge_betweenness", "infomap"),
+  add_cluster_of_conserved_positions = TRUE,
   linkcommunities = NULL,
   linkcommunities_k = NULL,
   linkcommunities_base_colors = NULL,
+  # technical parameters
+  graph_computation = NULL,
+  evaluation = NULL,
+  max_edges_for_evaluation = NULL,
+  intervention_position = "372",
+  causal_effects_function = NULL,
+  ida_direction = NULL,
   stages = NULL,
   print_analysis = NULL,
   plot_analysis = NULL,
@@ -928,14 +1001,12 @@ protein_causality_S <- function(
   argList$other = other
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
+  argList$max_edges_for_evaluation = max_edges_for_evaluation
   argList$causal_analysis = causal_analysis
   argList$max_conflict_edges = max_conflict_edges
   argList$intervention_position = intervention_position
   argList$causal_effects_function = causal_effects_function
   argList$ida_direction = ida_direction
-  argList$linkcommunities = linkcommunities
-  argList$linkcommunities_k = linkcommunities_k
-  argList$linkcommunities_base_colors = linkcommunities_base_colors
   argList$stages = stages
   argList$print_analysis = print_analysis
   argList$plot_analysis = plot_analysis
@@ -948,6 +1019,12 @@ protein_causality_S <- function(
   argList$pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length # NEW!
   argList$pymol_mix_connected_components = pymol_mix_connected_components  # NEW!
   argList$print_connected_components = print_connected_components    # NEW!
+  argList$weighted_graph_for_clusterings = weighted_graph_for_clusterings
+  argList$graph_cluster_methods = graph_cluster_methods
+  argList$add_cluster_of_conserved_positions = add_cluster_of_conserved_positions
+  argList$linkcommunities = linkcommunities
+  argList$linkcommunities_k = linkcommunities_k
+  argList$linkcommunities_base_colors = linkcommunities_base_colors
   argList$compute_pc_anew = compute_pc_anew
   argList$compute_localTests_anew = compute_localTests_anew
   argList$unabbrev_r_to_info = unabbrev_r_to_info
@@ -966,10 +1043,10 @@ protein_causality_p38g <- function(
   # data parameters
   type_of_variables = "continuous",
   protein = "p38g",
-  type_of_data = "NMR",
+  type_of_data = "NMR-Mut",
   subtype_of_data = "",
   data_set = "inact",
-  transpose_data = TRUE,
+  transpose_data = FALSE,
   position_numbering = "crystal",
   # int_pos specific parameters
   ida_percentile = "11",
@@ -1021,15 +1098,20 @@ protein_causality_p38g <- function(
   pymol_sort_connected_components_by_length = NULL, # NEW!
   pymol_mix_connected_components = NULL,  # NEW!
   print_connected_components = NULL,
+  # graph clustering
+  weighted_graph_for_clusterings = TRUE, # even for linkcommunities
+  graph_cluster_methods = c("edge_betweenness", "infomap"),
+  add_cluster_of_conserved_positions = TRUE,
+  linkcommunities = NULL,
+  linkcommunities_k = NULL,
+  linkcommunities_base_colors = NULL,
   # technical parameters
   graph_computation = NULL,
   evaluation = NULL,
+  max_edges_for_evaluation = NULL,
   intervention_position = "all",
   causal_effects_function = NULL,
   ida_direction = NULL,
-  linkcommunities = TRUE,
-  linkcommunities_k = 4,
-  linkcommunities_base_colors = c("#FFD700", "#1874CD", "#CC0000",  "#69A019"),
   stages = NULL,
   print_analysis = NULL,
   plot_analysis = NULL,
@@ -1090,14 +1172,12 @@ protein_causality_p38g <- function(
   argList$other = other
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
+  argList$max_edges_for_evaluation = max_edges_for_evaluation
   argList$causal_analysis = causal_analysis
   argList$max_conflict_edges = max_conflict_edges
   argList$intervention_position = intervention_position
   argList$causal_effects_function = causal_effects_function
   argList$ida_direction = ida_direction
-  argList$linkcommunities = linkcommunities
-  argList$linkcommunities_k = linkcommunities_k
-  argList$linkcommunities_base_colors = linkcommunities_base_colors
   argList$stages = stages
   argList$print_analysis = print_analysis
   argList$plot_analysis = plot_analysis
@@ -1110,6 +1190,11 @@ protein_causality_p38g <- function(
   argList$pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length # NEW!
   argList$pymol_mix_connected_components = pymol_mix_connected_components  # NEW!
   argList$print_connected_components = print_connected_components    # NEW!
+  argList$weighted_graph_for_clusterings = weighted_graph_for_clusterings
+  argList$graph_cluster_methods = graph_cluster_methods
+  argList$add_cluster_of_conserved_positions = add_cluster_of_conserved_positions
+  argList$linkcommunities = linkcommunities
+  argList$linkcommunities_k = linkcommunities_k
   argList$compute_pc_anew = compute_pc_anew
   argList$compute_localTests_anew = compute_localTests_anew
   argList$unabbrev_r_to_info = unabbrev_r_to_info
@@ -1140,20 +1225,20 @@ protein_causality_NoV <- function(
   # subtype_of_data = c("Fuc", "BTS")
 
   type_of_variables = "continuous",
-  protein = "NoV",
+  protein = NULL, # "pmo" or "pdi"
   # type_of_data = "NMR-Tit",
-  type_of_data = "DDS",
-  subtype_of_data = "",
+  type_of_data = NULL,
+  subtype_of_data = NULL,
   # subtype_of_data = c("Fuc", "BTS"),
-  data_set = "",
-  position_numbering = "",
+  data_set = NULL,
+  position_numbering = NULL,
   # analysis parameters
   min_pos_var = NULL,
   show_variance_cutoff_plot = NULL,
   only_cols = NULL,
-  only_cols_label = "",
-  every_n_th_row = 1,
-  alpha = 0.05,
+  only_cols_label = NULL,
+  every_n_th_row = NULL,
+  alpha = NULL,
   pc_indepTest = NULL,
   pc_suffStat = NULL,
   ranked = FALSE,
@@ -1185,22 +1270,27 @@ protein_causality_NoV <- function(
   for_combined_plot = NULL,
   mute_all_plots = NULL,
   other = NULL, # "cov"
+  # graph clustering
+  weighted_graph_for_clusterings = TRUE, # even for linkcommunities
+  graph_cluster_methods = c("edge_betweenness", "infomap"),
+  add_cluster_of_conserved_positions = TRUE,
+  linkcommunities = NULL,
+  linkcommunities_k = NULL,
+  linkcommunities_base_colors = NULL,
   # technical parameters
   graph_computation = NULL,
   evaluation = NULL,
+  max_edges_for_evaluation = NULL,
   causal_analysis = NULL,
   max_conflict_edges = NULL,
   intervention_position = "all",
   causal_effects_function = NULL,
   ida_direction = NULL,
-  linkcommunities = NULL,
-  linkcommunities_k = NULL,
-  linkcommunities_base_colors = NULL,
   stages = NULL, # c("orig", "sub"), "sub"
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graph"),
-  plot_with_graphviz = FALSE,
+  plot_with_graphviz = TRUE,
   pymol_show_int_pos = FALSE,
   pymol_sort_connected_components_by_length = NULL, # NEW!
   pymol_mix_connected_components = NULL,  # NEW!
@@ -1258,12 +1348,10 @@ protein_causality_NoV <- function(
   argList$other = other
   argList$graph_computation = graph_computation
   argList$evaluation = evaluation
+  argList$max_edges_for_evaluation = max_edges_for_evaluation
   argList$causal_analysis = causal_analysis
   argList$max_conflict_edges = max_conflict_edges
   argList$intervention_position = intervention_position
-  argList$linkcommunities = linkcommunities
-  argList$linkcommunities_k = linkcommunities_k
-  argList$linkcommunities_base_colors = linkcommunities_base_colors
   argList$stages = stages
   argList$print_analysis = print_analysis
   argList$plot_analysis = plot_analysis
@@ -1276,6 +1364,11 @@ protein_causality_NoV <- function(
   argList$pymol_sort_connected_components_by_length = pymol_sort_connected_components_by_length # NEW!
   argList$pymol_mix_connected_components = pymol_mix_connected_components  # NEW!
   argList$print_connected_components = print_connected_components    # NEW!
+  argList$weighted_graph_for_clusterings = weighted_graph_for_clusterings
+  argList$graph_cluster_methods = graph_cluster_methods
+  argList$add_cluster_of_conserved_positions = add_cluster_of_conserved_positions
+  argList$linkcommunities = linkcommunities
+  argList$linkcommunities_k = linkcommunities_k
   argList$compute_pc_anew = compute_pc_anew
   argList$compute_localTests_anew = compute_localTests_anew
   argList$unabbrev_r_to_info = unabbrev_r_to_info

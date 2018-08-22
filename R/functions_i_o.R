@@ -36,7 +36,7 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
       if ((length(transpose) > i && transpose[i]) || (length(transpose) == 1 && transpose[1])) {
         data_i <- t(data_i)
       }
-      rownames(data_i) <- paste(file, rownames(data_i), sep = "-")
+      rownames(data_i) <- paste(file, rownames(data_i), sep = ".")
       # save(data_i, file = paste0(path_to_data, file, ".RData"))
 
       if (!(missing(every_n_th_row_)) && !is.null(every_n_th_row_) && !(every_n_th_row_ == 1)) {
@@ -139,7 +139,7 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   } else {
     drop <- which(apply(data, 2, var) <= as.numeric(min_var))
   }
-  colors <- rep("#FFFFFF", dim(data)[[1]])
+  colors <- rep("#FFFFFF", dim(data)[[2]])
   colors[drop] <- "#000000"
   if (!mute_plot) {
     barplot(apply(data, 2, var), col = colors, las = 2,
@@ -378,6 +378,7 @@ compute_if_not_existent <- function(filename, FUN, obj_name = "data", compute_an
       warning("The loaded object did not fit!")
     } else {
       print(paste(obj_name, " object loaded from ", filename, ".", sep = ""))
+      # TODO speichern, falls aus altem Outpath geladen
       return(get(obj_name))
     }
   # } else {

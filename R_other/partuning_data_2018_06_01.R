@@ -16,7 +16,7 @@ source("configuration_data.R")
 
 
 # NoV_NMR-Tit_B3S-with-unass
-type_of_data = "NMR-Tit"
+type_of_data = "NMR-Tit-20180601"
 ## subtype_of_data = "B3S-with-unass"
 # subtype_of_data = "B3S_with-unass_1H" ## options are ..._Euclidean, ..._1H and ..._15N
 ##subtype_of_data = "BTS"

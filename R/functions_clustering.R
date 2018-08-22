@@ -2,14 +2,17 @@
 #' @param monochromatic_removed_cols all removed_cols are given (the same shade of) white as color
 #' @param more_levels_of_conservedness (bacause of too little variacne) removed positions are
 #' clored in shades of white with increasing amounts of blue with increasing variance
-protein_graph_clustering <- function(results, protein, position_numbering, coloring, colors, outpath, output_formats,
-                                     file_separator, mute_all_plots, caption, cluster_methods,
+protein_graph_clustering <- function(graph, protein, position_numbering, coloring, colors,
+                                     outpath, output_formats, file_separator,
+                                     mute_all_plots, caption, cluster_methods,
                                      remove_singular_clusters = TRUE,
-                                     merge_singular_clusters = FALSE, add_cluster_of_conserved_positions = TRUE,
+                                     merge_singular_clusters = FALSE, add_cluster_of_conserved_positions = FALSE,
                                      removed_cols, monochromatic_removed_cols = TRUE,
                                      more_levels_of_conservedness = FALSE,
                                      sort_clusters = length) {
 
+  igraph_plot <- graph$plot
+  igraph_cluster <- igraph.from.graphNEL(graph$cluster)
   ## sort_clusters = "DDS-SVD") {
   if (add_cluster_of_conserved_positions) {
     # node_clustering <- c(node_clustering, "#FFFFFF" = list(removed_cols))
@@ -39,19 +42,24 @@ protein_graph_clustering <- function(results, protein, position_numbering, color
   }
 
   for (clustering in cluster_methods) {
+    if (clustering == "edge_betweenness") {
+      type <- "eb"
+    } else if (clustering == "infomap") {
+      type <- "im"
+    } else {
+      type <- "igraph"
+    }
     ## old conversion method
     ## igraph <- graph_from_graphnel(results$pc@graph)
-    igraph <- igraph.from.graphNEL(results$pc@graph)
+    # graph <- results$pc@graph
     cluster_fct <- get(paste0("cluster_", clustering))
-    cl <- cluster_fct(igraph)
-    ## TODO: save plot, instaed of plotting
-    if (!mute_all_plots) {
-      ## edge.arrow.size determines size of arrows (1 is default), vertex.size determines size of the vertices (15 is default), edge.width determines width of edges (1 is default)
-      ## plot(cl, igraph, main = paste0(caption, "\n", clustering), edge.arrow.size=0.2, vertex.size=8, edge.width=0.7)
-      call_plot_igraph(g = results$pc@graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors, clusters = TRUE, cluster_str = clustering, clustering = cl, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots)
-      ##this is the old version, just in case my adjustments don't work for you
-      ##plot(cl, igraph, main = paste0(caption, "\n", clustering))
+    ## obs: absolute weights
+    if (clustering == "infomap") {
+      cl <- cluster_fct(igraph_cluster, e.weights = abs(E(igraph_cluster)$weight), modularity = FALSE)
+    } else {
+      cl <- cluster_fct(igraph_cluster, weights = abs(E(igraph_cluster)$weight), modularity = FALSE)
     }
+
     node_clustering <- groups(cl)
     node_clustering <- unname(node_clustering)  # otherwise interpreted as colors
 
@@ -60,6 +68,24 @@ protein_graph_clustering <- function(results, protein, position_numbering, color
     } else if (merge_singular_clusters) {
       node_clustering <- merge_singular_clusters(node_clustering)
     }
+
+    clustering_colors <- rainbow(length(node_clustering))
+    names(node_clustering) <- clustering_colors
+
+    ## TODO: save plot, instaed of plotting
+    if (!mute_all_plots) {
+      ## edge.arrow.size determines size of arrows (1 is default), vertex.size determines size of the vertices (15 is default), edge.width determines width of edges (1 is default)
+      ## plot(cl, igraph, main = paste0(caption, "\n", clustering), edge.arrow.size=0.2, vertex.size=8, edge.width=0.7)
+      call_plot_igraph(g = igraph_plot, protein = protein, position_numbering = position_numbering,
+                       coloring = coloring, colors = colors, clusters = TRUE, cluster_str = type,
+                       clustering = cl, clustering_colors = clustering_colors, caption = caption,
+                       outpath = paste0(outpath,"-", length(node_clustering), "_", "clusters"),
+                       output_formats = output_formats, mute_all_plots = mute_all_plots)
+      ##this is the old version, just in case my adjustments don't work for you
+      ##plot(cl, igraph, main = paste0(caption, "\n", clustering))
+    }
+
+
 
     if (!is.null(sort_clusters)) {
       # if ((length(which(names(node_clustering) != "")) == 1)
@@ -90,27 +116,21 @@ protein_graph_clustering <- function(results, protein, position_numbering, color
       node_clustering <- c(node_clustering, add_clusters)
     }
 
-    if (clustering == "edge_betweenness") {
-      type <- "eb"
-    } else if (clustering == "infomap") {
-      type <- "im"
-    } else {
-      type <- "igraph"
-    }
-
-    # print(node_clustering)
 
     plot_clusters_in_pymol(node_clustering = node_clustering, protein = protein, outpath = outpath,
                            file_separator = file_separator, type_of_clustering = type)
   }
 }
 
-remove_singular_clusters <- function(clustering) {
-  clustering <- clustering[sapply(clustering,
+remove_singular_clusters <- function(clustering, force = FALSE) {
+  clustering_new <- clustering[sapply(clustering,
     function(cluster) {
       length(cluster) > 1
     })]
-  return(clustering)
+  if ((length(clustering_new) == 0) && !(force)) {
+    return(clustering)
+  }
+  return(clustering_new)
 }
 
 merge_singular_clusters <- function(clustering) {
@@ -194,6 +214,9 @@ cluster_pairwise_effects <- function(results, pairwise_effects, k, cluster_metho
 
     # fit <- pvclust(data = pairwise_effects, method.hclust="ward",
     #                method.dist="euclidean", nboot = 1000)
+
+    # cl <- cutDendrogramAt(effects_pv$hclust, cutat = 15)
+    # membershiplist_from_clusterlist(cl)
 
     plot.new()
     plot(effects_pv) # dendogram with p values

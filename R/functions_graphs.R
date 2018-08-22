@@ -392,3 +392,46 @@ edge_information <- function(adj_m, print = FALSE) {
 
   return(list(conflict = n_conflic_edges, directed = n_unidirected_edges, undirected = n_bidirected_edges))
 }
+
+# aus causal_effect_w_o_IDA
+library("ggm")    # for pcor  (partial correlation)
+set_edge_weights_for_graph <- function(graph, cov) {
+  edges <- names(graph@edgeData@data)
+
+  setweight <- function(edge, graph, cov, mode = "adj_set") {
+    print(edge)
+    l <- list()
+    nodes <- unlist(strsplit(edge, "\\|"))
+    if (mode == "adj_set") {
+      # inst_vars <- instrumentalVariables(conv_to_r(graph, type_of_graph = "dag"), nodes[1], nodes[2])
+      adj_set_single_door <- adjustmentSets(conv_to_r(graph, type_of_graph = "dag"), nodes[1], nodes[2], type = "minimal", effect = "direct")
+
+      adj_set <- c()
+      if (!length(adj_set_single_door) == 0) {
+        for (adj_var in adj_set_single_door[[1]]) {
+          adj_set <- c(adj_set, adj_var)
+        }
+      }
+
+      l$weight <- pcor(c(nodes[1], nodes[2], adj_set), cov)
+    } else {
+      # graph@edgeData@data[[edge]] <- cov[nodes[1],nodes[2]] / cov[nodes[1],nodes[1]]
+      # l[[edge]] <- list()
+      # l[[edge]]$weight <- cov[nodes[1],nodes[2]] / cov[nodes[1],nodes[1]]
+      # l[[edge]] <- cov[nodes[1],nodes[2]] / cov[nodes[1],nodes[1]]
+      # return(cov[nodes[1],nodes[2]] / cov[nodes[1],nodes[1]])
+      l$weight <- cov[nodes[1],nodes[2]] / cov[nodes[1],nodes[1]]
+      # l$weight <- cov[nodes[2],nodes[1]] / cov[nodes[2],nodes[2]]    # andersrum
+    }
+
+    return(l)
+  }
+  # debug(setweight)
+  cat("Computing adjustment sets for weighted graph...\n")
+  l <- lapply(edges, setweight, graph, cov)
+  names(l) <- edges
+
+  graph@edgeData@data <- l
+
+  return(graph)
+}

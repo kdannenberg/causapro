@@ -20,7 +20,7 @@ analysis_after_pc <- function(results, data, outpath, protein, position_numberin
   #
   # results$orig <- list()
   # results$orig$graph$NEL <- pc@graph
-  if (sum(unlist(conflict_edges(results$pc@graph))) <= 70) {
+  if (sum(unlist(conflict_edges(results$pc@graph))) <= max_number_of_edges_in_graph) {
     results$orig$graph$NEL <- results$pc@graph
 
     graph_dagitty <- conv_to_r(results$pc@graph, type_of_graph = "pdag", nodename_prefix = "P")
@@ -95,32 +95,51 @@ evaluate_DAG <- function(data, graph, results, protein, position_numbering = NUL
   if (!(stage == "" || is.null(stage))) {
     outpath <- paste(outpath, stage, sep = "-")
   }
-  if ((file.exists(paste(outpath, "-localTests.RData", sep = ""))) && !(compute_localTests_anew)) {
-    filename <- paste(outpath, "-localTests.RData", sep = "")
-    load(filename)
-    if (!exists("r")) {
-      print("The file did not contain an object of name 'r'!")
-    } else {
-      print(paste("Result of localTests() loaded from ", filename, ".", sep = ""))
-      save(r, file = paste(outpath, "-r.RData", sep = ""))
-    }
-  } else if ((file.exists(paste(outpath, "-r.RData", sep = ""))) && !(compute_localTests_anew)) {
-    filename <- paste(outpath, "-r.RData", sep = "")
-    load(filename)
-    if (!exists("r")) {
-      print("The file did not contain an object of name 'r'!")
-    } else {
-      print(paste("Result of localTests() loaded from ", filename, ".", sep = ""))
-    }
-  } else {
+
+  outpath <- paste(outpath, "-r", sep = "")
+  # previously, both "-r" and "-localTests" were tested before computing anew
+
+  r_func <- function(graph, data) {
     d <- data.frame(data, check.names = FALSE)
     colnames(d) <- paste("P", colnames(d), sep="")
     rownames(d) <- paste("R", rownames(d), sep="")
 
     r <- localTests(graph, d)
-    save(r, file = paste(outpath, "-r.RData", sep = ""))
-    print("r saved.")
   }
+
+  r_function <- function_set_parameters(r_func, parameters = list(data = data, graph = graph))
+
+  r <- compute_if_not_existent(filename = outpath, FUN = r_function, obj_name = "r" ,
+                          compute_anew = compute_localTests_anew,
+                          fun_loaded_object_ok = function(x) {return(TRUE)},
+                          try_old_outpath = FALSE)
+
+  # if ((file.exists(paste(outpath, "-localTests.RData", sep = ""))) && !(compute_localTests_anew)) {
+  #   filename <- paste(outpath, "-localTests.RData", sep = "")
+  #   load(filename)
+  #   if (!exists("r")) {
+  #     print("The file did not contain an object of name 'r'!")
+  #   } else {
+  #     print(paste("Result of localTests() loaded from ", filename, ".", sep = ""))
+  #     save(r, file = paste(outpath, "-r.RData", sep = ""))
+  #   }
+  # } else if ((file.exists(paste(outpath, "-r.RData", sep = ""))) && !(compute_localTests_anew)) {
+  #   filename <- paste(outpath, "-r.RData", sep = "")
+  #   load(filename)
+  #   if (!exists("r")) {
+  #     print("The file did not contain an object of name 'r'!")
+  #   } else {
+  #     print(paste("Result of localTests() loaded from ", filename, ".", sep = ""))
+  #   }
+  # } else {
+  #   d <- data.frame(data, check.names = FALSE)
+  #   colnames(d) <- paste("P", colnames(d), sep="")
+  #   rownames(d) <- paste("R", rownames(d), sep="")
+  #
+  #   r <- localTests(graph, d)
+  #   save(r, file = paste(outpath, "-r.RData", sep = ""))
+  #   print("r saved.")
+  # }
 
   result_position = paste("localTests", stage, "r", sep = "_")
   results[[result_position]] <- r

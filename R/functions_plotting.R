@@ -97,6 +97,9 @@ colors_for_nodes <- function(node_clusters, protein, coloring, colors, clusterin
     # nAttrs <- list()
     # nAttrs$fillcolor <- nodes_with_colors
     # return(nAttrs)
+    if (length(nodes_with_colors) == 0) {
+      return(NULL)
+    }
     return(nodes_with_colors)
   }
 }
@@ -104,11 +107,11 @@ colors_for_nodes <- function(node_clusters, protein, coloring, colors, clusterin
 # TODO: call plot_graph_by_coloring oder so
 # TODO: add par(mfrow=...), so everything fits on one plane
 plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", graph_layout = "dot", protein,
-                       position_numbering, coloring, colors, outpath = "", plot_as_subgraphs = FALSE,
-                       plot_only_subgraphs = NULL, subgraphs, numerical = TRUE, output_formats, mute_all_plots = FALSE) {
+                       position_numbering, coloring, colors = NULL, outpath = "", plot_as_subgraphs = FALSE,
+                       plot_only_subgraphs = NULL, subgraphs, numerical = TRUE, output_formats = NULL, mute_all_plots = FALSE) {
   ## numerical serves no purpose right now, but it might in the future
   if (numerical) {
-    if (missing(coloring) || missing(colors)) {
+    if (missing(coloring)) {
       plot_structure(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout, outpath = outpath, caption = caption,
                            plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats, mute_all_plots = mute_all_plots)
     } else {
@@ -139,6 +142,8 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         #                     plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
         ## can not use missing here because those are not the parameters of this function
         node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
+        # remove nodes that are not in the current graph (e.g. due to min_pos_var or kernelization)
+        node_clustering <- lapply(node_clustering, function(cluster) {intersect(cluster, graph@nodes)})
         # print(node_clustering)
         if (missing(subgraphs)) {
           if (plot_as_subgraphs_i || !is.null(plot_only_subgraphs)) {
@@ -232,7 +237,7 @@ plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawA
       } else if (format == "svg") {
         svg(paste0(outpath, ".svg"))
       } else {
-        warning(paste("Unknown format:", format))
+        warning(paste("Unknown format in plot_structure:", format))
       }
       # }
       plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = caption)
@@ -274,7 +279,9 @@ get_eAttrs <- function(graph, igraph=FALSE) {
 ## the igraph library is used, but options for the graph library will be added later
 
 ## wrapper around plot function below
-call_plot_igraph <- function(g, protein = "PDZ", position_numbering = "crystal", coloring = "", colors = "", clusters = FALSE, cluster_str = "infomap", clustering, caption = "", outpath = "", output_formats = c(), mute_all_plots = FALSE, layout_str = "layout_nicely", plot_as_subgraphs = "FALSE") {
+call_plot_igraph <- function(g, protein = "PDZ", position_numbering = "crystal", coloring = "",
+                             colors = "", clusters = FALSE, cluster_str = "infomap", clustering,
+                             clustering_colors, caption = "", outpath = "", output_formats = c(), mute_all_plots = FALSE, layout_str = "layout_nicely", plot_as_subgraphs = "FALSE") {
   plot_structure_igraph(g = g, nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)), edgecolor = get_edgecolor_igraph(g),clusters = clusters, cluster_str = cluster_str, clustering = clustering, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots, layout_str = layout_str, plot_as_subgraphs = plot_as_subgraphs, subgraphs = get_subgraphs_igraph(node_clusters = interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors), protein = protein))
 }
 
@@ -293,19 +300,24 @@ call_plot_igraph <- function(g, protein = "PDZ", position_numbering = "crystal",
 #' @param plot_as_subgraphs A boolean, indicating if the plot should be divided into multiple subgraphs.
 #' @param subgraphs TODO
 #' @return No return value.
-plot_structure_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str, clustering, caption, outpath, output_formats, mute_all_plots, layout_str, plot_as_subgraphs, subgraphs) {
+plot_structure_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str, clustering,
+                                  clustering_colors = rainbow(length(clustering)), caption,
+                                  outpath, output_formats,
+                                  mute_all_plots, layout_str, plot_as_subgraphs, subgraphs) {
   ## par(mfrow = c(2,2))
   # kernel
   ig = igraph.from.graphNEL(g)
   V(ig)$color = nodecolor
   E(ig)$color = edgecolor
   ## we plot a given clustering
-  if(clusters) {
-    ## edges between clusters are blue, conflict edges red. If both categories apply the edge is colored purple
+  if (clusters) {
+    ## edges between clusters are blue, conflict edges red.
+    # If both categories apply the edge is colored purple
     E(ig)$color[crossing(clustering, ig)] = "blue"
     E(ig)$color[intersect(which(crossing(clustering,ig)), which(E(ig)$color == "red"))] = "purple"
     if(!mute_all_plots) {
-      plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=10, edge.width=0.8, main = paste(caption, cluster_str))
+      plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, mark.col = clustering_colors,
+           edge.arrow.size=0.1, vertex.size=10, edge.width=0.8, main = paste(caption, cluster_str))
     }
     for(format in output_formats) {
       if (!nchar(outpath) == 0) {
@@ -316,7 +328,8 @@ plot_structure_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str
         } else if(format == "svg") {
           svg(paste(outpath, "_", cluster_str, ".svg", sep = ""))
         }
-        plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=10, edge.width=0.8, main = paste(caption, cluster_str))
+        plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, mark.col = clustering_colors,
+             edge.arrow.size=0.1, vertex.size=10, edge.width=0.8, main = paste(caption, cluster_str))
         dev.off()
       }
     }
@@ -428,7 +441,9 @@ int_pos_to_color_vector <- function(pos, int_pos, color_for_other_positions = "#
 # either ranked or ampl_factor (or exponent) possible
 # prviously: hue_by_effect
 # color_by_effect <- function(effects, int_pos, color_for_other_positions = "#1874CD", mode = "mix") {
-color_by_effect <- function(effects, int_pos, interv_pos, color_for_interv_pos = "#FFFFFF", color_for_other_positions = "#1874CD", mode = "#FFFFFF") {
+color_by_effect <- function(effects, int_pos, interv_pos, color_for_interv_pos = NULL,
+                            color_for_other_positions = "#1874CD", mode = "#FFFFFF",
+                            abs_of_neg_effects = TRUE) {
   # TODO Marcel: Geht das auch eleganter, so dass effects Zeilen-, Spaltenmatrix oder Vektor sein kann?
   pos <- rownames(effects)
   if (is.null(pos)) {
@@ -443,10 +458,14 @@ color_by_effect <- function(effects, int_pos, interv_pos, color_for_interv_pos =
   pos_with_colors <- int_pos_to_color_vector(pos = pos, int_pos = int_pos, color_for_other_positions = color_for_other_positions)
   # pos_with_colors <- sapply(rownames(effects), base_color)
 
-  if (!missing(interv_pos) && !is.null(interv_pos)) {
+  if (!missing(interv_pos) && !is.null(interv_pos) && !missing(color_for_interv_pos) && !is.null(color_for_interv_pos)) {
     pos_with_colors[as.character(interv_pos)] <- color_for_interv_pos#"#FF9933"
   }
 
+  effects <- effects / max(abs(effects))
+  if (abs_of_neg_effects) {
+    effects <- abs(effects)
+  }
   pos_with_colors <- cbind(pos_with_colors, effects)
 
   # pos_with_colors <- sapply(colnames(pos_with_colors)),  function(pos) {})

@@ -89,12 +89,11 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
                                     amplification_factor = amplification_factor, ranked = opacity_ranked,
                                     index = colnames(effects)[i], no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = current_effects)
       }
-      if (!mute_all_plots) {
-        plot_causal_effects_ida(perturbed_position = perturbed_position, current_effects = current_effects,
+      plot_causal_effects_ida(perturbed_position = perturbed_position, current_effects = current_effects,
                                 dir = dir, colors_by_effect = colors_by_effect,
                                 type = colnames(effects)[i],
-                                current_scaled_effects = switch(plot_scaled_effects + 1, NULL, current_scaled_effects))
-      }
+                                current_scaled_effects = switch(plot_scaled_effects + 1, NULL, current_scaled_effects),
+                                outpath = current_outpath, mute = mute_all_plots)
       if (analysis) {
         statistics_of_influenced_positions(effects = current_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
 
@@ -133,7 +132,7 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
 plot_init <-  function(direction = "both", caption, effects, dir, plot_scaled_effects = FALSE) {
   lines <- 1 # lines in plot_space
 
-  graphics.off()
+  plot.new()
   ## lines <- 6 # 1/2 für of, 2 für on (min, max)
   columns <- ifelse(plot_scaled_effects, 2, 1)
   oma <- c( 0, 0, length(caption) + 1, 0 )  # oberer Rand für Caption: eine Zeile mehr als benötigt
@@ -172,7 +171,9 @@ plot_init <-  function(direction = "both", caption, effects, dir, plot_scaled_ef
 
 plot_causal_effects_ida <- function(perturbed_position, current_effects, dir,
                                     colors_by_effect, current_scaled_effects,
-                                    type = "") {
+                                    type = "", border_col_perturbed_pos = "#000000", #NULL = as given in colors_by_effect
+                                    border_col_other = "#000000",
+                                    mute = FALSE, outpath = "", output_format = "pdf") {
 
   ## graphics.off()
   ## par(mfrow=c(m,n))
@@ -184,14 +185,77 @@ plot_causal_effects_ida <- function(perturbed_position, current_effects, dir,
   is.na(vector_effects) <- sapply(vector_effects, is.infinite)   # set infinite values to NA
   names(vector_effects) <- rownames(current_effects)
   ## barplot(vector_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
-  barplot(vector_effects, main = paste(type, "total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+  # border color for perturbed position
+  border_col <- colors_by_effect
+  if (!is.null(border_col_other)) { # otherwise it remains as given in colors_by_effect
+    border_col[] <- border_col_other
+    border_col[perturbed_position] <- colors_by_effect[perturbed_position]
+  }
+  if (!is.null(border_col_perturbed_pos)) {
+    border_col[perturbed_position] <- border_col_perturbed_pos
+  }
+
+  # intensify color of perturbed position
+  colors_by_effect[perturbed_position] <- hex(mixcolor(0.9, hex2RGB("#000000"), hex2RGB(colors_by_effect[perturbed_position])))
+
+  # border and shading
+  vec_pert_pos_dens <- vector_effects
+  vec_pert_pos_dens[] <- NA
+  vec_pert_pos_dens[perturbed_position] <- 40
+
+  vec_pert_pos_angle <- vector_effects
+  vec_pert_pos_angle[] <- NA
+  vec_pert_pos_angle[perturbed_position] <- 90
+
+  vec_pert_pos_bool <- vector(length = length(vector_effects))
+  # vec_pert_pos_bool[] <- FALSE
+  vec_pert_pos_bool[perturbed_position] <- TRUE
+
+  if (!mute) {
+    barplot(vector_effects, main = paste(type, "total causal effect", dir, "position", perturbed_position),
+            density = vec_pert_pos_dens, angle = vec_pert_pos_angle, col = colors_by_effect, border = border_col)
+  }
+
+  if (!nchar(outpath) == 0) {
+    if (output_format == "pdf") {
+      pdf(paste(outpath, ".pdf", sep = ""))
+    } else if ((output_format == "ps") || (output_format == "postscript")) {
+      postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
+    } else if (output_format == "svg") {
+      svg(paste0(outpath, ".svg"))
+    } else {
+      warning(paste("Unknown format in plot_causal_effects_ida:", output_format))
+    }
+    barplot(vector_effects, main = paste(type, "total causal effect", dir, "position", perturbed_position),
+            density = vec_pert_pos_dens, angle = vec_pert_pos_angle, col = colors_by_effect, border = border_col)
+    dev.off()
+  }
+
+  # barplot(vector_effects, main = paste(type, "total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
   if (!is.null(current_scaled_effects) || missing(current_scaled_effects)) {
     vector_scaled_effects <- as.vector(current_scaled_effects)
     is.na(vector_scaled_effects) <- sapply(vector_scaled_effects, is.infinite)   # set infinite values to NA
     names(vector_scaled_effects) <- rownames(current_scaled_effects)
     ## barplot(vector_scaled_effects, main = paste(caption, "\n total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
-    barplot(vector_scaled_effects, main = paste(type, "total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+    if (!mute) {
+      barplot(vector_scaled_effects, main = paste(type, "total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+    }
+    if (!nchar(outpath) == 0) {
+      if (output_format == "pdf") {
+        pdf(paste(outpath, ".pdf", sep = ""))
+      } else if ((output_format == "ps") || (output_format == "postscript")) {
+        postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
+      } else if (output_format == "svg") {
+        svg(paste0(outpath, ".svg"))
+      } else {
+        warning(paste("Unknown format in plot_causal_effects_ida:", output_format))
+      }
+      barplot(vector_scaled_effects, main = paste(type, "total causal effect", dir, "position", perturbed_position), col = colors_by_effect)
+      dev.off()
+    }
   }
+
+
 }
 
 compute_causal_effects_ida <- function(data, perturbed_position, weight_effects_on_by = "mean_abs_effect",
