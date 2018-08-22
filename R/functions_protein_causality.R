@@ -34,8 +34,11 @@ protein_causality <- function(
   # remove_positions_with_low_variance = TRUE,
   min_pos_var = 0,
   show_variance_cutoff_plot = FALSE,
-  only_cols = NULL,
-  remove_cols = NULL,
+  only_cols = NULL, #NEW
+  remove_cols = NULL, #NEW
+  only_rows = NULL, #NEW
+  remove_rows = NULL, #NEW
+  rows_cols_subset_grep = FALSE, #NEW
   only_cols_label = "",
   every_n_th_row = 1,
   #
@@ -108,8 +111,8 @@ protein_causality <- function(
   # handling of conflics edges
   max_conflict_edges = 11,
   function_over_effects_of_conflict_graphs = function(x) {return(mean(abs(x)))},
-  conflict_graph_from_index = 1,
-  conflict_graph_to_index = Inf,
+  conflict_graph_from_index = 1, #NEW
+  conflict_graph_to_index = Inf, #NEW
   # graph clustering
   weighted_graph_for_clusterings = TRUE, # even for linkcommunities
   graph_cluster_methods = c("edge_betweenness", "infomap"),
@@ -211,6 +214,8 @@ protein_causality <- function(
 
   data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos,
                       only_cols = only_cols, remove_cols = remove_cols,
+                      only_rows = only_rows, remove_rows = remove_rows,
+                      rows_cols_subset_grep = FALSE,
                       min_var = min_pos_var, keep_quadratic = (cor_cov_FUN == "none"),
                       mute_plot = !show_variance_cutoff_plot)
 
@@ -260,10 +265,16 @@ protein_causality <- function(
   # if (other != "") {
   #   data_description <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other)
   # }
+  if (nchar(only_cols_label) == 0) {
+    only_cols_label <- get_only_cols_label(only_cols = only_cols, remove_cols = remove_cols,
+                                           only_rows = only_rows, remove_rows = remove_rows,
+                                           rows_cols_subset_grep)
+  }
 
   outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data,
                          data_set = data_set, suffix = other,
-                         alpha = alpha, min_pos_var = min_pos_var, only_cols_label = only_cols_label,
+                         alpha = alpha, min_pos_var = min_pos_var,
+                         only_cols_label = only_cols_label,
                          pc_indepTest = pc_indepTest, cor_cov_FUN = cor_cov_FUN,
                          pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
                          pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,

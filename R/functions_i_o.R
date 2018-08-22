@@ -93,7 +93,9 @@ analyse_data <- function(data, int_pos, min_var) {
 # rank_obs_per_pos: should the ranking be done the other way round?
 #   That is, per position, over all observations?
 adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE,
-                        only_cols = NULL, rows_cols_subset_grep = TRUE, remove_cols = NULL,
+                        only_cols = NULL, remove_cols = NULL,
+                        only_rows = NULL, remove_rows = NULL,
+                        rows_cols_subset_grep = TRUE,
                         # every_n_th_row = 1,
                         remove_low_variance = FALSE, zero_var_fct, min_var = 0.01,
                         keep_quadratic = FALSE, mute_plot = TRUE,
@@ -118,6 +120,15 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
   if (length(remove_cols) > 0) {
     data <- subset_data(data = data, selection = remove_cols, grep_selection = rows_cols_subset_grep,
                         remove = TRUE, cols = TRUE)
+  }
+  if (length(only_rows) > 0) {
+    # grep the right cols
+    data <- subset_data(data = data, selection = only_rows, grep_selection = rows_cols_subset_grep,
+                        remove = FALSE, cols = FALSE)
+  }
+  if (length(remove_rows) > 0) {
+    data <- subset_data(data = data, selection = remove_rows, grep_selection = rows_cols_subset_grep,
+                        remove = TRUE, cols = FALSE)
   }
   # TODO: statistical test for zero variance
   if (typeof(min_var) == "closure") {
@@ -272,6 +283,29 @@ subtype_of_data_after_adjustment <- function(data, subtype_of_data, rank = FALSE
   return(subtype_of_data)
 }
 
+
+get_only_cols_label <- function(only_cols, remove_cols, only_rows, remove_rows,
+                                rows_cols_subset_grep) {
+  only_cols_label <- ""
+  # for (param in c("only_cols", "remove_cols", "only_rows", "remove_rows")) {
+  #   if (is.null(get(param))) {
+  #     assign(param, "")
+  #   }
+  # }
+  cols_str_only <- paste(only_cols, collapse = "+")
+  cols_str_rem <- paste(remove_cols, collapse = "-")
+  cols_str = ""
+  if (nchar(cols_str_only) + nchar(cols_str_rem) > 0) {
+    cols_str = paste(pastes("c", cols_str_only, sep = "+"), cols_str_rem, sep = "-")
+  }
+  rows_str_only <- paste(only_rows, collapse = "+")
+  rows_str_rem <- paste(remove_rows, collapse = "-")
+  rows_str = ""
+  if (nchar(rows_str_only) + nchar(rows_str_rem) > 0) {
+    rows_str = pastes(pastes("r", rows_str_only, sep = "+"), rows_str_rem, sep = "-")
+  }
+  return(pastes(cols_str, rows_str, sep = "-"))
+}
 
 
 get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "",
