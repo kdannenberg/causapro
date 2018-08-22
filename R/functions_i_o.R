@@ -93,7 +93,7 @@ analyse_data <- function(data, int_pos, min_var) {
 # rank_obs_per_pos: should the ranking be done the other way round?
 #   That is, per position, over all observations?
 adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE,
-                        only_cols = NULL, only_cols_grep = FALSE,
+                        only_cols = NULL, rows_cols_subset_grep = TRUE, remove_cols = NULL,
                         # every_n_th_row = 1,
                         remove_low_variance = FALSE, zero_var_fct, min_var = 0.01,
                         keep_quadratic = FALSE, mute_plot = TRUE,
@@ -112,25 +112,12 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
 
   if (length(only_cols) > 0) {
     # grep the right cols
-    if (only_cols_grep) {
-    only_cols_ind <- sapply(only_cols, function(x) which(grepl(as.character(x), colnames(data))))
-    # only_cols <- names(sapply(only_cols, function(x) which(grepl(as.character(x), colnames(data)))))
-    cols_not_found <- names(only_cols_ind[which(lapply(only_cols_ind, length) == 0)])
-    if (length(cols_not_found) > 0) {
-      warning(paste("No columns containing", paste(cols_not_found, collapse = ", "), "found!"))
-    }
-    only_cols_ind <- only_cols_ind[which(!(lapply(only_cols_ind, length) == 0))]
-    only_cols <- colnames(data)[unlist(only_cols_ind)]
-    } else {
-      cols_not_found <- setdiff(as.character(only_cols), colnames(data))
-      removed_cols <- setdiff(colnames(data), as.character(only_cols))
-      print(paste("Column(s)", paste(removed_cols, collapse = ", "), "removed by only_cols."))
-      if (length(cols_not_found) > 0) {
-        warning(paste("Column(s)", paste(cols_not_found, collapse = ", "), "not found!"))
-      }
-      only_cols <- setdiff(only_cols, cols_not_found)
-    }
-    data = data[,as.character(only_cols)]
+    data <- subset_data(data = data, selection = only_cols, grep_selection = rows_cols_subset_grep,
+                        remove = FALSE, cols = TRUE)
+  }
+  if (length(remove_cols) > 0) {
+    data <- subset_data(data = data, selection = remove_cols, grep_selection = rows_cols_subset_grep,
+                        remove = TRUE, cols = TRUE)
   }
   # TODO: statistical test for zero variance
   if (typeof(min_var) == "closure") {
@@ -192,6 +179,63 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
     }
   }
   return(data)
+}
+
+
+subset_data <- function(data, selection, grep_selection, remove = FALSE, cols = TRUE) {
+  if (cols) {
+    name_function = colnames
+  } else {
+    name_function = rownames
+  }
+
+  if (grep_selection) {
+    selection_ind <- sapply(selection, function(x) which(grepl(as.character(x), name_function(data))))
+    # only_cols <- names(sapply(only_cols, function(x) which(grepl(as.character(x), colnames(data)))))
+    not_found <- names(selection_ind[which(lapply(selection_ind, length) == 0)])
+    if (length(not_found) > 0) {
+      warning(paste("No columns containing", paste(not_found, collapse = ", "), "found!"))
+    }
+    selection_ind <- selection_ind[which(!(lapply(selection_ind, length) == 0))]
+    selection <- colnames(data)[unlist(selection_ind)]
+  } # else {
+    not_found <- setdiff(as.character(selection), colnames(data))
+    if (length(not_found) > 0) {
+      warning(paste("Column(s)", paste(not_found, collapse = ", "), "not found!"))
+      selection <- setdiff(selection, not_found)
+    }
+    if (remove) {
+      lines_to_remove <- as.character(selection)
+    } else {
+      lines_to_remove <- setdiff(colnames(data), as.character(selection))
+    }
+    if (cols) {
+      print(paste("Column(s)", paste(lines_to_remove, collapse = ", "), "removed by only_cols/remove_cols."))
+    } else {
+      print(paste("Row(s)", paste(lines_to_remove, collapse = ", "), "removed by only_rows/remove_rows."))
+    }
+  # }
+  lines_to_remove_ind <- which(colnames(data) %in% as.character(lines_to_remove))
+  if (cols) {
+    data = data[, -lines_to_remove_ind]
+  } else {
+    data = data[-lines_to_remove_ind, ]
+  }
+  return(data)
+  # data = data[,as.character(selection)]
+
+  # if (rows_cols_subset_grep) {
+  #   remove_cols_ind <- sapply(remove_cols, function(x) which(grepl(as.character(x), colnames(data))))
+  #   # only_cols <- names(sapply(only_cols, function(x) which(grepl(as.character(x), colnames(data)))))
+  #   cols_not_found <- names(remove_cols_ind[which(lapply(remove_cols_ind, length) == 0)])
+  #   if (length(cols_not_found) > 0) {
+  #     warning(paste("No columns containing", paste(cols_not_found, collapse = ", "), "found!"))
+  #   }
+  #   remove_cols_ind <- remove_cols_ind[which(!(lapply(remove_cols_ind, length) == 0))]
+  #   remove_cols <- colnames(data)[unlist(remove_cols_ind)]
+  # }
+  # data = data[, -(which(colnames(data) %in% as.character(remove_cols)))]
+
 }
 
 adjust_data_description <- function(data_description, ranked = FALSE) {

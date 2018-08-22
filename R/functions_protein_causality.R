@@ -35,6 +35,7 @@ protein_causality <- function(
   min_pos_var = 0,
   show_variance_cutoff_plot = FALSE,
   only_cols = NULL,
+  remove_cols = NULL,
   only_cols_label = "",
   every_n_th_row = 1,
   #
@@ -184,6 +185,7 @@ protein_causality <- function(
   }, warning = function(cond) {
     message("Conf file could not be read, maybe it does not exist?")
   })
+  argList <- lapply(argList, eval) # otherwise c(...) is interpreted as the Language "c(..)"
   list2env(argList, env = environment())
   # }
   # print(graph_layout)
@@ -207,9 +209,9 @@ protein_causality <- function(
 
 
 
-  data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos, only_cols = only_cols,
-                      min_var = min_pos_var,
-                      keep_quadratic = (cor_cov_FUN == "none"),
+  data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos,
+                      only_cols = only_cols, remove_cols = remove_cols,
+                      min_var = min_pos_var, keep_quadratic = (cor_cov_FUN == "none"),
                       mute_plot = !show_variance_cutoff_plot)
 
   #TODO:
