@@ -133,8 +133,6 @@ partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
       }
     }
   }
-
-
   # TODO Marcel:
   # results_a abspeichern (nur, wenn alles da ist? dann alles laden, um teile daraus zu bekommen?)
   # dafür compute_if_not_existent nutzen

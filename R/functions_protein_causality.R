@@ -99,6 +99,7 @@ protein_causality <- function(
   # causal effects
   causal_analysis = FALSE,
   intervention_position = "all",
+  crossvalidation = FALSE, #NEW
   causal_effects_function = "IDA-reset", # "IDA", "causalEffects"
   ida_direction = "of",
   # weight_effects_on_by = "",
@@ -106,6 +107,7 @@ protein_causality <- function(
   # weight_effects_on_by = "mean",
   weight_effects_on_by = "median",
   ida_percentile = "11", # top 11
+  effect_to_color_mode = "#FFFFFF",
   # ida_percentile = 0.75, # top 75%
   #
   # handling of conflics edges
@@ -125,12 +127,13 @@ protein_causality <- function(
   linkcommunities_base_colors = NULL,
   linkcommunities_cluster_method = "ward",
   # effects clustering
+  effects_pre_cluster_fun = identity,
   effects_cluster_k = 3,
   effects_cluster_method = "pv",
   effects_hclust_method = "ward.D2",  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = "euclidean",
   effects_pv_nboot = 1000,
-  effects_cluster_alpha = 0.95,
+  effects_cluster_alpha = 0.05,
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
@@ -215,7 +218,7 @@ protein_causality <- function(
   data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos,
                       only_cols = only_cols, remove_cols = remove_cols,
                       only_rows = only_rows, remove_rows = remove_rows,
-                      rows_cols_subset_grep = FALSE,
+                      rows_cols_subset_grep = rows_cols_subset_grep,
                       min_var = min_pos_var, keep_quadratic = (cor_cov_FUN == "none"),
                       mute_plot = !show_variance_cutoff_plot)
 
@@ -516,7 +519,7 @@ protein_causality <- function(
                                                 protein = protein, coloring = "all", no_colors = FALSE,
                                                 outpath = outpath, amplification_exponent = 1,
                                                 amplification_factor = TRUE, rank_effects = FALSE,
-                                                effect_to_color_mode = "#FFFFFF", pymol_bg_color = "grey",
+                                                effect_to_color_mode = effect_to_color_mode, pymol_bg_color = "grey",
                                                 mute_all_plots = mute_all_plots, caption = caption,
                                                 show_neg_causation = TRUE, neg_effects = "sep",
                                                 analysis = TRUE, percentile = ida_percentile,
@@ -530,7 +533,6 @@ protein_causality <- function(
     # outpath = paste0(outpath, "_", causal_effects_function, "_interv-at-", intervention_position)
     outpath = paste0(outpath, "_", causal_effects_function)
 
-    # plot.new()  # TODO: Muss das sein?!
     if (intervention_position == "all") {
       # all_pairwise_effects_FUN <- function_set_parameters(compute_if_not_existent, parameters = c(filename = paste(outpath, "pairwise_effects", sep="-"),
       #                                                                             # FUN = function_set_parameters(FUN, parameters = c(results = results)),
@@ -561,7 +563,8 @@ protein_causality <- function(
                                                         # {return(FALSE)})
         results$all_pairwise_effects <- all_pairwise_effects
 
-        results <- cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects, k = effects_cluster_k,
+        results <- cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects,
+                                 pre_fct = effects_pre_cluster_fun,  k = effects_cluster_k,
                                  cluster_method = effects_cluster_method, hclust_method = effects_hclust_method,
                                  dist_measure = effects_dist_method, iterations_pv = effects_pv_nboot, alpha = effects_cluster_alpha,
                                  protein = protein, outpath = outpath, file_separator = file_separator)
@@ -671,6 +674,20 @@ protein_causality <- function(
                                      dist_measure = effects_dist_method, nboot = effects_pv_nboot)
       }
     } else {
+      if (crossvalidation) {
+        plot.new()
+        par(mfrow = c(2,1))
+        # if (any(grepl(as.character(intervention_position), rownames(data)))) {
+        #   warning("Invalid Cross-Validation: Intervention position in observational data!")
+        # }
+        # true_effects = data_orig[which(grepl(as.character(intervention_position), rownames(data_orig))),]
+        # if (!is.vector(true_effects)) {
+        #   warning(paste("Could not grep intervention position in rownames. Hits in rows",
+        #                 paste(which(grepl(as.character(intervention_position), rownames(data_orig))), collapse = ", "), "!"))
+        # }
+        # barplot(true_effects,
+        #         names.arg = colnames(data))
+      }
       if (conflict_edges(results$pc@graph)$conflict == 0) {
         results <- ida_function_w_o_pos(perturbed_position = intervention_position)
       } else {
@@ -699,6 +716,31 @@ protein_causality <- function(
                                                  function_over_all_graphs = function_over_effects_of_conflict_graphs,
                                                  ida_function = ida_function_w_o_results,
                                                  outpath = outpath, caption = caption)
+      }
+      if (crossvalidation) {
+        # par(mfrow = c(2,1))
+        if (any(grepl(as.character(intervention_position), rownames(data)))) {
+          warning("Invalid Cross-Validation: Intervention position in observational data!")
+        }
+        true_effects = data_orig[which(grepl(as.character(intervention_position), rownames(data_orig))),]
+        if (!is.vector(true_effects)) {
+          warning(paste("Could not grep intervention position in rownames. Hits in rows",
+                        paste(which(grepl(as.character(intervention_position), rownames(data_orig))), collapse = ", "), "!"))
+        }
+        # colors_by_effect <- color_by_effect(effects = true_effects,
+        #                                     int_pos = int_pos_to_color_vector(results$general$int_pos),
+        #                                     interv_pos = intervention_position,
+        #                                     mode = effect_to_color_mode)
+        caption = paste("True (observed) effects of intervention position", intervention_position)
+        # plot_causal_effects_ida(perturbed_position = intervention_position,
+        #                         current_effects = true_effects,
+        #                         colors_by_effect = colors_by_effect,
+        #                         caption = caption)
+        plot_effects(effects = true_effects,
+                     int_pos = conv_for_coloring(int_pos = results$general$int_pos),
+                     caption = caption)
+        # barplot(true_effects,
+        #         names.arg = colnames(data))
       }
     }
   }

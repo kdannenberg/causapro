@@ -192,7 +192,8 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
 #' @return No return value.
 plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawAgNode, caption="", graph_layout="dot", outpath="",
                            plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL,
-                           output_formats = "pdf", mute_all_plots = FALSE) {
+                           output_formats = "pdf", mute_all_plots = FALSE,
+                           width_divisor_files = 100, height_divisor_files = 100) {
 
   nAttrs <- list()
   nAttrs$fillcolor <- fillcolor
@@ -221,6 +222,28 @@ plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawA
     plot(pc_graph, nodeAttrs = nAttrs, edgeAttrs = eAttrs, drawNode = drawnode, main = paste(caption), subGList = subgraphs)
   }
 
+  # image size estimations
+  n <- length(graph@nodes)
+  m <-length(graph@edgeData@data)
+  print(paste0("n=", n, ", m=", m, ", m/n=", m/n))
+  # width_of_image <- n / 8
+  # height_of_image <- (m / n) * (m / 10) + 2
+  postscript(paste(outpath, ".pdf", sep = ""))
+   graph_laidout <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs)
+  dev.off()
+  width_of_image <- graph_laidout@boundBox@upRight@x / width_divisor_files  # works because pc_graph has beet laidout by agopen
+  suffix = ""
+  # if (m/n > 1) {
+  #   height_divisor_files <-  height_divisor_files / 2
+  #   warning("Height divisor halfed.")
+  #   suffix = "h"
+  # }
+  # if (m/n > 1.5) {
+  #   height_divisor_files <-  height_divisor_files / 2
+  #   warning("Height divisor halfed twice.")
+  #   suffix = "v"
+  # }
+  height_of_image <- (graph_laidout@boundBox@upRight@y / height_divisor_files)
   for (format in output_formats) {
     if (!nchar(outpath) == 0) {
       # if (!is.null(coloring) && !(coloring == "")) {
@@ -231,7 +254,7 @@ plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawA
       #   }
       # } else {
       if (format == "pdf") {
-        pdf(paste(outpath, ".pdf", sep = ""))
+        pdf(paste(outpath, "_", suffix, "_w-", width_of_image, "_h-", height_of_image, ".pdf", sep = ""), width = width_of_image, height = height_of_image)
       } else if ((format == "ps") || (format == "postscript")) {
         postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
       } else if (format == "svg") {

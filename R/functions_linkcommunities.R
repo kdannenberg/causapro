@@ -64,7 +64,9 @@ clusterlist_from_membershiplist <- function(membershiplist, cluster_names) {
   if (missing(cluster_names)) {
     cluster_names <- as.list(unique(membershiplist))#list(1,2,3,4)
   }
-  clusters <- lapply(cluster_names, function(cluster_name) return(as.numeric(names(clusters_cut_cuttree)[clusters_cut_cuttree == cluster_name])))
+  # clusters <- lapply(cluster_names, function(cluster_name) return(as.numeric(names(clusters_cut_cuttree)[clusters_cut_cuttree == cluster_name])))
+  # as.numeric had to be removed for dimers (eg. positions 482_1, 482_2 exist)
+  clusters <- lapply(cluster_names, function(cluster_name) return((names(clusters_cut_cuttree)[clusters_cut_cuttree == cluster_name])))
   names(clusters) <- cluster_names
   return(clusters)
 }

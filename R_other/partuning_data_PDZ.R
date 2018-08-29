@@ -101,10 +101,10 @@ tunes[[4]] <- edge_score_w4 <-
 #                                           protein = protein,
 #                                           objective_fun_returns_indices = TRUE)
 
-# tuning <- tunes[[4]]
-# print(tuning)
-# plot.new()
-# plot_partuning(tuning$all_values)
+tuning <- tunes[[4]]
+print(tuning)
+plot.new()
+plot_partuning(tuning$all_values)
 
 # pc_fun(alpha = tuning$best_alpha, min_pos_var = tuning$best_minposvar, causal_analysis = TRUE, intervention_position = "all")
 

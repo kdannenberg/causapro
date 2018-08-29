@@ -314,6 +314,7 @@ plot_total_effects_in_pymol <- function(positions_with_colors_by_effect, pos_wit
                                         perturbed_position, protein, outpath, label = TRUE, ranked = TRUE,
                                         amplification_exponent = 10, amplification_factor = FALSE, index = "", no_colors = FALSE, bg_color = "black", orig_effects) {
   # out_file <- paste0(outpath, "-total_effects")
+  outpath <- paste0(outpath, ".pml")
 
   sink(file = outpath)
   pymol_header(protein = protein)

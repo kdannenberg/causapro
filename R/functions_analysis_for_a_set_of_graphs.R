@@ -895,18 +895,18 @@ display_effects <- function(effects, effect_hue_by = "effect", direction = "mean
 }
 
 
-plot_effects <- function(effects, effect_hue_by = effects, int_pos, scale_in_the_end, caption, effect_quality,
-                         false_pos_neg, score, effect_to_color_mode = "#FFFFFF", barplot_contour_black,
+plot_effects <- function(effects, effect_hue_by = effects, int_pos, scale_in_the_end = FALSE, caption, effect_quality,
+                         false_pos_neg, score, effect_to_color_mode = "#FFFFFF", barplot_contour_black = TRUE,
                          plot_to_canvas = TRUE, outpath, output_formats = c()) {
 
   lines_needed_for_subcaption = 0
-  if (!is.null(false_pos_neg)) {
+  if (!missing(false_pos_neg) && !is.null(false_pos_neg)) {
     lines_needed_for_subcaption = lines_needed_for_subcaption + 2
   }
-  if (!is.null(effect_quality)) {
+  if (!missing(effect_quality) && !is.null(effect_quality)) {
     lines_needed_for_subcaption = lines_needed_for_subcaption + 1
   }
-  if (!is.null(score)) {
+  if (!missing(score) && !is.null(score)) {
     lines_needed_for_subcaption = lines_needed_for_subcaption + 1
   }
 

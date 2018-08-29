@@ -147,9 +147,13 @@ merge_singular_clusters <- function(clustering) {
 }
 
 #' Cluster by Causal Effects
-cluster_pairwise_effects <- function(results, pairwise_effects, k, cluster_method,
-                                     hclust_method, dist_measure, alpha = 0.95,
+cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = identity, k,
+                                     cluster_method, hclust_method,
+                                     dist_measure, alpha = 0.95,
                                      iterations_pv, protein, outpath, file_separator) {
+  pre_cluster_fct <- get(pre_fct)
+  pairwise_effects <- pre_cluster_fct(pairwise_effects)
+  outpath <- paste0(outpath, "-", pre_fct)
   results$effects_clustering <- list()
   #k-means
   if (grepl(pattern = "k", cluster_method) && grepl(pattern = "means", cluster_method)) {

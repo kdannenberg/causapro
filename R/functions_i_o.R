@@ -89,6 +89,11 @@ analyse_data <- function(data, int_pos, min_var) {
   min(apply(data, 2, var)[as.character(int_pos)])
 }
 
+# FKT für p38g (z.B. p38g_NMR-Mut_inact.L77V)
+intervention_positions_from_rownames <- function(rownames) {
+  return(str_extract(lapply(rownames, function(x) {str_split(x,"\\.")[[1]][2]}), "[0-9]+"))
+}
+
 
 # rank_obs_per_pos: should the ranking be done the other way round?
 #   That is, per position, over all observations?
@@ -203,34 +208,37 @@ subset_data <- function(data, selection, grep_selection, remove = FALSE, cols = 
   if (grep_selection) {
     selection_ind <- sapply(selection, function(x) which(grepl(as.character(x), name_function(data))))
     # only_cols <- names(sapply(only_cols, function(x) which(grepl(as.character(x), colnames(data)))))
-    not_found <- names(selection_ind[which(lapply(selection_ind, length) == 0)])
+    not_found <- selection[which(lapply(selection_ind, length) == 0)]
     if (length(not_found) > 0) {
       warning(paste("No columns containing", paste(not_found, collapse = ", "), "found!"))
     }
     selection_ind <- selection_ind[which(!(lapply(selection_ind, length) == 0))]
     selection <- colnames(data)[unlist(selection_ind)]
-  } # else {
+  } else {
     not_found <- setdiff(as.character(selection), colnames(data))
     if (length(not_found) > 0) {
       warning(paste("Column(s)", paste(not_found, collapse = ", "), "not found!"))
       selection <- setdiff(selection, not_found)
     }
-    if (remove) {
-      lines_to_remove <- as.character(selection)
-    } else {
-      lines_to_remove <- setdiff(colnames(data), as.character(selection))
-    }
+  }
+
+  if (remove) {
+    lines_to_remove <- as.character(selection)
+  } else {
+    lines_to_remove <- setdiff(colnames(data), as.character(selection))
+  }
+  if (length(selection) > 0) {
     if (cols) {
       print(paste("Column(s)", paste(lines_to_remove, collapse = ", "), "removed by only_cols/remove_cols."))
     } else {
       print(paste("Row(s)", paste(lines_to_remove, collapse = ", "), "removed by only_rows/remove_rows."))
     }
-  # }
-  lines_to_remove_ind <- which(colnames(data) %in% as.character(lines_to_remove))
-  if (cols) {
-    data = data[, -lines_to_remove_ind]
-  } else {
-    data = data[-lines_to_remove_ind, ]
+    lines_to_remove_ind <- which(colnames(data) %in% as.character(lines_to_remove))
+    if (cols) {
+      data = data[, -lines_to_remove_ind]
+    } else {
+      data = data[-lines_to_remove_ind, ]
+    }
   }
   return(data)
   # data = data[,as.character(selection)]
@@ -554,7 +562,7 @@ get_caption <- function(protein, data, alpha, min_pos_var, chars_per_line = 50) 
   return(caption)
 }
 
-
+library(stringr)
 parameters_for_info_file <- function(protein, type_of_data, alpha, position_numbering, only_cols, coloring, colors, outpath) {
   par_string <- paste("protein: ", protein, ", data: ", type_of_data, ", alpha: ", alpha, sep = "")
   if (is.null(colors)) {
