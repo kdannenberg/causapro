@@ -146,19 +146,71 @@ merge_singular_clusters <- function(clustering) {
   return(clustering)
 }
 
+remove_effects_of_isolated_nodes <- function(all_pairwise_effects, isolated_nodes) {
+  if (missing(isolated_nodes)) {
+    # isolated_rows_names <- sapply(rownames(all_pairwise_effects), function(rowname) {
+    #   if (norm(all_pairwise_effects[rowname, ], type="2") == 1) {
+    #     return(rowname)
+    #   }
+    # })
+    rows_isolated <- apply(all_pairwise_effects, 1, function(row) {
+      if (norm(row, type="2") == 1) {
+        return(TRUE)
+      }
+      return(FALSE)
+    })
+    nodes_isolated <- sapply(colnames(all_pairwise_effects), function(node_name) {
+      rownames_for_node <- rownames(all_pairwise_effects)[grep(node_name, rownames(all_pairwise_effects))]
+      if (all(rows_isolated[rownames(all_pairwise_effects)[grep(node_name, rownames(all_pairwise_effects))]])) {
+        return(TRUE)
+      }
+      return(FALSE)
+    })
+    all_pairwise_effects <- all_pairwise_effects[which(!rows_isolated), which(!nodes_isolated)]
+  }
+
+}
+
 #' Cluster by Causal Effects
-cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = identity, k,
+#' @param pairwise_effects a matrix with one col for each node that is to be clustered. There might be more rows than cols,
+#'  e.g. because there are several possible effects (and therefore more than one line) for a node
+#' @param pre_fct name of a function that is to be applied to the effects before clustering (e.g. "cor" or "cov); default is "identity"
+#' @param remove_isolated_nodes if set, the effects are filtered before the clustering, to remove the lines and column for each position
+#'  for which there is no line of effects that effect any other position than the position itself.
+#'  (Which means that the node is isolated in the cuasal structure.)
+#'  (Actually it is checked whether the lies' 2-norm is 1. This is equivalent because by definition, each node must have the effect 1 on itself,
+#'  and thus all other positions must be zero in this case.)
+#'
+cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "identity",
                                      cluster_method, hclust_method,
-                                     dist_measure, alpha = 0.95,
-                                     iterations_pv, protein, outpath, file_separator) {
+                                     dist_measure,
+                                     number_of_clusters_k,
+                                     cut_height_h, alpha = 0.05,
+                                     iterations_pv, protein, outpath, file_separator,
+                                     remove_isolated_nodes = TRUE) {
+
+  if (remove_isolated_nodes) {
+    pairwise_effects <- remove_effects_of_isolated_nodes(all_pairwise_effects = pairwise_effects)
+    # if ((dim(pairwise_effects)[1] != dim(pairwise_effects)[2]) ||
+    #     (sum(sapply(1:92, function(i) {return(pairwise_effects[i,i])})) != dim(pairwise_effects)[1])) { # sum of the main diagonal is other than sum of the rows and cols
+    #   warning("Pairwise effects is not a square matrix with value 1 on the main diagonal. Removal of isolated nodes might not work.")
+    # }
+    # isolated_cols <- apply(pairwise_effects, 1, function(v) (norm(v, type="2") != 0))
+    # pairwise_effects <- apply(pairwise_effects, 1, function(v) {if (norm(v, type="2") != 0) {return(v)} else return(NULL)})
+    # pairwise_effects <- do.call(rbind, apply(pairwise_effects, 1, function(v) {if (norm(v, type="2") != 0) {return(v)}}))
+  }
+
   pre_cluster_fct <- get(pre_fct)
   pairwise_effects <- pre_cluster_fct(pairwise_effects)
-  outpath <- paste0(outpath, "-", pre_fct)
+  outpath <- paste0(outpath, "-pre-fct=", pre_fct)
+
+
+
   results$effects_clustering <- list()
   #k-means
   if (grepl(pattern = "k", cluster_method) && grepl(pattern = "means", cluster_method)) {
-    k_m <- kmeans(t(pairwise_effects), k)
-    lapply(seq(1:k), function (i) {dim(pairwise_effects[,names(which(k_m$cluster == i))])})
+    k_m <- kmeans(t(pairwise_effects), number_of_clusters_k)
+    lapply(seq(1:number_of_clusters_k), function (i) {dim(pairwise_effects[,names(which(k_m$cluster == i))])})
 
     # apply(pairwise_effects[,names(which(k_m$cluster == 1))], 2, barplot);
 
@@ -174,7 +226,8 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = identi
     type <- "effects-km"
     # names(cl) <- NULL
     plot_clusters_in_pymol(node_clustering = cl, protein = protein, outpath = outpath,
-                           file_separator = file_separator, type_of_clustering = type)
+                           file_separator = file_separator, type_of_clustering = type,
+                           length_sort = TRUE)
   }
 
   #hierarchical clustering
@@ -223,34 +276,54 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = identi
     # membershiplist_from_clusterlist(cl)
 
     plot.new()
-    plot(effects_pv) # dendogram with p values
+    plot(effects_pv, hang = -1)
 
-    high_clusterlist <- pvpick(effects_pv, alpha = alpha)$clusters
-    alpha_changed = FALSE
-    while (is.null(high_clusterlist[[1]])){
-      alpha = alpha - 0.1
-      high_clusterlist <- pvpick(effects_pv, alpha = alpha)$clusters
-      alpha_changed = TRUE
+    if ((missing(number_of_clusters_k) || is.null(number_of_clusters_k)) && (missing(cut_height_h) || is.null(cut_height_h))) {
+            high_clusterlist <- pvpick(effects_pv, alpha = alpha)$clusters
+      alpha_changed = FALSE
+      while (is.null(high_clusterlist[[1]])){
+        alpha = alpha - 0.1
+        high_clusterlist <- pvpick(effects_pv, alpha = alpha)$clusters
+        alpha_changed = TRUE
+      }
+      if (alpha_changed) {
+        warning(paste("Alpha was reduced to", alpha, "because no clusters could be found otherwise." ))
+      }
+
+      # add rectangles around groups highly supported by the data
+      pvrect(effects_pv, alpha = alpha)
+
+      high <- membershiplist_from_clusterlist(high_clusterlist)
+      type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-alpha=", alpha), sep="-")
+    } else if (!(missing(number_of_clusters_k) || is.null(number_of_clusters_k))) {
+      high <- cutree(effects_pv$hclust, k = number_of_clusters_k)
+      type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-k=", number_of_clusters_k), sep="-")
+      rect.hclust(effects_pv$hclust, k = number_of_clusters_k, cluster = high)
+    } else if (!(missing(cut_height_h) || is.null(cut_height_h))) {
+      high <- cutree(effects_pv$hclust, h = cut_height_h)
+      type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-h=", cut_height_h), sep="-")
+      abline(h = cut_height_h, lty = 2)
+      rect.hclust(effects_pv$hclust, h = cut_height_h, cluster = high)
     }
-    if (alpha_changed) {
-      warning(paste("Alpha was reduced to", alpha, "because no clusters could be found otherwise." ))
-    }
-
-    # add rectangles around groups highly supported by the data
-    pvrect(effects_pv, alpha = alpha)
-
-    high <- membershiplist_from_clusterlist(high_clusterlist)
 
     cl_pv <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = high)
 
     print(cl_pv)
 
-    type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-alpha=", alpha), sep="-")
+
     results$effects_clustering$pv[[type]] <- cl_pv
 
     # names(cl) <- NULL
+
+    # if (remove_singular_clusters) {
+    #   node_clustering <- remove_singular_clusters(node_clustering)
+    # } else if (merge_singular_clusters) {
+    #   node_clustering <- merge_singular_clusters(node_clustering)
+    # }
+
     plot_clusters_in_pymol(node_clustering = cl_pv, protein = protein, outpath = outpath,
-                           file_separator = file_separator, type_of_clustering = type)
+                           file_separator = file_separator, type_of_clustering = type,
+                           length_sort = TRUE)
   }
   return(results)
 }

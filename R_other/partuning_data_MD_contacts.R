@@ -12,8 +12,8 @@ source("configuration_data.R")
 # debug(protein_graph_clustering)
 # debug(partuning_over_alpha_and_minposvar)
 # debug(cluster_pairwise_effects)
-debug(plot_different_measures_of_all_results)
-# debug(edge_information)
+# debug(plot_different_measures_of_all_results)
+debug(max_gradient_value_below_t)
 
 filename = "pdi_MD_contacts_A"
 ranked = FALSE              # data SHOULD be ranked
@@ -46,9 +46,11 @@ tuning <- list()
 
 # MAX GRADIENT OF CONFLICT EDGES WHILE STILL LESS THAN 10
 tune_fct <- tune_alpha_mpv_max_gradient_of_conflict_edges_below_t_factory(t_max_number_of_conflict_edges = 6)
+debug(tune_fct)
 tuning[["max_grad_conflict_less_than_10"]] <- tune_fct(pc_fun = pc_fun,
                                                      alphas = alphas,
                                                      minposvars = min_pos_vars,
+                                                     objective_fun_returns_indices = TRUE,
                                                      plot_labels_as_rows_and_cols = FALSE)
 
 

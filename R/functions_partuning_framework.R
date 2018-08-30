@@ -388,12 +388,12 @@ tune_alpha_mpv_conflict_edges_local_min <-
 # remember to set:
 # objective_fun_returns_indices = TRUE
 tune_alpha_mpv_max_gradient_of_conflict_edges_below_t_factory <- function(t_max_number_of_conflict_edges) {
-  max_gradient_value_below_6 <- function_set_parameters(max_gradient_value_below_t,
+  max_gradient_value_below_x <- function_set_parameters(max_gradient_value_below_t,
                                                         parameters = list(t = t_max_number_of_conflict_edges))
   return(function_set_parameters(partuning_over_alpha_and_minposvar,
                                  parameters = list(results_to_value_fun = results_to_conflict_edges,
                                                    measure_fun = identity,
-                                                   objective_fun = max_gradient_value_below_6)))
+                                                   objective_fun = max_gradient_value_below_x)))
 }
 
 

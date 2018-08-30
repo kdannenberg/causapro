@@ -127,13 +127,14 @@ protein_causality <- function(
   linkcommunities_base_colors = NULL,
   linkcommunities_cluster_method = "ward",
   # effects clustering
-  effects_pre_cluster_fun = identity,
-  effects_cluster_k = 3,
+  effects_pre_cluster_fun = "identity",
+  effects_cluster_k = NULL,
+  effects_cluster_cut_height_h = NULL,
   effects_cluster_method = "pv",
   effects_hclust_method = "ward.D2",  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = "euclidean",
   effects_pv_nboot = 1000,
-  effects_cluster_alpha = 0.05,
+  effects_cluster_alpha = 0.95,
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
@@ -512,6 +513,7 @@ protein_causality <- function(
   # CAUSAL ANALYSIS
   # if ("analysis" %in% steps) {
   if (causal_analysis) {
+    no_pairwise_effects_computable <- FALSE
     ida_function_w_o_pos_and_results <-
       function_set_parameters(causal_effects_ida,
                               parameters = list(data = data, direction = ida_direction,
@@ -533,6 +535,7 @@ protein_causality <- function(
     # outpath = paste0(outpath, "_", causal_effects_function, "_interv-at-", intervention_position)
     outpath = paste0(outpath, "_", causal_effects_function)
 
+    # plot.new()  # TODO: Muss das sein?!
     if (intervention_position == "all") {
       # all_pairwise_effects_FUN <- function_set_parameters(compute_if_not_existent, parameters = c(filename = paste(outpath, "pairwise_effects", sep="-"),
       #                                                                             # FUN = function_set_parameters(FUN, parameters = c(results = results)),
@@ -563,12 +566,7 @@ protein_causality <- function(
                                                         # {return(FALSE)})
         results$all_pairwise_effects <- all_pairwise_effects
 
-        results <- cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects,
-                                 pre_fct = effects_pre_cluster_fun,  k = effects_cluster_k,
-                                 cluster_method = effects_cluster_method, hclust_method = effects_hclust_method,
-                                 dist_measure = effects_dist_method, iterations_pv = effects_pv_nboot, alpha = effects_cluster_alpha,
-                                 protein = protein, outpath = outpath, file_separator = file_separator)
-
+        #Hier war früher cluster_pairwise_effects
       } else {
 
         set_of_graphs <- determine_set_of_graphs(results = results, data = data, perturbed_position = intervention_position,
@@ -651,13 +649,12 @@ protein_causality <- function(
           colnames(all_pairwise_effects_over_all_graphs) <- names(all_results[[1]]$ida)
           rownames(all_pairwise_effects_over_all_graphs) <- names(all_results[[1]]$ida)
 
+
           results$all_pairwise_effects <- all_pairwise_effects_over_all_graphs
 
-          results <- cluster_pairwise_effects(results = results, pairwise_effects = all_pairwise_effects_over_all_graphs, k = effects_cluster_k,
-                                   cluster_method = effects_cluster_method, hclust_method = effects_hclust_method,
-                                   dist_measure = effects_dist_method, iterations_pv = effects_pv_nboot, alpha = effects_cluster_alpha,
-                                   protein = protein, outpath = outpath, file_separator = file_separator)
+          #Hier war früher cluster_pairwise_effects
         } else {
+          no_pairwise_effects_computable <- TRUE
           if (!mute_all_plots) {
             plot_infeasible(caption = caption)
           }
@@ -669,6 +666,16 @@ protein_causality <- function(
         # results_copy$outpath = outpath
         # analyse_set_of_graphs(results = results_copy, protein = "PDZ")
       }
+
+      if (!no_pairwise_effects_computable) {
+        results <- cluster_pairwise_effects(results = results, pairwise_effects = results$all_pairwise_effects,
+                                            pre_fct = effects_pre_cluster_fun, cluster_method = effects_cluster_method,
+                                            hclust_method = effects_hclust_method, dist_measure = effects_dist_method,
+                                            number_of_clusters_k = effects_cluster_k, cut_height_h = effects_cluster_cut_height_h,
+                                            iterations_pv = effects_pv_nboot, alpha = effects_cluster_alpha,
+                                            protein = protein, outpath = outpath, file_separator = file_separator)
+      }
+
       if (compare_effects) {
         compare_effects_per_position(results, hclust_method = effects_hclust_method,
                                      dist_measure = effects_dist_method, nboot = effects_pv_nboot)
