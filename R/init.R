@@ -4,6 +4,7 @@ source_all_function_scripts <- function() {
   source("functions_compute_DAG_categorical.R")
   source("functions_compute_DAG_numerical.R")
   source("functions_conversions.R")
+  source("functions_data.R")
   source("functions_evaluate_DAG.R")
   source("functions_analysis_for_a_set_of_graphs.R")
   source("functions_general.R")
@@ -19,4 +20,6 @@ source_all_function_scripts <- function() {
   source("functions_tools.R")
   source("functions_results_analysis.R")
   source("functions_ci_tests.R")
+
+  sink.reset()
 }

@@ -343,7 +343,7 @@ determine_set_of_graphs <- function(results, data, perturbed_position, type_of_g
                                     s, new, save, outpath,
                                     pc_maj_rule_conflict, pc_conservative_conflict, suffix_effects_type = "",
                                     suffix_graphs = "graphs", suffix_results = "results-ida-reset",
-                                    max_conflict_edges = 11, no_results = FALSE) {
+                                    max_conflict_edges = 11, no_results = FALSE, try_old_outpath = FALSE) {
   start_new <- new
   if (type_of_graph_set == "retry") {
     suffix_retry_conflict = "-pc-retry_"
@@ -353,12 +353,13 @@ determine_set_of_graphs <- function(results, data, perturbed_position, type_of_g
     filename_graphs <- paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData")
     filename_results <- paste0(outpath, suffix_retry_conflict, suffix_results, ".RData")
     # if (suffix_effects_type == "" || suffix_effects_type == "372") {
+    if (try_old_outpath) {
       outpath_where_graphs_exist <- get_old_outpath(outpath, suffix = suffix_retry_conflict, suffix_graphs, ".RData")
       outpath_where_results_exist <- get_old_outpath(outpath, suffix = suffix_retry_conflict, suffix_results, ".RData")
-    # } else {
-    #   outpath_where_graphs_exist <- NULL
-    #   outpath_where_results_exist <- NULL
-    # }
+    } else {
+      outpath_where_graphs_exist <- NULL
+      outpath_where_results_exist <- NULL
+    }
     if (is.null(outpath_where_graphs_exist) || is.null(outpath_where_results_exist)) {
       start_new <- TRUE
     }
@@ -436,12 +437,13 @@ determine_set_of_graphs <- function(results, data, perturbed_position, type_of_g
     filename_graphs <- paste0(outpath, suffix_retry_conflict, suffix_graphs, ".RData")
     filename_results <- paste0(outpath, suffix_retry_conflict, suffix_results, ".RData")
     # if (suffix_effects_type == "" || suffix_effects_type == "372") {
+    if (try_old_outpath) {
       outpath_where_graphs_exist <- get_old_outpath(outpath, suffix = paste0(suffix_retry_conflict, suffix_graphs, ".RData"))
       outpath_where_results_exist <- get_old_outpath(outpath, suffix = paste0(suffix_retry_conflict, suffix_results, ".RData"))
-    # } else {
-    #   outpath_where_graphs_exist <- NULL # TODO: so wird es ws. NIE geladen
-    #   outpath_where_results_exist <- NULL
-    # }
+    } else {
+      outpath_where_graphs_exist <- NULL
+      outpath_where_results_exist <- NULL
+    }
     if (is.null(outpath_where_graphs_exist) || is.null(outpath_where_results_exist)) {
       start_new <- TRUE
     }

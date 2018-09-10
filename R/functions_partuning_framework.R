@@ -160,6 +160,11 @@ partuning_over_alpha_and_minposvar <- function(alphas, minposvars, pc_fun,
   #   best_index <- best_both$index
   # }
 
+  # if several otpimal values, choose first one
+  if (length(dim(best_index)) > 1) {
+    best_index <- best_index[1,]
+  }
+
   best_alpha <- rownames(results_a)[best_index[1]]
   best_minposvar <- colnames(results_a)[best_index[2]]
   return(list(best_value = best_value, best_alpha = best_alpha, best_minposvar = best_minposvar,

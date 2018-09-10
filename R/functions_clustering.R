@@ -1,23 +1,146 @@
 #' Cluster by Causal Structure (Graph Clustering)
-#' @param monochromatic_removed_cols all removed_cols are given (the same shade of) white as color
-#' @param more_levels_of_conservedness (bacause of too little variacne) removed positions are
-#' clored in shades of white with increasing amounts of blue with increasing variance
-protein_graph_clustering <- function(graph, protein, position_numbering, coloring, colors,
-                                     outpath, output_formats, file_separator,
-                                     mute_all_plots, caption, cluster_methods,
-                                     remove_singular_clusters = TRUE,
-                                     merge_singular_clusters = FALSE, add_cluster_of_conserved_positions = FALSE,
-                                     removed_cols, monochromatic_removed_cols = TRUE,
-                                     more_levels_of_conservedness = FALSE,
-                                     sort_clusters = length) {
+#'
+#'
+#' @return node clustering as an igraph clustering
+#' @seealso node_clustering_from_igraph_clustering
+protein_graph_clustering <- function(graph, clustering) {
+  igraph_cluster <- igraph.from.graphNEL(graph)
+  ## old conversion method
+  ## igraph <- graph_from_graphnel(results$pc@graph)
+  # graph <- results$pc@graph
+  cluster_fct <- get(paste0("cluster_", clustering))
+  ## obs: absolute weights
+  if (clustering == "infomap") {
+    cl <- cluster_fct(igraph_cluster, e.weights = abs(E(igraph_cluster)$weight), modularity = FALSE)
+  } else {
+    cl <- cluster_fct(igraph_cluster, weights = abs(E(igraph_cluster)$weight), modularity = FALSE)
+  }
+  return(cl)
+}
 
-  igraph_plot <- graph$plot
-  igraph_cluster <- igraph.from.graphNEL(graph$cluster)
-  ## sort_clusters = "DDS-SVD") {
-  if (add_cluster_of_conserved_positions) {
+#' transform an igraph clustering to a node clustering (format?)
+#' @param communities_clustering the clustering that is to be transformed
+#' @param unname = TRUE Should the names of the resulting object should be removed, to avoid that they are interpreted as colors by subsequent functions?
+node_clustering_from_igraph_clustering <- function(communities_clustering, unname = TRUE) {
+  node_clustering <- groups(communities_clustering)
+  if (unname) {
+    node_clustering <- unname(node_clustering)  # otherwise interpreted as colors
+  }
+  return(node_clustering)
+}
+
+#' Plot graph clustering in graph and pymol
+#'
+#' @param node_clustering the node clustering as a list of lists (?); if the object is named, the names ar interpreted as colors (e.g. "#000000")
+#' @param clustering_type a string that decribes the kind of clustering (e.g. the clustering algorithm); used for e.g. the outpath
+#' @param graph the graph in which the clustering is to be highlighted; if missing (and communities_clustering missing) or NULL, this step is skipped
+#' @param outpath the outpath to which output files should be written
+#' @param protein the protein that the data, that the computation relies on, belong to
+#' @param mute_all_plots boolean which can be set to avoid that the plot (cluster highlighting in the graph) is shown in R (it is written to the outpath anyway)
+#' @param caption caption for the graph plot
+#' @param file_separator a character the should be used to speparate directories (e.g. "/" or "\", depending on the operating system).
+#' This is used in the path to the pdb-file in the output pymol file.
+#' @param remove_singular_clusters = TRUE Should clusters consisting of only one element be removed? (If all clusters are singular, this is not done.)
+#' @param merge_singular_clusters = FALSE Should all clusters that consist of only one element be merged into one single cluster? (Only if !remove_singular_clusters)
+#' @param sort_clusters = length either a function which can be applied to the clusters and by which result values the clusters are to be sorted in decreasing order
+#' or "DDS-SVD" (...)
+#' @param ...  parameters passed on to call_plot_igraph for the highlighting in the graph
+output_node_clustering <- function(node_clustering, clustering_type, graph,
+                                   communities_clustering,
+                                   outpath, protein, file_separator,
+                                   remove_singular_clusters = TRUE, merge_singular_clusters = FALSE,
+                                   sort_clusters = length, additional_clusters, ...) {
+
+  if (!missing(communities_clustering)) {
+    if (missing(node_clustering)) {
+      node_clustering <- node_clustering_from_igraph_clustering(communities_clustering = communities_clustering, unname = TRUE)
+    }
+    if (missing(graph)) {
+      graph <- communities_clustering$graph
+    }
+    if (missing(clustering_type)) {
+      clustering_type <- communities_clustering$algorithm
+    }
+
+  } else {
+    if (!missing(graph)) { # otherwise, nnno plotting is done and thus, the communities clustering object is not needed
+      communities_clustering <- make_clusters(graph = igraph.from.graphNEL(graph), membershiplist_from_clusterlist(node_clustering))
+    }
+    if (missing(clustering_type)) {
+      warning("No clustering_type given in output_node_clustering! It was set to \"\".")
+    }
+  }
+
+
+  if (remove_singular_clusters) {
+    node_clustering <- remove_singular_clusters(node_clustering)
+  } else if (merge_singular_clusters) {
+    node_clustering <- merge_singular_clusters(node_clustering)
+  }
+
+  if (is.null(names(node_clustering))) {
+    clustering_colors <- rainbow(length(node_clustering))
+    names(node_clustering) <- clustering_colors
+  }
+
+
+  ## TODO: save plot, instaed of plotting
+  if (!missing(graph) && is.null(graph)) {
+    igraph_plot <- graph
+    ## edge.arrow.size determines size of arrows (1 is default), vertex.size determines size of the vertices (15 is default), edge.width determines width of edges (1 is default)
+    ## plot(cl, igraph, main = paste0(caption, "\n", clustering), edge.arrow.size=0.2, vertex.size=8, edge.width=0.7)
+    call_plot_igraph(g = igraph_plot, clusters = TRUE, cluster_str = clustering_type,
+                     clustering = communities_clustering, clustering_colors = clustering_colors,
+                     outpath = paste0(outpath,"-", length(node_clustering), "_", "clusters"), ...)
+    ##this is the old version, just in case my adjustments don't work for you
+    ##plot(cl, igraph, main = paste0(caption, "\n", clustering))
+  }
+
+
+
+  if (!is.null(sort_clusters)) {
+    # if ((length(which(names(node_clustering) != "")) == 1)
+    #     && names(node_clustering)[length(node_clustering)] != "") { # only one color defined, and that for the last cluster
+    #   length_except_last <- vapply(node_clustering[1:(length(node_clustering) - 1)], length, 1L)
+    #   node_clustering <- node_clustering[c(order(length_except_last, decreasing = TRUE), length(node_clustering))]
+    # } else {
+    if (typeof(sort_clusters) == "closure" || typeof(sort_clusters) == "builtin") {
+      node_clustering <- node_clustering[order(vapply(node_clustering, sort_clusters, 1L), decreasing = TRUE)]
+    } else if (sort_clusters == "DDS-SVD") {
+      DDS_SVD <- read_data(files = paste0(protein, "_DDS-SVD-1"))
+      cluster_weights <- lapply(node_clustering, function(nodes) {
+        nodes <- nodes[which((nchar(nodes) >= 3) && (nodes %in% colnames(DDS_SVD)))]
+        len <- length(nodes)
+        if (len > 0) {
+          sum <- sum(DDS_SVD[,nodes])
+          return(sum / len)
+        } else {
+          return(0)
+        }
+      })
+      node_clustering <- node_clustering[order(unlist(cluster_weights), decreasing = TRUE)]
+    }
+  }
+
+
+  if (!(missing(additional_clusters))) {
+    node_clustering <- c(node_clustering, additional_clusters)
+  }
+
+
+  plot_clusters_in_pymol(node_clustering = node_clustering, protein = protein, outpath = outpath,
+                         file_separator = file_separator, type_of_clustering = clustering_type)
+}
+
+#' @param monochromatic_removed_cols all removed_cols are given (the same shade of) white as color
+#' @param more_levels_of_conservedness (because of too little variacne) removed positions are
+#' clored in shades of white with increasing amounts of blue with increasing variance
+add_clusters <- function(add_cluster_of_conserved_positions = FALSE, removed_cols,
+                         more_levels_of_conservedness = FALSE, monochromatic_removed_cols = TRUE) {
+  # is this for coloring intesity by variance (an those below min_pos_var are removed)?
+  if (add_cluster_of_conserved_positions) { # should this be add_cluster_of_REMOVED_positions?
     # node_clustering <- c(node_clustering, "#FFFFFF" = list(removed_cols))
     # names(node_clustering)[length(node_clustering)] <- "#FFFFFF"
-
 
     if (more_levels_of_conservedness) {
       removed_cols <- (removed_cols / max(removed_cols)) / 0.9999
@@ -32,96 +155,19 @@ protein_graph_clustering <- function(graph, protein, position_numbering, colorin
       add_clusters <- sapply(names(table(colors_for_rem_pos)),
                              FUN = function(color) {return(names(colors_for_rem_pos[which(colors_for_rem_pos == color)]))},
                              simplify = FALSE, USE.NAMES = TRUE)
-
       # TODO ergibt hier keinen Sinn, oder?
       # if (remove_singular_clusters) {
       #   node_clustering <- remove_singular_clusters(node_clustering)
       # }
-
     }
-  }
-
-  for (clustering in cluster_methods) {
-    if (clustering == "edge_betweenness") {
-      type <- "eb"
-    } else if (clustering == "infomap") {
-      type <- "im"
-    } else {
-      type <- "igraph"
-    }
-    ## old conversion method
-    ## igraph <- graph_from_graphnel(results$pc@graph)
-    # graph <- results$pc@graph
-    cluster_fct <- get(paste0("cluster_", clustering))
-    ## obs: absolute weights
-    if (clustering == "infomap") {
-      cl <- cluster_fct(igraph_cluster, e.weights = abs(E(igraph_cluster)$weight), modularity = FALSE)
-    } else {
-      cl <- cluster_fct(igraph_cluster, weights = abs(E(igraph_cluster)$weight), modularity = FALSE)
-    }
-
-    node_clustering <- groups(cl)
-    node_clustering <- unname(node_clustering)  # otherwise interpreted as colors
-
-    if (remove_singular_clusters) {
-      node_clustering <- remove_singular_clusters(node_clustering)
-    } else if (merge_singular_clusters) {
-      node_clustering <- merge_singular_clusters(node_clustering)
-    }
-
-    clustering_colors <- rainbow(length(node_clustering))
-    names(node_clustering) <- clustering_colors
-
-    ## TODO: save plot, instaed of plotting
-    if (!mute_all_plots) {
-      ## edge.arrow.size determines size of arrows (1 is default), vertex.size determines size of the vertices (15 is default), edge.width determines width of edges (1 is default)
-      ## plot(cl, igraph, main = paste0(caption, "\n", clustering), edge.arrow.size=0.2, vertex.size=8, edge.width=0.7)
-      call_plot_igraph(g = igraph_plot, protein = protein, position_numbering = position_numbering,
-                       coloring = coloring, colors = colors, clusters = TRUE, cluster_str = type,
-                       clustering = cl, clustering_colors = clustering_colors, caption = caption,
-                       outpath = paste0(outpath,"-", length(node_clustering), "_", "clusters"),
-                       output_formats = output_formats, mute_all_plots = mute_all_plots)
-      ##this is the old version, just in case my adjustments don't work for you
-      ##plot(cl, igraph, main = paste0(caption, "\n", clustering))
-    }
-
-
-
-    if (!is.null(sort_clusters)) {
-      # if ((length(which(names(node_clustering) != "")) == 1)
-      #     && names(node_clustering)[length(node_clustering)] != "") { # only one color defined, and that for the last cluster
-      #   length_except_last <- vapply(node_clustering[1:(length(node_clustering) - 1)], length, 1L)
-      #   node_clustering <- node_clustering[c(order(length_except_last, decreasing = TRUE), length(node_clustering))]
-      # } else {
-      if (typeof(sort_clusters) == "closure" || typeof(sort_clusters) == "builtin") {
-        node_clustering <- node_clustering[order(vapply(node_clustering, sort_clusters, 1L), decreasing = TRUE)]
-      } else if (sort_clusters == "DDS-SVD") {
-        DDS_SVD <- read_data(files = paste0(protein, "_DDS-SVD-1"))
-        cluster_weights <- lapply(node_clustering, function(nodes) {
-          nodes <- nodes[which((nchar(nodes) >= 3) && (nodes %in% colnames(DDS_SVD)))]
-          len <- length(nodes)
-          if (len > 0) {
-            sum <- sum(DDS_SVD[,nodes])
-            return(sum / len)
-          } else {
-            return(0)
-          }
-        })
-        node_clustering <- node_clustering[order(unlist(cluster_weights), decreasing = TRUE)]
-      }
-    }
-
-
-    if (add_cluster_of_conserved_positions && exists("add_clusters")) {
-      node_clustering <- c(node_clustering, add_clusters)
-    }
-
-
-    plot_clusters_in_pymol(node_clustering = node_clustering, protein = protein, outpath = outpath,
-                           file_separator = file_separator, type_of_clustering = type)
   }
 }
 
+#' Remove all clusters with just one element from the clustering.
+#'
+#'@param clustering the clustering from which all singular clusters are to be removed.
+#'@param force = FALSE Should the clusters be removed, even if the resulting clustering is empty, that is, all clusters are singular?
+#'If FALSE, the default, the original clustering is returned in that case.
 remove_singular_clusters <- function(clustering, force = FALSE) {
   clustering_new <- clustering[sapply(clustering,
     function(cluster) {
@@ -160,14 +206,26 @@ remove_effects_of_isolated_nodes <- function(all_pairwise_effects, isolated_node
       return(FALSE)
     })
     nodes_isolated <- sapply(colnames(all_pairwise_effects), function(node_name) {
-      rownames_for_node <- rownames(all_pairwise_effects)[grep(node_name, rownames(all_pairwise_effects))]
-      if (all(rows_isolated[rownames(all_pairwise_effects)[grep(node_name, rownames(all_pairwise_effects))]])) {
+      rownames_for_node <- rownames(all_pairwise_effects)[grep(paste0("^", node_name, "-|^", node_name, "$"), rownames(all_pairwise_effects))]
+      # rownames_for_node <- rownames(all_pairwise_effects)[grep(node_name, rownames(all_pairwise_effects))]
+      if (all(rows_isolated[rownames_for_node])) {
         return(TRUE)
       }
       return(FALSE)
     })
-    all_pairwise_effects <- all_pairwise_effects[which(!rows_isolated), which(!nodes_isolated)]
+  } else {
+    nodes_isolated <- colnames(all_pairwise_effects) %in% isolated_nodes
+    names(nodes_isolated) <- colnames(all_pairwise_effects)
+    rows_isolated <- sapply(rownames(all_pairwise_effects), function(row_name) {
+      if (grepl("-", row_name)) {
+        node <- str_split(row_name, "-")[[1]][1]
+      } else {
+        node <- row_name
+      }
+      return(row_name = unname(nodes_isolated[as.character(node)]))
+    }, USE.NAMES = TRUE)
   }
+  all_pairwise_effects <- all_pairwise_effects[which(!rows_isolated), which(!nodes_isolated)]
 
 }
 
@@ -228,36 +286,7 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
     plot_clusters_in_pymol(node_clustering = cl, protein = protein, outpath = outpath,
                            file_separator = file_separator, type_of_clustering = type,
                            length_sort = TRUE)
-  }
-
-  #hierarchical clustering
-  # d <- dist(t(pairwise_effects))
-  #
-  # hc <- hclust(d, method = method)
-  #
-  # plot.new()
-  # plot(hc)
-  #
-  # hc_cut <- cutree(hc, 5)
-  #
-  # hc_cut
-  #
-  # clustering_with_duplicates <- hc_cut
-  #
-  # cl <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = clustering_with_duplicates)
-  #
-  # print(cl)
-  #
-  # type <- "effects-hc"
-  # # names(cl) <- NULL
-  # plot_clusters_in_pymol(node_clustering = cl, protein = protein, outpath = outpath,
-  #                        file_separator = file_separator, type_of_clustering = type)
-  #
-  # pvclust
-  # library(pvclust)
-
-
-  else {
+  } else {
     FUN_pv <- function_set_parameters(pvclust, parameters = list(data = pairwise_effects,
                                                                  method.hclust = hclust_method,
                                                                  method.dist = dist_measure, nboot = iterations_pv))
@@ -266,7 +295,7 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
                                                            substr(dist_measure, 0, 3), iterations_pv, sep="-"),
                                           FUN = FUN_pv,
                                           obj_name = "effects_pv",
-                                          fun_loaded_object_ok = function(effects_pv) {return(colnames(pairwise_effects) == effects_pv$hclust$labels)}
+                                          fun_loaded_object_ok = function(effects_pv) {return(all(colnames(pairwise_effects) == effects_pv$hclust$labels))}
     )
 
     # fit <- pvclust(data = pairwise_effects, method.hclust="ward",
@@ -306,12 +335,14 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
       rect.hclust(effects_pv$hclust, h = cut_height_h, cluster = high)
     }
 
-    cl_pv <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = high)
+    # TODO: vorher Farben für die cluster festlegen und konsistent verwenden
+    # TODO: cluster im Graph einzeichnen
 
-    print(cl_pv)
+    node_clustering <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = high)
 
+    print(node_clustering)
 
-    results$effects_clustering$pv[[type]] <- cl_pv
+    results$effects_clustering$pv[[type]] <- node_clustering
 
     # names(cl) <- NULL
 
@@ -321,9 +352,12 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
     #   node_clustering <- merge_singular_clusters(node_clustering)
     # }
 
-    plot_clusters_in_pymol(node_clustering = cl_pv, protein = protein, outpath = outpath,
-                           file_separator = file_separator, type_of_clustering = type,
-                           length_sort = TRUE)
+    output_node_clustering(node_clustering = node_clustering, clustering_type = type, outpath = outpath,
+                           protein = protein, file_separator = file_separator, sort_clusters = length)
+
+    # plot_clusters_in_pymol(node_clustering = node_clustering, protein = protein, outpath = outpath,
+    #                        file_separator = file_separator, type_of_clustering = type,
+    #                        length_sort = TRUE)
   }
   return(results)
 }

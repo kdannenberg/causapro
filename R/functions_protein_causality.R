@@ -2,6 +2,10 @@ library(pvclust)
 
 protein_causality <- function(
   filename = NULL,
+
+  read_fct = function_set_parameters(read.csv2, parameters =
+                                       list(row.names = 1, check.names = FALSE)), # if check.names, an X is prepended to numerical column-names
+
   # Data parameters
   #
   # available data:
@@ -26,7 +30,12 @@ protein_causality <- function(
   data_set = "",
   # data_set = "SVD",
   # data_set = "372",
+  #
+  # adjustment of data before pc
   transpose_data = FALSE,
+  ranked = FALSE,
+  rank_obs_per_pos = TRUE,
+  pre_fun_on_data = NULL, # NAME of a function (retrieved with get(...)) in the workspace that is to be applied on the data (after adjustment)
   #
   position_numbering = "crystal",
   #
@@ -43,8 +52,6 @@ protein_causality <- function(
   every_n_th_row = 1,
   #
   alpha = 0.01,
-  ranked = FALSE,
-  rank_obs_per_pos = TRUE,
   pc_indepTest = NULL,
   pc_suffStat = NULL,
   #
@@ -203,7 +210,7 @@ protein_causality <- function(
     start_with_alignment <- TRUE
   }
 
-  if (start_with_alignment) {
+  if (start_with_alignment) { # ToDo: kann man das durch die read_fun modellieren?
     ## further specification of alignments needed
     if (protein == "PDZ") {
       position_numbering <- "alignment"
@@ -211,16 +218,18 @@ protein_causality <- function(
     alignment <- readAlignment(filename = paste0("Data", file_separator, protein, "_ALN"))
     data_orig <- compute_data_from_alignment(alignment = alignment, filename = filename)
   } else {
-    data_orig <- read_data(filename, transpose = transpose_data, every_n_th_row = every_n_th_row)
+    data_orig <- read_data(files = filename, read_fct = read_fct, transpose = transpose_data,
+                           every_n_th_row = every_n_th_row)
   }
 
 
 
-  data <- adjust_data(data = data_orig, rank = ranked, rank_obs_per_pos = rank_obs_per_pos,
+  data <- adjust_data(data = data_orig, data_descr = filename, rank = ranked, rank_obs_per_pos = rank_obs_per_pos,
                       only_cols = only_cols, remove_cols = remove_cols,
                       only_rows = only_rows, remove_rows = remove_rows,
                       rows_cols_subset_grep = rows_cols_subset_grep,
                       min_var = min_pos_var, keep_quadratic = (cor_cov_FUN == "none"),
+                      pre_fun_on_data = pre_fun_on_data,
                       mute_plot = !show_variance_cutoff_plot)
 
   #TODO:
@@ -282,6 +291,7 @@ protein_causality <- function(
                          pc_indepTest = pc_indepTest, cor_cov_FUN = cor_cov_FUN,
                          pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
                          pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
+                         pre_fun_on_data = pre_fun_on_data,
                          file_separator = file_separator)
 
 
@@ -471,27 +481,51 @@ protein_causality <- function(
 
         outpath_clustering <- paste0(outpath_clustering, "-wgt")
         results$graph$weighted <- weighted_graph
-        graphs$cluster <- weighted_graph
-        graphs$plot <- results$pc@graph
+        graphs$for_clustering <- weighted_graph
+        graphs$for_plotting <- results$pc@graph
 
       } else {
-        graphs$cluster <- results$pc@graph
-        graphs$plot <- results$pc@graph
+        graphs$for_clustering <- results$pc@graph
+        graphs$for_plotting <- results$pc@graph
+      }
+
+      # graphs$for_clustering with edge weights, if desired
+      # definitely without edge weights
+
+      if (add_cluster_of_conserved_positions) {
+        additional_clusters <- add_clusters(removed_cols = removed_cols)
       }
 
 
       if (graph_clustering) {
-        protein_graph_clustering(graphs, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors,
-                                 outpath = outpath_clustering, output_formats = graph_output_formats, file_separator = file_separator,
-                                 caption = caption, mute_all_plots = mute_all_plots, cluster_methods = graph_cluster_methods,
-                                 add_cluster_of_conserved_positions = add_cluster_of_conserved_positions, removed_cols = removed_cols)
+        for (clustering in graph_cluster_methods) {
+          if (clustering == "edge_betweenness") {
+            type <- "eb"
+          } else if (clustering == "infomap") {
+            type <- "im"
+          } else {
+            type <- "igraph"
+          }
+
+          communities_clustering <- protein_graph_clustering(graphs$for_clustering, clustering = clustering)
+          # ne, lieber als node_clustering übergeben...! und dann zurücktranformieren... (WIE?)
+          output_node_clustering(clustering_type = type, graph = graphs$for_plotting,
+                                 communities_clustering = communities_clustering,
+                                 additional_clusters = additional_clusters,
+                                 protein = protein, position_numbering = position_numbering,
+                                 coloring = coloring, colors = colors,
+                                 output_formats = graph_output_formats, caption = caption,
+                                 outpath = outpath_clustering, mute_all_plots = mute_all_plots,
+                                 file_separator = file_separator)
+        }
+
       }
 
 
 
 
       if (linkcommunities && sum(unlist(conflict_edges(results$pc@graph))) > 0) {
-        cols <- compute_link_communities(graphs$cluster, data = data, k = linkcommunities_k, plot_barplot = FALSE,
+        cols <- compute_link_communities(graphs$for_clustering, data = data, k = linkcommunities_k, plot_barplot = FALSE,
                                          classify_nodes = TRUE, cluster_method = linkcommunities_cluster_method,
                                          pie_nodes = FALSE, color_edges = TRUE,
                                          round_categories = linkcommunities_roundcategories,

@@ -317,7 +317,7 @@ call_plot_igraph <- function(g, protein = "PDZ", position_numbering = "crystal",
 #' @param clustering Character string choosing a clustering from the ones available in the igraph package.
 #' @param caption A character string, the caption of the plot.
 #' @param outpath A character string, the path to the location where the plot should be stored. If an empty string is passed, the plot will not be stored.
-#' @param output_formats A character string, the desired output format. All standard R plotting options are available.
+#' @param output_formats A character string, the desired output format. "pdf", "ps" and "svg" are available.
 #' @param mute_all_plots A boolean, if TRUE the structure will not be plotted.
 #' @param layout_str A character string. All graph layouts from igraph are available.
 #' @param plot_as_subgraphs A boolean, indicating if the plot should be divided into multiple subgraphs.

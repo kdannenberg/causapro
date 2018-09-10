@@ -2,23 +2,26 @@ library(stringr) # for str_replace_all
 
 
 get_data_description <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "") {
-  data_description <- ""
-  if (is.null(subtype_of_data) || subtype_of_data != "") {
-    type_of_data <- paste(type_of_data, subtype_of_data, sep = "_")
-  }
-  data_description <- paste(protein, type_of_data, sep = "_")
-  if (data_set != "") {
-    data_description <- paste(data_description, data_set, sep = "_")
-  }
-  if (suffix != "") {
-    data_description <- paste(data_description, suffix, sep = "_")
-  }
+  data_description <- pastes(protein, type_of_data, paste(subtype_of_data, collapse = "+"),
+                             data_set, suffix, pre_fun_on_data = "", sep = "_")
+
+  # data_description <- ""
+  # if (is.null(subtype_of_data) || subtype_of_data != "") {
+  #   type_of_data <- paste(type_of_data, subtype_of_data, sep = "_")
+  # }
+  # data_description <- paste(protein, type_of_data, sep = "_")
+  # if (data_set != "") {
+  #   data_description <- paste(data_description, data_set, sep = "_")
+  # }
+  # if (suffix != "") {
+  #   data_description <- paste(data_description, suffix, sep = "_")
+  # }
   return(data_description)
 }
 
-
-read_data <- function(files, path_to_data = "Data/", extension = ".csv", filename, transpose = FALSE,
-                      every_n_th_row = 1) {
+# parameter filename was redundant?
+read_data <- function(files, read_fct, path_to_data = "Data/", extension = ".csv", #filename,
+                      transpose = FALSE, every_n_th_row = 1) {
   read <- function (file, every_n_th_row_ = 1) {
     # if (file.exists(paste0(path_to_data, file, ".RData"))) {
     #   load(paste0(path_to_data, file, ".RData"))
@@ -26,11 +29,13 @@ read_data <- function(files, path_to_data = "Data/", extension = ".csv", filenam
     # } else {
       if (!(missing(every_n_th_row_)) && !is.null(every_n_th_row_) && !(every_n_th_row_ == 1)
           && file.exists(filename = paste0(path_to_data, file, "-every_", every_n_th_row_, "th", extension))) {
-          data_i = read.csv2(filename, row.names = 1, check.names = FALSE) # if check.names, an X is prepended to numerical column-names
+          # data_i = read.csv2(filename, row.names = 1, check.names = FALSE) # if check.names, an X is prepended to numerical column-names
+          data_i = read_fct(filename = filename)
           every_n_th_row_ = 1
       } else {
           filename <- paste0(path_to_data, file, extension)
-          data_i = read.csv2(filename, row.names = 1, check.names = FALSE) # if check.names, an X is prepended to numerical column-names
+          # data_i = read.csv2(filename, row.names = 1, check.names = FALSE) # if check.names, an X is prepended to numerical column-names
+          data_i = read_fct(filename = filename)
       }
       i <- which(files == file)
       if ((length(transpose) > i && transpose[i]) || (length(transpose) == 1 && transpose[1])) {
@@ -97,12 +102,13 @@ intervention_positions_from_rownames <- function(rownames) {
 
 # rank_obs_per_pos: should the ranking be done the other way round?
 #   That is, per position, over all observations?
-adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FALSE,
+adjust_data <- function(data, data_descr = "", type_of_data, rank = FALSE, rank_obs_per_pos = FALSE,
                         only_cols = NULL, remove_cols = NULL,
                         only_rows = NULL, remove_rows = NULL,
                         rows_cols_subset_grep = TRUE,
                         # every_n_th_row = 1,
                         remove_low_variance = FALSE, zero_var_fct, min_var = 0.01,
+                        pre_fun_on_data,
                         keep_quadratic = FALSE, mute_plot = TRUE,
                         adjust_colnames = TRUE) {
 
@@ -135,37 +141,8 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
     data <- subset_data(data = data, selection = remove_rows, grep_selection = rows_cols_subset_grep,
                         remove = TRUE, cols = FALSE)
   }
-  # TODO: statistical test for zero variance
-  if (typeof(min_var) == "closure") {
-    # remove_low_var_cols <-  nearZeroVar(data, freqCut = 15, saveMetrics = FALSE)
-    drop <-  min_var(data)
-  } else {
-    drop <- which(apply(data, 2, var) <= as.numeric(min_var))
-  }
-  colors <- rep("#FFFFFF", dim(data)[[2]])
-  colors[drop] <- "#000000"
-  if (!mute_plot) {
-    barplot(apply(data, 2, var), col = colors, las = 2,
-            names.arg = colnames(data))
-  }
-  # var unter min_var wegschmeißen
-  # data <- data[,-drop]
-  # data <- subset(data, select = -drop)
-  if (length(drop) > 0) {
-    # cat("\n")
-    print(paste("Removed columns:", paste(colnames(data)[drop], collapse = ", ")))
-    if (keep_quadratic) {
-      data <- data[!colnames(data) %in% names(drop), !colnames(data) %in% names(drop)]
-    } else {
-      data <- data[, !colnames(data) %in% names(drop)]
-    }
-  } else {
-    print(paste("No columns removed."))
-  }
 
-  print(paste("Next lowest variance:", min(apply(data, 2, var))))
-
-
+  # rank data i desired
   if (rank) {
     if (!rank_obs_per_pos) {
       if (!missing(data)) {
@@ -194,6 +171,49 @@ adjust_data <- function(data, type_of_data, rank = FALSE, rank_obs_per_pos = FAL
       }
     }
   }
+
+  # apply pre_fun_on_data on data
+  if (!missing(pre_fun_on_data) && !(is.null(pre_fun_on_data)) && nchar(pre_fun_on_data) > 0) {
+    data <- get(pre_fun_on_data)(data)
+  }
+
+  # Remove cols with less than min_var
+  # TODO: statistical test for zero variance
+  if (typeof(min_var) == "closure") {
+    # remove_low_var_cols <-  nearZeroVar(data, freqCut = 15, saveMetrics = FALSE)
+    drop <-  min_var(data)
+  } else {
+    drop <- which(apply(data, 2, var) < as.numeric(min_var)) # fkt nicht zuverlässig bei der Grenze (vllt wegen Rundungsfehlern)
+  }
+  colors <- rep("#FFFFFF", dim(data)[[2]])
+  colors[drop] <- "#000000"
+  if (!mute_plot) {
+    caption <- pastes(data_descr, ifelse(rank, "ranked", ""),
+                     ifelse(rank, ifelse(rank_obs_per_pos, "per_pos", "per_obs"), ""),
+                     pre_fun_on_data,
+                     ifelse(min_var > 0, paste0("var_cutoff=", min_var), ""),
+                     ifelse(keep_quadratic, "kept_quadratic", ""), sep = ", ")
+    barplot(apply(data, 2, var), col = colors, las = 2,
+            names.arg = colnames(data),
+            main = strwrap(caption, width = 50))
+  }
+  # var unter min_var wegschmeißen
+  # data <- data[,-drop]
+  # data <- subset(data, select = -drop)
+  if (length(drop) > 0) {
+    # cat("\n")
+    print(paste("Removed columns:", paste(colnames(data)[drop], collapse = ", ")))
+    if (keep_quadratic) {
+      data <- data[!colnames(data) %in% names(drop), !colnames(data) %in% names(drop)]
+    } else {
+      data <- data[, !colnames(data) %in% names(drop)]
+    }
+  } else {
+    print(paste("No columns removed."))
+  }
+
+  print(paste("Next lowest variance:", min(apply(data, 2, var))))
+
   return(data)
 }
 
@@ -318,8 +338,9 @@ get_only_cols_label <- function(only_cols, remove_cols, only_rows, remove_rows,
 
 get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "",
                         alpha, min_pos_var, only_cols_label = "", every_n_th_row, pc_indepTest = "",
-                        cor_cov_FUN, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule, file_separator = "/",
-                        filename_suffix, main_dir = "Outputs") {   ## last two options: only for get_old_outpath
+                        cor_cov_FUN, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule,
+                        pre_fun_on_data,
+                        file_separator = "/", filename_suffix, main_dir = "Outputs") {   ## last two options: only for get_old_outpath
   dir_1 <- protein
   dir_2 <- type_of_data
   # if (subtype_of_data != "")
@@ -327,7 +348,7 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
   # else {
   #   dir_3 <- type_of_data
   # }
-  dir_3 <- pastes(type_of_data, paste(subtype_of_data, collapse = "+"), data_set, sep = "_")
+  dir_3 <- pastes(type_of_data, paste(subtype_of_data, collapse = "+"), data_set, pre_fun_on_data, sep = "_")
 
   dir_4 <- paste0(get_data_description(protein = protein, type_of_data = type_of_data,
                                        subtype_of_data = paste(subtype_of_data, collapse = "+"),
