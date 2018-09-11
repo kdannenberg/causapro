@@ -45,11 +45,13 @@ node_clustering_from_igraph_clustering <- function(communities_clustering, unnam
 #' @param sort_clusters = length either a function which can be applied to the clusters and by which result values the clusters are to be sorted in decreasing order
 #' or "DDS-SVD" (...)
 #' @param ...  parameters passed on to call_plot_igraph for the highlighting in the graph
-output_node_clustering <- function(node_clustering, clustering_type, graph,
+output_node_clustering <- function(node_clustering, #clustering_type,
+                                   graph,
                                    communities_clustering,
                                    outpath, protein, file_separator,
                                    remove_singular_clusters = TRUE, merge_singular_clusters = FALSE,
-                                   sort_clusters = length, additional_clusters, ...) {
+                                   sort_clusters = length, additional_clusters,
+                                   mute_all_plots, ...) {
 
   if (!missing(communities_clustering)) {
     if (missing(node_clustering)) {
@@ -58,17 +60,19 @@ output_node_clustering <- function(node_clustering, clustering_type, graph,
     if (missing(graph)) {
       graph <- communities_clustering$graph
     }
-    if (missing(clustering_type)) {
-      clustering_type <- communities_clustering$algorithm
-    }
+    # if (missing(clustering_type)) {
+    #   clustering_type <- communities_clustering$algorithm
+    # }
 
   } else {
     if (!missing(graph)) { # otherwise, nnno plotting is done and thus, the communities clustering object is not needed
-      communities_clustering <- make_clusters(graph = igraph.from.graphNEL(graph), membershiplist_from_clusterlist(node_clustering))
+      communities_clustering <- make_clusters(graph = igraph.from.graphNEL(graph),
+                                              membership =  membershipvector_from_clusterlist(node_clustering),
+                                              modularity = FALSE)
     }
-    if (missing(clustering_type)) {
-      warning("No clustering_type given in output_node_clustering! It was set to \"\".")
-    }
+    # if (missing(clustering_type)) {
+    #   warning("No clustering_type given in output_node_clustering! It was set to \"\".")
+    # }
   }
 
 
@@ -81,19 +85,24 @@ output_node_clustering <- function(node_clustering, clustering_type, graph,
   if (is.null(names(node_clustering))) {
     clustering_colors <- rainbow(length(node_clustering))
     names(node_clustering) <- clustering_colors
+  } else {
+    clustering_colors <- names(node_clustering)
   }
 
 
   ## TODO: save plot, instaed of plotting
-  if (!missing(graph) && is.null(graph)) {
+  if (!missing(graph) && !is.null(graph)) {
     igraph_plot <- graph
     ## edge.arrow.size determines size of arrows (1 is default), vertex.size determines size of the vertices (15 is default), edge.width determines width of edges (1 is default)
     ## plot(cl, igraph, main = paste0(caption, "\n", clustering), edge.arrow.size=0.2, vertex.size=8, edge.width=0.7)
-    call_plot_igraph(g = igraph_plot, clusters = TRUE, cluster_str = clustering_type,
-                     clustering = communities_clustering, clustering_colors = clustering_colors,
-                     outpath = paste0(outpath,"-", length(node_clustering), "_", "clusters"), ...)
-    ##this is the old version, just in case my adjustments don't work for you
-    ##plot(cl, igraph, main = paste0(caption, "\n", clustering))
+    # call_plot_igraph(g = igraph_plot, clusters = TRUE, cluster_str = paste0(clustering_type, "-graph"),
+    #                  clustering = communities_clustering,
+    #                  clustering_colors = sapply(clustering_colors, adjustcolor, alpha.f = 0.1),
+    #                  outpath = paste0(outpath,"-", length(node_clustering), "_", "clusters"), ...)
+    call_plot_igraph(g = igraph_plot, clusters = TRUE, #cluster_str = clustering_type,
+                     clustering = communities_clustering,
+                     clustering_colors = sapply(clustering_colors, adjustcolor, alpha.f = 0.1),
+                     outpath = paste0(outpath,"-graph"), mute_all_plots = mute_all_plots, ...)
   }
 
 
@@ -245,7 +254,8 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
                                      number_of_clusters_k,
                                      cut_height_h, alpha = 0.05,
                                      iterations_pv, protein, outpath, file_separator,
-                                     remove_isolated_nodes = TRUE) {
+                                     remove_isolated_nodes = TRUE,
+                                     output_formats, mute_all_plots, ...) {
 
   if (remove_isolated_nodes) {
     pairwise_effects <- remove_effects_of_isolated_nodes(all_pairwise_effects = pairwise_effects)
@@ -302,13 +312,16 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
     #                method.dist="euclidean", nboot = 1000)
 
     # cl <- cutDendrogramAt(effects_pv$hclust, cutat = 15)
-    # membershiplist_from_clusterlist(cl)
+    # membershipvector_from_clusterlist(cl)
 
-    plot.new()
-    plot(effects_pv, hang = -1)
 
+    # TODO: caption
     if ((missing(number_of_clusters_k) || is.null(number_of_clusters_k)) && (missing(cut_height_h) || is.null(cut_height_h))) {
             high_clusterlist <- pvpick(effects_pv, alpha = alpha)$clusters
+
+      plot.new()
+      plot(effects_pv, hang = -1)
+
       alpha_changed = FALSE
       while (is.null(high_clusterlist[[1]])){
         alpha = alpha - 0.1
@@ -319,24 +332,38 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
         warning(paste("Alpha was reduced to", alpha, "because no clusters could be found otherwise." ))
       }
 
+      high <- membershipvector_from_clusterlist(high_clusterlist)
+      colors <- rainbow(length(unique(high)))
       # add rectangles around groups highly supported by the data
-      pvrect(effects_pv, alpha = alpha)
-
-      high <- membershiplist_from_clusterlist(high_clusterlist)
+      pvrect(effects_pv, alpha = alpha, border = colors)
       type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-alpha=", alpha), sep="-")
+      outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("_clusters", type, sep = "-"))
+      output_dendrogram(cluster_obj = effects_pv, alpha = alpha,
+                        clusters = high, colors = colors, caption = caption,
+                        outpath = outpath, output_formats = "pdf",
+                        mute_all_plots = mute_all_plots)
     } else if (!(missing(number_of_clusters_k) || is.null(number_of_clusters_k))) {
       high <- cutree(effects_pv$hclust, k = number_of_clusters_k)
+      colors <- rainbow(number_of_clusters_k)
       type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-k=", number_of_clusters_k), sep="-")
-      rect.hclust(effects_pv$hclust, k = number_of_clusters_k, cluster = high)
+      # rect.hclust(effects_pv$hclust, k = number_of_clusters_k, cluster = high, border = colors)
+      outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("_clusters", type, sep = "-"))
+      output_dendrogram(cluster_obj = effects_pv, k = number_of_clusters_k,
+                        clusters = high, colors = colors, caption = caption,
+                        outpath = outpath, output_formats = "pdf",
+                        mute_all_plots = mute_all_plots)
     } else if (!(missing(cut_height_h) || is.null(cut_height_h))) {
       high <- cutree(effects_pv$hclust, h = cut_height_h)
+      colors <- rainbow(length(unique(high)))
       type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-h=", cut_height_h), sep="-")
-      abline(h = cut_height_h, lty = 2)
-      rect.hclust(effects_pv$hclust, h = cut_height_h, cluster = high)
+      outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("_clusters", type, sep = "-"))
+      # abline(h = cut_height_h, lty = 2)
+      # rect.hclust(effects_pv$hclust, h = cut_height_h, cluster = high, border = colors)
+      output_dendrogram(cluster_obj = effects_pv, h = cut_height_h,
+                        clusters = high, colors = colors, caption = caption,
+                        outpath = outpath, output_formats = "pdf",
+                        mute_all_plots = mute_all_plots)
     }
-
-    # TODO: vorher Farben für die cluster festlegen und konsistent verwenden
-    # TODO: cluster im Graph einzeichnen
 
     node_clustering <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = high)
 
@@ -352,19 +379,21 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
     #   node_clustering <- merge_singular_clusters(node_clustering)
     # }
 
-    output_node_clustering(node_clustering = node_clustering, clustering_type = type, outpath = outpath,
-                           protein = protein, file_separator = file_separator, sort_clusters = length)
 
     # plot_clusters_in_pymol(node_clustering = node_clustering, protein = protein, outpath = outpath,
     #                        file_separator = file_separator, type_of_clustering = type,
     #                        length_sort = TRUE)
   }
+  output_node_clustering(node_clustering = node_clustering, #clustering_type = type,
+                         outpath = outpath,
+                         protein = protein, file_separator = file_separator, sort_clusters = length,
+                         mute_all_plots = mute_all_plots, ...)
   return(results)
 }
 
 
 
-position_clustering_from_clustering_with_duplicates <- function(clustering_with_duplicates) {
+position_clustering_from_clustering_with_duplicates <- function(clustering_with_duplicates, cluster_colors) {
   positions <- unique(sapply(names(clustering_with_duplicates), function(long_name) return(gsub("-.*","",long_name))))
   k = max(clustering_with_duplicates)
 
@@ -377,7 +406,11 @@ position_clustering_from_clustering_with_duplicates <- function(clustering_with_
   ##})
 
   ## averaged_clusters <- round(averaged_clusters)
-  rb_cols = substr(rainbow(k), 1, 7)
+  if (missing(cluster_colors)) {
+    cluster_colors <- rainbow(k)
+  }
+
+  rb_cols = substr(cluster_colors, 1, 7)
   averaged_clusters <- sapply(positions, function(position) {
     position_clustering <- clustering_with_duplicates[which(grepl(position, names(clustering_with_duplicates)))]
     cols <- rb_cols[position_clustering]
@@ -397,5 +430,44 @@ position_clustering_from_clustering_with_duplicates <- function(clustering_with_
 
   return(cl)
   # TODO!
+}
+
+output_dendrogram <- function(cluster_obj, clusters, colors, caption, alpha, h = NULL,
+                              outpath = "", output_formats = "pdf", mute_all_plots = FALSE, ...) {
+  if (!mute_all_plots) {
+    plot.new()
+    plot(cluster_obj, hang = -1)
+    if (!missing(h)) {
+      abline(h = h, lty = 2)
+    }
+    if (!missing(alpha)) {
+      pvrect(cluster_obj, alpha = alpha, border = colors, ...)
+    } else {
+      rect.hclust(cluster_obj$hclust, h = h, cluster = clusters, border = colors, ...)
+    }
+  }
+
+  for(format in output_formats) {
+    if (!nchar(outpath) == 0) {
+      if (format == "pdf") {
+        pdf(paste(outpath, "-dendrogram", ".pdf", sep = ""))
+      } else if ((format == "ps") || (format == "postscript")) {
+        postscript(paste(outpath, "-dendrogram", ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
+      } else if(format == "svg") {
+        svg(paste(outpath, "-dendrogram", ".svg", sep = ""))
+      }
+
+      plot(cluster_obj, hang = -1)
+      if (!missing(h)) {
+        abline(h = h, lty = 2)
+      }
+      if (!missing(alpha)) {
+        pvrect(cluster_obj, alpha = alpha, border = colors, ...)
+      } else {
+        rect.hclust(cluster_obj$hclust, h = h, cluster = clusters, border = colors, ...)
+      }
+      dev.off()
+    }
+  }
 }
 

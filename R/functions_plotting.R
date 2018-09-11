@@ -303,9 +303,14 @@ get_eAttrs <- function(graph, igraph=FALSE) {
 
 ## wrapper around plot function below
 call_plot_igraph <- function(g, protein = "PDZ", position_numbering = "crystal", coloring = "",
-                             colors = "", clusters = FALSE, cluster_str = "infomap", clustering,
-                             clustering_colors, caption = "", outpath = "", output_formats = c(), mute_all_plots = FALSE, layout_str = "layout_nicely", plot_as_subgraphs = "FALSE") {
-  plot_structure_igraph(g = g, nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)), edgecolor = get_edgecolor_igraph(g),clusters = clusters, cluster_str = cluster_str, clustering = clustering, caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots, layout_str = layout_str, plot_as_subgraphs = plot_as_subgraphs, subgraphs = get_subgraphs_igraph(node_clusters = interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors), protein = protein))
+                             colors = "", clusters = FALSE, cluster_str = "", clustering,
+                             clustering_colors, caption = "", outpath = "", output_formats = "pdf",
+                             mute_all_plots = FALSE, layout_str = "layout_nicely", plot_as_subgraphs = "FALSE") {
+  plot_structure_igraph(g = g,
+                        nodecolor = get_nodecolor_igraph(g, interesting_positions(protein = protein, position_numbering = position_numbering, coloring = coloring)),
+                        edgecolor = get_edgecolor_igraph(g),
+                        clusters = clusters, cluster_str = cluster_str, clustering = clustering, clustering_colors = clustering_colors,
+                        caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots, layout_str = layout_str, plot_as_subgraphs = plot_as_subgraphs, subgraphs = get_subgraphs_igraph(node_clusters = interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors), protein = protein))
 }
 
 #' Plots a given structure using the igraph package. Note that the graph is still passed as an graph object (not an igraph object).
@@ -345,11 +350,11 @@ plot_structure_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str
     for(format in output_formats) {
       if (!nchar(outpath) == 0) {
         if (format == "pdf") {
-          pdf(paste(outpath, "_", cluster_str, ".pdf", sep = ""))
+          pdf(paste(pastes(outpath, cluster_str, sep = "_"), ".pdf", sep = ""))
         } else if ((format == "ps") || (format == "postscript")) {
-          postscript(paste(outpath, "_", cluster_str, ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
-        } else if(format == "svg") {
-          svg(paste(outpath, "_", cluster_str, ".svg", sep = ""))
+          postscript(paste(pastes(outpath, cluster_str, sep = "_"), ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
+        } else if (format == "svg") {
+          svg(paste(pastes(outpath, cluster_str, sep = "_"), ".svg", sep = ""))
         }
         plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, mark.col = clustering_colors,
              edge.arrow.size=0.1, vertex.size=10, edge.width=0.8, main = paste(caption, cluster_str))

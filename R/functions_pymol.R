@@ -90,7 +90,8 @@ plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file,
   }
 
   if(!core) {
-    out_file <- paste0(outpath, "-", length(node_clustering), pastes("_clusters", type_of_clustering, sep = "-"),".pml")
+    # out_file <- paste0(outpath, "-", length(node_clustering), pastes("_clusters", type_of_clustering, sep = "-"),".pml")
+    out_file <- paste0(outpath, ".pml")
     ## out_file <- pastes(out_file, type_of_clustering, sep = "-")
     ## out_file <- paste0(out_file, ".pml")
     ## print(out_file)

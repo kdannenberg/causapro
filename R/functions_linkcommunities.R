@@ -71,10 +71,18 @@ clusterlist_from_membershiplist <- function(membershiplist, cluster_names) {
   return(clusters)
 }
 
-membershiplist_from_clusterlist <- function(clusterlist) {
+# Transform a Clustering in form of a list of list into a vector which for each element (in names of the vector) contains its cluster
+#' @param clusterlist the list of lists that is to be transformed
+#' @param colors_as_cluster_identifiers Should the resulting vector contain the element's cluster's color instead of the number of the cluster?
+# previously: membershiplist_from_clusterlist
+membershipvector_from_clusterlist <- function(clusterlist, colors_as_cluster_identifiers = FALSE) {
   elements <- sort(unique(unlist(clusterlist)))
+  if (colors_as_cluster_identifiers) {
+    membershiplist <- sapply(elements, function(element) {
+      return(names(which(sapply(clusterlist, function(cluster){element %in% cluster}))))})
+  }
   membershiplist <- sapply(elements, function(element) {
-    return(which(sapply(clusterlist, function(cluster){element %in% cluster})))})
+    return(unname(which(sapply(clusterlist, function(cluster){element %in% cluster}))))})
   return(membershiplist)
 }
 

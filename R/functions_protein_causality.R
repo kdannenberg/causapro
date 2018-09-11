@@ -141,7 +141,7 @@ protein_causality <- function(
   effects_hclust_method = "ward.D2",  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = "euclidean",
   effects_pv_nboot = 1000,
-  effects_cluster_alpha = 0.95,
+  effects_cluster_alpha = 0.05,
   print_analysis = FALSE,
   plot_analysis = TRUE,
   plot_types = c("localTests", "graphs"),
@@ -508,14 +508,16 @@ protein_causality <- function(
           }
 
           communities_clustering <- protein_graph_clustering(graphs$for_clustering, clustering = clustering)
-          # ne, lieber als node_clustering übergeben...! und dann zurücktranformieren... (WIE?)
-          output_node_clustering(clustering_type = type, graph = graphs$for_plotting,
+          # outpath_clustering
+          outpath_clustering_type <- paste(outpath_clustering, type, sep = "-")
+          output_node_clustering(#clustering_type = type,
+                                 graph = graphs$for_plotting,
                                  communities_clustering = communities_clustering,
                                  additional_clusters = additional_clusters,
                                  protein = protein, position_numbering = position_numbering,
                                  coloring = coloring, colors = colors,
                                  output_formats = graph_output_formats, caption = caption,
-                                 outpath = outpath_clustering, mute_all_plots = mute_all_plots,
+                                 outpath = outpath_clustering_type, mute_all_plots = mute_all_plots,
                                  file_separator = file_separator)
         }
 
@@ -707,7 +709,8 @@ protein_causality <- function(
                                             hclust_method = effects_hclust_method, dist_measure = effects_dist_method,
                                             number_of_clusters_k = effects_cluster_k, cut_height_h = effects_cluster_cut_height_h,
                                             iterations_pv = effects_pv_nboot, alpha = effects_cluster_alpha,
-                                            protein = protein, outpath = outpath, file_separator = file_separator)
+                                            protein = protein, outpath = outpath, file_separator = file_separator,
+                                            graph = results$pc@graph, mute_all_plots = mute_all_plots)
       }
 
       if (compare_effects) {
