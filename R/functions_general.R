@@ -20,7 +20,8 @@ alignment_to_binary_matrix <- function(alignment) {
 set_parameters <- function(FUN, parameters) {
   # return(function(...) return(do.call(FUN, parameters, ...)))
   # return(function(...) {return(do.call(FUN, list(parameters, list(...))))})  # previously: return(do.call(FUN, c(parameters, list(...)))) (problematic when arguemts are matrices)
-  return(function(...) {return(do.call(FUN, c(parameters, list(...))))})
+  f = FUN  # this seems to be sufficient toa void infinite recursions
+  return(function(...) {return(do.call(f, c(parameters, list(...))))})
 }
 
 function_set_parameters <- set_parameters

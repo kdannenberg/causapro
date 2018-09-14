@@ -270,7 +270,7 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
 
   pre_cluster_fct <- get(pre_fct)
   pairwise_effects <- pre_cluster_fct(pairwise_effects)
-  outpath <- paste0(outpath, "-pre-fct=", pre_fct)
+  outpath <- paste0(outpath, "-prefct=", pre_fct)
 
 
 
@@ -337,7 +337,7 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
       # add rectangles around groups highly supported by the data
       pvrect(effects_pv, alpha = alpha, border = colors)
       type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-alpha=", alpha), sep="-")
-      outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("_clusters", type, sep = "-"))
+      outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("clusters", type, sep = "-"))
       output_dendrogram(cluster_obj = effects_pv, alpha = alpha,
                         clusters = high, colors = colors, caption = caption,
                         outpath = outpath, output_formats = "pdf",
@@ -347,7 +347,7 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
       colors <- rainbow(number_of_clusters_k)
       type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-k=", number_of_clusters_k), sep="-")
       # rect.hclust(effects_pv$hclust, k = number_of_clusters_k, cluster = high, border = colors)
-      outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("_clusters", type, sep = "-"))
+      outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("clusters", type, sep = "-"))
       output_dendrogram(cluster_obj = effects_pv, k = number_of_clusters_k,
                         clusters = high, colors = colors, caption = caption,
                         outpath = outpath, output_formats = "pdf",
@@ -356,7 +356,7 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
       high <- cutree(effects_pv$hclust, h = cut_height_h)
       colors <- rainbow(length(unique(high)))
       type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-h=", cut_height_h), sep="-")
-      outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("_clusters", type, sep = "-"))
+      outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("clusters", type, sep = "-"))
       # abline(h = cut_height_h, lty = 2)
       # rect.hclust(effects_pv$hclust, h = cut_height_h, cluster = high, border = colors)
       output_dendrogram(cluster_obj = effects_pv, h = cut_height_h,

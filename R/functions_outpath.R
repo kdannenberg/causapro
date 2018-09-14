@@ -1,0 +1,173 @@
+# paste if non of the arguments is empty, return empty string otherwise
+pastes_parvalue <- function(parameter_name, value, sep = " ") {
+  if (is.null(parameter_name) || is.null(value) ||
+      missing(parameter_name)  || missing(value) ||
+      nchar(parameter_name == 0) || nchar(value == 0)) {
+    return("")
+  } else {
+    return(paste(parameter_name, value, sep = " "))
+  }
+}
+
+
+get_outpath_pc_graph <- function(prefix = NULL, plot_only_subgraphs = NULL, coloring = NULL, graph_layout = NULL) {
+  str <- ""
+  if ((nchar(coloring) == 0) || (is.null(coloring)) || (coloring == "auto")) {
+    coloring <- ""
+  }
+  str <- pastes("graph", pastes_parvalue("col=", coloring), graph_layout,
+                pastes_parvalue("col=", coloring), sep = "-")
+  str <- pastes(prefix, str, sep = "_")
+
+  return(str)
+}
+
+# TODO: alpha müsste hier raus; -> Verzeichnisstruktur?
+get_outpath_data <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "",
+                             alpha, min_pos_var, only_rows_cols_label = "", every_n_th_row,
+                             pre_fun_on_data, cor_cov_FUN = "", type_of_variables = "",
+                             file_separator = "/", filename_suffix, main_dir = "Outputs") {   ## last two options: only for get_old_outpath
+  dir_1 <- protein
+  dir_2 <- type_of_data
+  # if (subtype_of_data != "")
+  #   dir_3 <- paste(type_of_data, subtype_of_data, sep = "-")
+  # else {
+  #   dir_3 <- type_of_data
+  # }
+  # dir_3 <- pastes(type_of_data, paste(subtype_of_data, collapse = "+"), data_set, pre_fun_on_data, sep = "_")
+
+  dir_4 <- paste0(get_data_description(protein = protein, type_of_data = type_of_data,
+                                       subtype_of_data = paste(subtype_of_data, collapse = "+"),
+                                       data_set = data_set, only_rows_cols_label = only_rows_cols_label,
+                                       pre_fun = pre_fun_on_data, cor_cov_FUN = cor_cov_FUN, type_of_variables = type_of_variables,
+                                       suffix = suffix))
+
+  # if (min_pos_var > 0) {
+  #   dir_4 <- paste0(dir_min_pos_var, "_mv=", min_pos_var)
+  # }
+
+
+
+
+  if (!missing(filename_suffix)) { # vllt so für get_old_outpath?
+    filename <- paste0(filename, filename_suffix)
+    dir_4 <- paste0(get_data_description(protein = protein, type_of_data = type_of_data,
+                                         subtype_of_data = paste(subtype_of_data, collapse = "+"),
+                                         data_set = data_set, only_cols_label = only_cols_label,
+                                         suffix = suffix))
+  } else {
+    dir_4 <- paste0(get_data_description(protein = protein, type_of_data = type_of_data,
+                                         subtype_of_data = paste(subtype_of_data, collapse = "+"),
+                                         data_set = data_set, only_rows_cols_label = only_rows_cols_label,
+                                         pre_fun = pre_fun_on_data, cor_cov_FUN = cor_cov_FUN,
+                                         type_of_variables = type_of_variables,
+                                         suffix = suffix))
+  }
+  # else {
+  #   filename <- pastes(filename, only_cols_label, sep = "-")
+  #   if (typeof(cor_cov_FUN) == "closure") {
+  #     cor_cov_FUN <- deparse(substitute(cor_cov_FUN))
+  #   }
+  #   if (is.null(cor_cov_FUN) || missing(cor_cov_FUN)) {
+  #     cor_cov_FUN <- ""
+  #   }
+  #   if (cor_cov_FUN != "") {
+  #     filename <- paste0(filename, "-corFUN=", cor_cov_FUN)
+  #   }
+  # }
+
+  output_dir <- paste(main_dir, dir_1, dir_2, dir_4, sep = file_separator)
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
+  }
+
+  filename <- dir_4
+
+  return(paste(output_dir, filename, sep = file_separator))
+}
+
+get_outpath_suff_pc <- function(alpha, pc_indepTest = "", cor_cov_FUN, pc_solve_conflicts,
+                            pc_u2pd, pc_conservative, pc_maj_rule) {
+  # ab hier: pc # soll das überhaupt schon dran?
+  filename_pc <- paste0("PC-alpha=", alpha)
+  if (typeof(pc_indepTest) == "closure") {
+    pc_indepTest <- deparse(substitute(pc_indepTest))
+  }
+  if (!(missing(pc_indepTest)) && !(is.null(pc_indepTest)) && pc_indepTest != "") {
+    filename_pc <- pastes(filename_pc, "test=", pc_indepTest, sep = "-")
+  }
+  if (pc_solve_conflicts) {
+    filename_pc <- pastes(filename_pc, "sc", sep = "-")
+  }
+  if (pc_conservative) {
+    filename_pc <- pastes(filename_pc, "cons", sep = "-")
+  }
+  if (pc_maj_rule) {
+    filename_pc <- pastes(filename_pc, "maj", sep = "-")
+  }
+  if (!(pc_solve_conflicts || pc_conservative)) {
+    filename_pc <- pastes(filename_pc, substr(pc_u2pd, 1, 3), sep = "-")
+  }
+  # filename <- pastes(filename, filename_pc, sep = "_")
+
+  return(filename_pc)
+}
+
+# gab früher den old_outpath zurück,
+# jetzt das Verzeichnis in dem es die Datei gibt, oder NULL, wenn es sie nicht gibt.
+# TODO: rename: get_file (oder so) / get_outpath_where_file_exists
+# TODO: try - <-> _
+get_old_outpath <- function(outpath, suffix) {
+  if (file.exists(paste0(outpath, suffix))) {
+    return(paste0(outpath, suffix))
+  }
+
+  if (endsWith(outpath, "-sc-maj")) {
+    old_outpath <- str_replace(outpath, "-sc-maj", "-rel")
+    if (file.exists(paste0(old_outpath, suffix))) {
+      return(paste0(old_outpath, suffix))
+    }
+  } # else {
+  dirs <- str_split(outpath, "/", simplify = TRUE)
+
+  protein <- dirs[2]
+  type_of_data <- dirs[3]
+  extension <- sub(type_of_data, "", dirs[4])
+  if (is.null(extension) || extension == "NULL") {
+    subtype_of_data <- ""
+  } else {
+    extension <- substr(extension, 2, nchar(extension))
+    if (grepl(pattern = "-", extension)) {
+      subtype_of_data <- str_split(extension, "-", simplify = TRUE)[1]
+    } else {
+      subtype_of_data <- ""
+    }
+    rest_of_extension <- sub(subtype_of_data, "", extension)
+    if (substr(rest_of_extension, 1, 1) == "-") {
+      rest_of_extension <- substr(rest_of_extension, 2, nchar(extension))
+    }
+    type_of_data <- pastes(type_of_data, rest_of_extension, sep = "-")
+  }
+
+  start_of_alpha <- gregexpr(pattern ='alpha', outpath)[[1]][1]
+  end_that_starts_with_first_alpha <- substr(outpath, start_of_alpha + 6, nchar(outpath))
+  first_slash <- gregexpr(pattern ='/', end_that_starts_with_first_alpha)[[1]][1]
+  alpha <- substr(end_that_starts_with_first_alpha, 1, first_slash - 1)
+  # rest_of_extension <- str_replace(extension, ", "")
+
+  filename <- dirs[length(dirs)]
+  start_of_suffix <- gregexpr(pattern ='alpha', filename)[[1]][1] + 6 + nchar(alpha)
+  filename_suffix <- substr(filename, start_of_suffix, nchar(filename))
+
+  old_outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, alpha = alpha,
+                             filename_suffix = filename_suffix, main_dir = "Outputs_2017-09-14")
+  # old_outpath <- paste(old_outpath, paste(dirs[c(5,6)], collapse = "/"), sep = "/")
+  # }
+
+  old_outpath <- str_replace(old_outpath, "_sc_maj", "_rel")
+  if (file.exists(paste0(old_outpath, suffix))) {
+    return(paste0(old_outpath, suffix))
+  }
+
+  return(NULL)
+}

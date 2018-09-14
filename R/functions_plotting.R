@@ -107,15 +107,19 @@ colors_for_nodes <- function(node_clusters, protein, coloring, colors, clusterin
 # TODO: call plot_graph_by_coloring oder so
 # TODO: add par(mfrow=...), so everything fits on one plane
 plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", graph_layout = "dot", protein,
-                       position_numbering, coloring, colors = NULL, outpath = "", plot_as_subgraphs = FALSE,
-                       plot_only_subgraphs = NULL, subgraphs, numerical = TRUE, output_formats = NULL, mute_all_plots = FALSE) {
+                       position_numbering, coloring, colors = NULL, outpath = function() {return("")},
+                       plot_as_subgraphs = FALSE, plot_only_subgraphs = NULL, subgraphs, numerical = TRUE,
+                       output_formats = NULL, mute_all_plots = FALSE) {
   ## numerical serves no purpose right now, but it might in the future
   if (numerical) {
     if (missing(coloring)) {
-      plot_structure(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode, graph_layout = graph_layout, outpath = outpath, caption = caption,
-                           plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats, mute_all_plots = mute_all_plots)
+      plot_structure(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode,
+                     graph_layout = graph_layout, outpath = outpath, caption = caption,
+                     plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+                     subgraphs = subgraphs, output_formats = output_formats, mute_all_plots = mute_all_plots)
     } else {
       for (i in 1:(max(c(1,length(coloring))))) {
+        outpath_col <- outpath
         coloring_i <- coloring[i]
         if (length(colors) >= i) {
           colors_i <- colors[i]
@@ -141,7 +145,9 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         #                     position_numbering = position_numbering, coloring = coloring_i, colors = colors_i, outpath = outpath, caption = caption,
         #                     plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs, subgraphs = subgraphs, output_formats = output_formats)
         ## can not use missing here because those are not the parameters of this function
-        node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
+        outpath_col <- function_set_parameters(outpath_col, list(coloring = coloring))
+        node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE,
+                                                 coloring = coloring, colors = colors)
         # remove nodes that are not in the current graph (e.g. due to min_pos_var or kernelization)
         node_clustering <- lapply(node_clustering, function(cluster) {intersect(cluster, graph@nodes)})
         # print(node_clustering)
@@ -161,11 +167,12 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
         if (missing(edgecolor)) {
           edgecolor <- get_eAttrs(graph)
         }
-        if (!(nchar(outpath) == 0) && !(is.null(coloring)) && !(coloring == "")) {
-          outpath <- paste(outpath, "_", graph_layout, "_colored-", coloring, sep = "")
-        }
+        # moved to outpath_pc_graph
+        # if (!(nchar(outpath) == 0) && !(is.null(coloring)) && !(coloring == "")) {
+        #   outpath <- paste(outpath, "_graph-", graph_layout, "-col=", coloring, sep = "")
+        # }
         plot_structure(graph = graph, fillcolor = fillcolor, edgecolor = edgecolor, drawnode = drawnode,
-                       graph_layout = graph_layout_i, outpath = outpath, caption = caption,
+                       graph_layout = graph_layout_i, outpath = outpath_col, caption = caption,
                        plot_as_subgraphs = plot_as_subgraphs_i, plot_only_subgraphs = plot_only_subgraphs,
                        subgraphs = subgraphs, output_formats = output_formats, mute_all_plots = mute_all_plots)
       }
@@ -190,7 +197,8 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
 #' @param output_formats A character string, the desired output format. All standard R plotting options are available.
 #' @param mute_all_plots A boolean, if TRUE the structure will not be plotted.
 #' @return No return value.
-plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawAgNode, caption="", graph_layout="dot", outpath="",
+plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawAgNode, caption="",
+                           graph_layout="dot", outpath=function() {return("")},
                            plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL,
                            output_formats = "pdf", mute_all_plots = FALSE,
                            width_divisor_files = 100, height_divisor_files = 100) {
@@ -215,6 +223,7 @@ plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawA
     drawnode = drawnode[nodes(graph)]
   }
 
+  outpath <- function_set_parameters(outpath, list(graph_layout = graph_layout))
   pc_graph <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs)
 
   # this plots the graph with the given options
@@ -223,12 +232,12 @@ plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawA
   }
 
   # image size estimations
-  n <- length(graph@nodes)
-  m <-length(graph@edgeData@data)
-  print(paste0("n=", n, ", m=", m, ", m/n=", m/n))
-  # width_of_image <- n / 8
-  # height_of_image <- (m / n) * (m / 10) + 2
-  postscript(paste(outpath, ".pdf", sep = ""))
+  # n <- length(graph@nodes)
+  # m <-length(graph@edgeData@data)
+  # print(paste0("n=", n, ", m=", m, ", m/n=", m/n))
+  ###### width_of_image <- n / 8
+  ###### height_of_image <- (m / n) * (m / 10) + 2
+  postscript(paste(outpath(), ".pdf", sep = ""))
    graph_laidout <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs)
   dev.off()
   width_of_image <- graph_laidout@boundBox@upRight@x / width_divisor_files  # works because pc_graph has beet laidout by agopen
@@ -245,20 +254,21 @@ plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawA
   # }
   height_of_image <- (graph_laidout@boundBox@upRight@y / height_divisor_files)
   for (format in output_formats) {
-    if (!nchar(outpath) == 0) {
+    if (!nchar(outpath()) == 0) {
       # if (!is.null(coloring) && !(coloring == "")) {
       #   if (format == "pdf") {
-      #     pdf(paste(outpath, "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
+      #     pdf(paste(outpath(), "_", graph_layout, "_colored-", coloring, ".pdf", sep = ""))
       #   } else if ((format == "ps") || (format == "postscript")) {
-      #     postscript(paste(outpath, "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
+      #     postscript(paste(outpath(), "_", graph_layout, "_colored-", coloring, ".ps",  sep = ""), paper="special", width = 10, height = 9)
       #   }
       # } else {
       if (format == "pdf") {
-        pdf(paste(outpath, "_", suffix, "_w-", width_of_image, "_h-", height_of_image, ".pdf", sep = ""), width = width_of_image, height = height_of_image)
+        # pdf(paste(outpath(), "_", suffix, "_w-", width_of_image, "_h-", height_of_image, ".pdf", sep = ""), width = width_of_image, height = height_of_image)
+        pdf(paste(outpath(), ".pdf", sep = ""), width = width_of_image, height = height_of_image)
       } else if ((format == "ps") || (format == "postscript")) {
-        postscript(paste(outpath, ".ps", sep = ""), paper = "special", width = 10, height = 9)
+        postscript(paste(outpath(), ".ps", sep = ""), paper = "special", width = 10, height = 9)
       } else if (format == "svg") {
-        svg(paste0(outpath, ".svg"))
+        svg(paste0(outpath(), ".svg"))
       } else {
         warning(paste("Unknown format in plot_structure:", format))
       }

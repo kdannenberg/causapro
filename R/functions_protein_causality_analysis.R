@@ -4,7 +4,6 @@ protein_causal_graph <- function(results = list(), data, protein, type_of_data, 
                                  alpha, cor_cov_FUN = cov, pc_solve_conflicts, pc_u2pd, pc_conservative, pc_maj_rule) {
 
 
-  outpath <- paste(outpath, paste(type_of_variables, "pc", sep = "-"), sep = "_")
 
   # Computation of pc
   # pc_fun <- function(outpath) {
@@ -47,13 +46,16 @@ plot_pc <- function(graph, caption, outpath, protein, position_numbering, plot_t
   }
 
   if(plot_with_graphviz) {
-    plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering, graph_layout = graph_layout,
-               coloring = coloring, colors = colors, outpath = outpath, numerical = numerical, plot_as_subgraphs = plot_as_subgraphs,
-               plot_only_subgraphs = plot_only_subgraphs, output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
+    plot_graph(graph = graph, caption = caption, protein = protein, position_numbering = position_numbering,
+               graph_layout = graph_layout, coloring = coloring, colors = colors, outpath = outpath,
+               numerical = numerical, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
+               output_formats = graph_output_formats, mute_all_plots = mute_all_plots)
   } else {
-    call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors,
-                     clusters = FALSE, caption = caption, outpath = outpath, output_formats = graph_output_formats, mute_all_plots = mute_all_plots,
-                     layout_str = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs)
+    call_plot_igraph(g = graph, protein = protein, position_numbering = position_numbering,
+                     coloring = coloring, colors = colors, clusters = FALSE, caption = caption,
+                     outpath = outpath(), output_formats = graph_output_formats,
+                     mute_all_plots = mute_all_plots, layout_str = graph_layout_igraph,
+                     plot_as_subgraphs = plot_as_subgraphs)
   }
 }
 

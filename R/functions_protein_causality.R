@@ -48,7 +48,7 @@ protein_causality <- function(
   only_rows = NULL, #NEW
   remove_rows = NULL, #NEW
   rows_cols_subset_grep = FALSE, #NEW
-  only_cols_label = "",
+  only_rows_cols_label = "",
   every_n_th_row = 1,
   #
   alpha = 0.01,
@@ -170,11 +170,13 @@ protein_causality <- function(
   file_separator = "/",
   compare_effects = FALSE
   ) {
+
+  ######## DATA ########
   # INIT
   if (!(mute_all_plots || for_combined_plot)) {
     graphics.off()
 
-    # TOunDO: graph_clustering_funktion bauen, da rein
+    # TODO: graph_clustering_funktion bauen, da rein
     if (!((plot_analysis && causal_analysis) || (plot_ida && evaluation))) {
       if (graph_clustering) {
         cols <- length(graph_cluster_methods) + 1
@@ -248,16 +250,16 @@ protein_causality <- function(
 
   if (missing(type_of_variables)) {
     if (grepl("ALN", filename)) {
-      type_of_variables <- "nominal"
+      type_of_variables <- "nom"
     } else if (grepl("rank", filename) || ranked) {
-      type_of_variables <- "ordinal"
+      type_of_variables <- "ord"
     } else {
-      type_of_variables <- "continuous"
+      type_of_variables <- "cont"
     }
   }
 
   if (ranked) {
-    type_of_variables <- "ordinal"
+    type_of_variables <- "ord"
   }
 
 
@@ -278,21 +280,19 @@ protein_causality <- function(
   # if (other != "") {
   #   data_description <- get_data_description(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data, data_set = data_set, suffix = other)
   # }
-  if (nchar(only_cols_label) == 0) {
-    only_cols_label <- get_only_cols_label(only_cols = only_cols, remove_cols = remove_cols,
+  if (nchar(only_rows_cols_label) == 0) {
+    only_rows_cols_label <- get_only_cols_label(only_cols = only_cols, remove_cols = remove_cols,
                                            only_rows = only_rows, remove_rows = remove_rows,
                                            rows_cols_subset_grep)
   }
 
-  outpath <- get_outpath(protein = protein, type_of_data = type_of_data, subtype_of_data = subtype_of_data,
-                         data_set = data_set, suffix = other,
-                         alpha = alpha, min_pos_var = min_pos_var,
-                         only_cols_label = only_cols_label,
-                         pc_indepTest = pc_indepTest, cor_cov_FUN = cor_cov_FUN,
-                         pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
-                         pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
-                         pre_fun_on_data = pre_fun_on_data,
-                         file_separator = file_separator)
+  outpath_data <- get_outpath_data(protein = protein, type_of_data = type_of_data,
+                                   subtype_of_data = subtype_of_data, data_set = data_set,
+                                   suffix = other, min_pos_var = min_pos_var,
+                                   only_rows_cols_label = only_rows_cols_label,
+                                   pre_fun_on_data = pre_fun_on_data, cor_cov_FUN = cor_cov_FUN,
+                                   type_of_variables = type_of_variables,
+                                   file_separator = file_separator)
 
 
 
@@ -303,14 +303,14 @@ protein_causality <- function(
 
   # TODO: data_description nutzen; nicht source_of_data
 
-  # filename <- paste(only_cols_label, source_of_data, "-alpha=", alpha, sep = "")
+  # filename <- paste(only_rows_cols_label, source_of_data, "-alpha=", alpha, sep = "")
   # # output_dir <- paste("~/Documents/Uni/Viren/R/Outputs/", protein, "/", type_of_data, "/", filename, sep = "")
   # output_dir <- paste("Outputs", protein, type_of_data, filename, sep = "/")
   # outpath <- paste(output_dir, filename, sep = "/")
   #
   # filename <- paste(filename, other, sep = "-")
 
-  # outpath = paste("/Outputs/", type_of_data, "/", only_cols_label, source_of_data, "-alpha=", alpha, sep="")
+  # outpath = paste("/Outputs/", type_of_data, "/", only_rows_cols_label, source_of_data, "-alpha=", alpha, sep="")
 
   chars_per_line <- 45
   if (for_combined_plot) {
@@ -320,9 +320,9 @@ protein_causality <- function(
   # TODO Marcel: add all the new ones
   parameters_for_info_file <- parameters_for_info_file(protein = protein, type_of_data = type_of_data, alpha = alpha, position_numbering = position_numbering,
                                                        only_cols = only_cols, coloring = coloring, colors = colors, #outpath = paste(output_dir, filename, sep = file_separator)
-                                                       outpath = outpath)
+                                                       outpath = outpath_data)
 
-  parameters_to_info_file(parameters_for_info_file, outpath)
+  parameters_to_info_file(parameters_for_info_file, outpath_data)
 
   graph_computation <- graph_computation || evaluation || causal_analysis
   # Computation of the Graph
@@ -341,19 +341,33 @@ protein_causality <- function(
 
   # if (output_parameters_in_results) {
     results$summary$caption <- caption
-    results$summary$outpath <- outpath
+    results$summary$outpath_data <- outpath_data
 
     results$general$int_pos <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
   # }
 
-  ###### CAUSAL STRUCTURE LEARNING ######
+  ######## CAUSAL STRUCTURE LEARNING ########
   if (graph_computation) {
-    directories <- strsplit(outpath, file_separator)
+    directories <- strsplit(outpath_data, file_separator)
+    output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_separator, sep = file_separator)
+
+    outpath_suff_pc <- get_outpath_suff_pc(alpha = alpha, pc_indepTest = pc_indepTest, cor_cov_FUN = cor_cov_FUN,
+                                           pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
+                                           pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule)
+    last_dir_name <- pastes(directories[[1]][length(directories[[1]])-1], outpath_suff_pc, sep = "_")
+
+    outpath_pc <- paste(output_dir, last_dir_name, last_dir_name, sep = file_separator)
+    get_outpath_pc_graph <- function_set_parameters(get_outpath_pc_graph, list(prefix = outpath_pc))
+
+    results$summary$outpath_pc <- outpath_pc
+
+    directories <- strsplit(outpath_pc, file_separator)
     # filename <- directories[[1]][length(directories[[1]])]
     output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_separator, sep = file_separator)
     print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
 
-    create_parent_directory_if_necessary(outpath)
+    create_parent_directory_if_necessary(outpath_pc)
+
     # if (!dir.exists(output_dir)) {
     #   dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
     #   print("Directory created.")
@@ -379,7 +393,7 @@ protein_causality <- function(
     # TODO: gleich pc_func übergeben, alle anderen parameter rausnehmen
     results <- protein_causal_graph(results = results, data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering,
                                     output_dir = output_dir, filename = filename,
-                                    outpath = outpath, type_of_variables = type_of_variables,
+                                    outpath = outpath_pc, type_of_variables = type_of_variables,
                                     indepTest = pc_indepTest, suffStat = pc_suffStat,
                                     alpha = alpha, cor_cov_FUN = cor_cov_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
                                     # caption = caption,
@@ -392,12 +406,39 @@ protein_causality <- function(
                                     # plot_no_isolated_nodes = plot_no_isolated_nodes, plot_with_graphviz = plot_with_graphviz
                                     )
 
+    if (!is.null(plot_only_subgraphs)) {
+      # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
+      node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE,
+                                               coloring = coloring, colors = colors)
+      subgraphs <- subgraphs_from_node_clusters(node_clustering, graph = results$orig$graph$NEL, protein = protein)
+      graph <- subgraphs[[plot_only_subgraphs]]$graph
+      get_outpath_pc_graph <- function_set_parameters(FUN = get_outpath_pc_graph,
+                                                           parameters = list(plot_only_subgraphs = plot_only_subgraphs))
+    } else {
+      graph <- results$pc@graph
+    }
+    # outpath_pc_graph <- paste(outpath_pc, get_outpath_pc_graph(graph_layout = graph_layout,
+    #                     coloring = coloring, plot_only_subgraphs = plot_only_subgraphs), sep = "_")
+    plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = graph,
+                                       outpath = get_outpath_pc_graph, show_int_pos = pymol_show_int_pos, show_positions = TRUE,
+                                       file_separator = file_separator, sort_connected_components_by_length =
+                                         pymol_sort_connected_components_by_length,
+                                       mix_connected_components = pymol_mix_connected_components)
+
+    if (print_connected_components) {
+      conn_comp <- nonsingular_connected_components(graph)
+      if (length(conn_comp) > 0) {
+        cat("Connected components:")
+        print(conn_comp)
+      }
+    }
+
     # numerical <- (type_of_variables == "continuous")
     # if (!mute_all_plots) {
-      plot_pc(graph = results$pc@graph, caption = caption, outpath = outpath, protein = protein, position_numbering = position_numbering,
+      plot_pc(graph = graph, caption = caption, outpath = get_outpath_pc_graph, protein = protein, position_numbering = position_numbering,
               plot_types = plot_types, coloring = coloring, colors = colors,
               graph_layout = graph_layout, graph_layout_igraph = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs,
-              plot_only_subgraphs = plot_only_subgraphs,unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console,
+              plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console,
               lines_in_abbr_of_r = lines_in_abbr_of_r, compute_pc_anew = compute_pc_anew, compute_localTests_anew = compute_localTests_anew,
               graph_output_formats = graph_output_formats, numerical = TRUE, mute_all_plots = mute_all_plots,
               plot_no_isolated_nodes = plot_no_isolated_nodes, plot_with_graphviz = plot_with_graphviz)
@@ -418,10 +459,10 @@ protein_causality <- function(
     ### end
   }
 
-  # Evaluation
+  ######## CAUSAL STRUCTURE EVALUATION ########
                                         # if ("evaluation" %in% steps) {
   if (evaluation) {
-    results <- analysis_after_pc(results, data, outpath = outpath, protein = protein, position_numbering = position_numbering,
+    results <- analysis_after_pc(results, data, outpath = outpath_pc, protein = protein, position_numbering = position_numbering,
                                  stages = stages, #max_number_of_edges_in_graph = 70,
                                  unabbrev_r_to_info = unabbrev_r_to_info,
                                  print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
@@ -433,8 +474,9 @@ protein_causality <- function(
       if (is.null(results$orig$graph$dagitty)) { # wird in analysis_after_pc gesetzt, wenn der Graph nicht zu groß war
         plot_text("Too many edges in the graph. Graph evaluation (probably) infeasible.")
       } else {
+          # TODO: Das geht bestimmt auch ein bisschen eleganter
           plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-              coloring = coloring, colors = colors, caption = caption, outpath = outpath, graph_output_formats = graph_output_formats,
+              coloring = coloring, colors = colors, caption = caption, outpath = outpath_pc, graph_output_formats = graph_output_formats,
               combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
           plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
               coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
@@ -443,33 +485,9 @@ protein_causality <- function(
     }
   }
 
-  # CLUSTERING, PYMOL, LINKCOMM
+  ######## GRAPH CLUSTERING, PYMOL, LINKCOMM
   if (graph_computation) {
-    # if (!is.null(clustering)) {
-    # set_edge_weights_for_graph(graph, cov(data))
 
-    if (!is.null(plot_only_subgraphs)) {
-      # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
-      node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors)
-      subgraphs <- subgraphs_from_node_clusters(node_clustering, graph = results$orig$graph$NEL, protein = protein)
-      graph <- subgraphs[[plot_only_subgraphs]]$graph
-    } else {
-      graph <- results$pc@graph
-    }
-
-    plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = graph,
-                                       outpath = outpath, show_int_pos = pymol_show_int_pos, show_positions = TRUE,
-                                       file_separator = file_separator, sort_connected_components_by_length =
-                                         pymol_sort_connected_components_by_length,
-                                       mix_connected_components = pymol_mix_connected_components)
-
-    if (print_connected_components) {
-      conn_comp <- nonsingular_connected_components(graph)
-      if (length(conn_comp) > 0) {
-        cat("Connected components:")
-        print(conn_comp)
-      }
-    }
     graphs <- list()
     if (graph_clustering || (linkcommunities && sum(unlist(conflict_edges(results$pc@graph))) > 0)) {
       outpath_clustering <- outpath
@@ -546,7 +564,7 @@ protein_causality <- function(
   # plot_paths_in_pymol(protein = protein, graph = results$orig$graph$NEL, outpath = outpath, paths = paths, no_colors = FALSE,
   #                     label = TRUE, show_positions = FALSE, file_separator = file_separator)
 
-  # CAUSAL ANALYSIS
+  ######## CAUSAL ANALYSIS ########
   # if ("analysis" %in% steps) {
   if (causal_analysis) {
     no_pairwise_effects_computable <- FALSE
@@ -804,7 +822,7 @@ protein_causality_G <- function(
   # PDZ_DDDG-all_372
   # PDZ_DDDG-all
   # PDZ_DDDG-all_SVD
-  type_of_variables = "continuous",
+  type_of_variables = "cont",
   protein = "PDZ",
   type_of_data = "DDG",
   subtype_of_data = "10",
@@ -817,7 +835,7 @@ protein_causality_G <- function(
   ida_percentile = "11",
   # data-related parameters
   only_cols = NULL,
-  only_cols_label = "",
+  only_rows_cols_label = "",
   every_n_th_row = 1,
   # data-dependent graphical parameters
   graph_output_formats = NULL,
@@ -903,7 +921,7 @@ protein_causality_G <- function(
   argList$min_pos_var = min_pos_var
   argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
-  argList$only_cols_label = only_cols_label
+  argList$only_rows_cols_label = only_rows_cols_label
   argList$every_n_th_row = every_n_th_row
   argList$alpha = alpha
   argList$pc_indepTest = pc_indepTest
@@ -971,7 +989,7 @@ protein_causality_G <- function(
 protein_causality_S <- function(
   filename = NULL,
   # data parameters
-  type_of_variables = "continuous",
+  type_of_variables = "cont",
   protein = "PDZ",
   type_of_data = "DDS",
   subtype_of_data = "",
@@ -981,7 +999,7 @@ protein_causality_S <- function(
   ida_percentile = "11",
   # data-related parameters
   only_cols = NULL,
-  only_cols_label = "",
+  only_rows_cols_label = "",
   every_n_th_row = 1,
   ## data-dependent graphical parameters
   graph_output_formats = NULL,
@@ -1069,7 +1087,7 @@ protein_causality_S <- function(
   argList$min_pos_var = min_pos_var
   argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
-  argList$only_cols_label = only_cols_label
+  argList$only_rows_cols_label = only_rows_cols_label
   argList$every_n_th_row = every_n_th_row
   argList$alpha = alpha
   argList$pc_indepTest = pc_indepTest
@@ -1140,7 +1158,7 @@ protein_causality_S <- function(
 protein_causality_p38g <- function(
   filename = NULL,
   # data parameters
-  type_of_variables = "continuous",
+  type_of_variables = "cont",
   protein = "p38g",
   type_of_data = "NMR-Mut",
   subtype_of_data = "",
@@ -1151,7 +1169,7 @@ protein_causality_p38g <- function(
   ida_percentile = "11",
   # data-related parameters
   only_cols = NULL,
-  only_cols_label = "",
+  only_rows_cols_label = "",
   every_n_th_row = 1,
   # data-dependent graphical parameters
   graph_output_formats = NULL,
@@ -1240,7 +1258,7 @@ protein_causality_p38g <- function(
   argList$min_pos_var = min_pos_var
   argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
-  argList$only_cols_label = only_cols_label
+  argList$only_rows_cols_label = only_rows_cols_label
   argList$every_n_th_row = every_n_th_row
   argList$alpha = alpha
   argList$pc_indepTest = pc_indepTest
@@ -1323,7 +1341,7 @@ protein_causality_NoV <- function(
   # TODO: wieder ermöglichen
   # subtype_of_data = c("Fuc", "BTS")
 
-  type_of_variables = "continuous",
+  type_of_variables = "cont",
   protein = NULL, # "pmo" or "pdi"
   # type_of_data = "NMR-Tit",
   type_of_data = NULL,
@@ -1335,7 +1353,7 @@ protein_causality_NoV <- function(
   min_pos_var = NULL,
   show_variance_cutoff_plot = NULL,
   only_cols = NULL,
-  only_cols_label = NULL,
+  only_rows_cols_label = NULL,
   every_n_th_row = NULL,
   alpha = NULL,
   pc_indepTest = NULL,
@@ -1416,7 +1434,7 @@ protein_causality_NoV <- function(
   argList$min_pos_var = min_pos_var
   argList$show_variance_cutoff_plot = show_variance_cutoff_plot
   argList$only_cols = only_cols
-  argList$only_cols_label = only_cols_label
+  argList$only_rows_cols_label = only_rows_cols_label
   argList$every_n_th_row = every_n_th_row
   argList$alpha = alpha
   argList$pc_indepTest = pc_indepTest

@@ -37,12 +37,12 @@ estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath
   V <- colnames(data)
 
   if (missing(indepTest) || is.null(indepTest)) {
-    if (type_of_variables == "continuous") {
+    if (startsWith(type_of_variables, "cont")) {
       if (missing(suffStat) || is.null(suffStat)) {
         suffStat <- list(C = cor_FUN(data), n=n, adaptDF = FALSE) #dm = dat$x        ### WHY COR?!
       }
       indepTest <- gaussCItest   # partial correlation
-    } else if (type_of_variables == "ordinal") {
+    } else if (startsWith(type_of_variables, "ord")) {
       indepTest <- "jt" # Jonckhere-Terpstra
       # if (missing(suffStat) || is.null(indepTest)) {
       #   suffStat <- list(dm = data,#scale_data_for_pc_discrete(data),
@@ -50,7 +50,7 @@ estimate_DAG_from_numerical_data <- function(data, alpha, cor_FUN = cor, outpath
       #   adaptDF = FALSE)
       # }
       # indepTest <- ci_test_pc("jt")   # Jonckhere-Terpstra
-    } else if (type_of_variables == "nominal") {
+    } else if (startsWith(type_of_variables, "nom")) {
       if (missing(suffStat) || is.null(suffStat)) {
         suffStat <- list(dm = data, #scale_data_for_pc_discrete(data),
                          nlev = apply(data, 2, function(row){length(unique(row))}),

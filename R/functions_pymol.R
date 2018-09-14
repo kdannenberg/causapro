@@ -147,7 +147,7 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
                                                coloring_for_int_pos, no_colors = FALSE, only_dist = FALSE, show_positions = TRUE,
                                                file_separator = "/", bg_color = "grey", sort_connected_components_by_length = FALSE,
                                                mix_connected_components = TRUE) {
-  print(paste("Outpath for pymol-file:", outpath))
+  print(paste("Outpath for pymol-file:", outpath()))
   connected_components <- nonsingular_connected_components(graph)
 
   if (length(connected_components) == 0) {
@@ -165,20 +165,20 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
     # TODO: outpath aus dem übergebenen outpath konstruieren (per strsplit)
     # directories <- strsplit(outpath, "/")
     # outpath <- paste(directories[[1]][1:(length(directories[[1]])-3)], collapse = "/", sep = "/")
-    outpath <- paste("..", file_separator, "Outputs", file_separator, protein, file_separator, sep = "")
+    outpath <- function() {paste("..", file_separator, "Outputs", file_separator, protein, file_separator, sep = "")}
     if (grepl("all", coloring_for_int_pos)) {
-      out_file <- paste(outpath, "interesting-all.pml", sep = "")
+      out_file <- paste(outpath(), "interesting-all.pml", sep = "")
     } else {
-      out_file <- paste(outpath, "interesting.pml", sep = "")
+      out_file <- paste(outpath(), "interesting.pml", sep = "")
     }
   } else {
-    out_file <- paste(outpath, ".pml", sep = "")
+    out_file <- paste(outpath(), ".pml", sep = "")
   }
   sink(file = out_file)
   pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
   colors <- rainbow(length(connected_components))
   if (!only_dist) {
-    plot_clusters_in_pymol(node_clustering = connected_components, protein = protein, outpath = outpath,
+    plot_clusters_in_pymol(node_clustering = connected_components, protein = protein, outpath = outpath(), # TODO: die innere FKt auch auf outpath-fkt umstellen
                            pdb_file = pdb_file, label = label, no_colors = no_colors, show_positions = show_positions,
                            file_separator = file_separator, type_of_clustering = "connected_components",
                            bg_color = bg_color, length_sort = sort_connected_components_by_length,
