@@ -348,15 +348,10 @@ protein_causality <- function(
 
   ######## CAUSAL STRUCTURE LEARNING ########
   if (graph_computation) {
-    directories <- strsplit(outpath_data, file_separator)
-    output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_separator, sep = file_separator)
-
-    outpath_suff_pc <- get_outpath_suff_pc(alpha = alpha, pc_indepTest = pc_indepTest, cor_cov_FUN = cor_cov_FUN,
-                                           pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
-                                           pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule)
-    last_dir_name <- pastes(directories[[1]][length(directories[[1]])-1], outpath_suff_pc, sep = "_")
-
-    outpath_pc <- paste(output_dir, last_dir_name, last_dir_name, sep = file_separator)
+    outpath_pc  <- get_outpath_pc(outpath_data = outpath_data, file_separator = file_separator,
+                                  alpha = alpha, pc_indepTest = pc_indepTest, cor_cov_FUN = cor_cov_FUN,
+                                  pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
+                                  pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule)
     get_outpath_pc_graph <- function_set_parameters(get_outpath_pc_graph, list(prefix = outpath_pc))
 
     results$summary$outpath_pc <- outpath_pc
@@ -462,7 +457,7 @@ protein_causality <- function(
   ######## CAUSAL STRUCTURE EVALUATION ########
                                         # if ("evaluation" %in% steps) {
   if (evaluation) {
-    results <- analysis_after_pc(results, data, outpath = outpath_pc, protein = protein, position_numbering = position_numbering,
+    results <- analysis_after_pc(results, data, outpath = get_outpath_pc, protein = protein, position_numbering = position_numbering,
                                  stages = stages, #max_number_of_edges_in_graph = 70,
                                  unabbrev_r_to_info = unabbrev_r_to_info,
                                  print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,

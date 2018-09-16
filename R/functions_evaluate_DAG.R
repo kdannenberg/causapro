@@ -30,7 +30,9 @@ analysis_after_pc <- function(results, data, outpath, protein, position_numberin
     if (("main" %in% stages) || ("orig" %in% stages)) {
     # if (originalgraph) {
       print("ORIGINAL GRAPH...")
-      results$orig$localTests <- evaluate_DAG(data = data, graph = graph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, compute_localTests_anew = compute_localTests_anew)
+      results$orig$localTests <- evaluate_DAG(data = data, graph = graph_dagitty, results = results,
+                                              protein = protein, position_numbering = position_numbering,
+                                              outpath = outpath, compute_localTests_anew = compute_localTests_anew)
     }
 
     if ("sub" %in% stages) {
@@ -45,7 +47,9 @@ analysis_after_pc <- function(results, data, outpath, protein, position_numberin
       # plot(subgraph)
       results$sub$graph$NEL <- subgraph
       subgraph_dagitty <- conv_to_r(subgraph, type_of_graph = "pdag", nodename_prefix = "P")
-      results$sub$localTests <- evaluate_DAG(data = data, graph = subgraph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, stage = "sub", plot = TRUE, compute_localTests_anew = compute_localTests_anew)
+      results$sub$localTests <- evaluate_DAG(data = data, graph = subgraph_dagitty, results = results, protein = protein,
+                                             position_numbering = position_numbering, outpath = outpath, stage = "sub",
+                                             plot = TRUE, compute_localTests_anew = compute_localTests_anew)
     }
 
     if ("anc" %in% stages) {
@@ -53,14 +57,18 @@ analysis_after_pc <- function(results, data, outpath, protein, position_numberin
       print("ANCESTOR GRAPH...")
       # outpath_ancestor = paste(outpath, "-anc", sep = "")
 
-      ancestor_graph_dagitty <- ancestorgraph_of_interesting_positions(graph_dagitty = graph_dagitty, protein = protein, position_numbering = position_numbering, nodename_prefix = "P")
+      ancestor_graph_dagitty <- ancestorgraph_of_interesting_positions(graph_dagitty = graph_dagitty, protein = protein,
+                                                                       position_numbering = position_numbering, nodename_prefix = "P")
       if (!is.null(ancestor_graph_dagitty)) {
         # if (!((plotstages == "ancestor") && (plot_types == "graph"))) {
         #   garbage <- graphics.off()
         # }
         # plot(dagitty::graphLayout(ancestor_graph_dagitty))
         results$anc$graph$dagitty <- dagitty::graphLayout(ancestor_graph_dagitty)
-        results$anc$localTests <- evaluate_DAG(data = data, graph = ancestor_graph_dagitty, results = results, protein = protein, position_numbering = position_numbering, outpath = outpath, stage = "anc", plot = TRUE, compute_localTests_anew = compute_localTests_anew)
+        results$anc$localTests <- evaluate_DAG(data = data, graph = ancestor_graph_dagitty, results = results,
+                                               protein = protein, position_numbering = position_numbering,
+                                               outpath = outpath, stage = "anc", plot = TRUE,
+                                               compute_localTests_anew = compute_localTests_anew)
       } else {
         print("Ancestor graph is NULL!")
       }
@@ -92,12 +100,17 @@ analysis_after_pc <- function(results, data, outpath, protein, position_numberin
 # estimate_margin: margin around zero, in which estimates given by localTests(...) are regarded "bad"
 evaluate_DAG <- function(data, graph, results, protein, position_numbering = NULL, outpath, stage = "orig",
                          bad_alpha_threshold = 0.01, estimate_margin = 0.4, compute_localTests_anew) {
+  # ein bisschen quick and dirty
+  # vllt lieber der outpth-function die folgenden Modifikationen übergeben und weiterhin die Funktion aufrufen
+  outpath <- outpath()
   if (!(stage == "" || is.null(stage))) {
     outpath <- paste(outpath, stage, sep = "-")
   }
 
-  outpath <- paste(outpath, "-r", sep = "")
-  # previously, both "-r" and "-localTests" were tested before computing anew
+  # outpath <- paste(outpath, "-r", sep = "")
+  # old: previously, both "-r" and "-localTests" were tested before computing anew
+  # now: I think -localTests is more instructive
+  outpath <- paste(outpath, "-localTests", sep = "")
 
   r_func <- function(graph, data) {
     d <- data.frame(data, check.names = FALSE)

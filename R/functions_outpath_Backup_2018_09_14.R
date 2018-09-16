@@ -9,34 +9,8 @@ pastes_parvalue <- function(parameter_name, value, sep = " ") {
   }
 }
 
-# Projekt erstmal wieder aufgegeben.
-get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "",
-                        alpha, min_pos_var, only_rows_cols_label = "", every_n_th_row,
-                        pre_fun_on_data, cor_cov_FUN = "", type_of_variables = "",
-                        file_separator = "/", filename_suffix, main_dir = "Outputs",
-                        plot_only_subgraphs = NULL, coloring = NULL, graph_layout = NULL) {
-  outpath <- ""
-  # quick and dirty:
-  outpath_data <- get_outpath_data(protein = protein, type_of_data = type_of_data, subtype_of_data = "", data_set = "", suffix = "",
-                                   alpha, min_pos_var, only_rows_cols_label = "", every_n_th_row,
-                                   pre_fun_on_data, cor_cov_FUN = "", type_of_variables = "",
-                                   file_separator = "/", filename_suffix, main_dir = "Outputs")
 
-  outpath <- paste0(outpath, outpath_data)
-  if (!all(sapply(list(...), is.null))) { #bisschen doof, die da alle reinzustecken, oder?
-    # Kommt da in dem Fall nicht sowieso "" raus? Nein, "graph"...
-    outpath_pc <- get_outpath_pc_(...)
-    outpath <- c(outpath, outpath_pc)
-  }
-  outpath_pc_graph <- get_outpath_pc_graph(prefix = outpath_pc, plot_only_subgraphs = plot_only_subgraphs,
-                                           coloring = coloring, graph_layout = graph_layout)
-
-  return(with_graph)
-}
-
-
-get_outpath_pc_graph <- function(prefix = NULL, plot_only_subgraphs = NULL, coloring = NULL,
-                                 graph_layout = NULL) {
+get_outpath_pc_graph <- function(prefix = NULL, plot_only_subgraphs = NULL, coloring = NULL, graph_layout = NULL) {
   str <- ""
   if ((nchar(coloring) == 0) || (is.null(coloring)) || (coloring == "auto")) {
     coloring <- ""
@@ -137,22 +111,6 @@ get_outpath_suff_pc <- function(alpha, pc_indepTest = "", cor_cov_FUN, pc_solve_
   # filename <- pastes(filename, filename_pc, sep = "_")
 
   return(filename_pc)
-}
-
-get_outpath_pc <- function(outpath_data, file_separator, alpha, pc_indepTest = "", cor_cov_FUN = "",
-                           pc_solve_conflicts = "", pc_u2pd = "",
-                           pc_conservative = "", pc_maj_rule = "") {
-  directories <- strsplit(outpath_data, file_separator)
-  output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_separator, sep = file_separator)
-
-  outpath_suff_pc <- get_outpath_suff_pc(alpha = alpha, pc_indepTest = pc_indepTest, cor_cov_FUN = cor_cov_FUN,
-                                         pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
-                                         pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule)
-  last_dir_name <- pastes(directories[[1]][length(directories[[1]])-1], outpath_suff_pc, sep = "_")
-
-  outpath_pc <- paste(output_dir, last_dir_name, last_dir_name, sep = file_separator)
-
-  return(outpath_pc)
 }
 
 # gab früher den old_outpath zurück,
