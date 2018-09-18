@@ -138,7 +138,7 @@ protein_causality <- function(
   effects_cluster_k = NULL,
   effects_cluster_cut_height_h = NULL,
   effects_cluster_method = "pv",
-  effects_hclust_method = "ward.D2",  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
+  effects_hclust_method = "complete",  #"average", "ward.D", "ward.D2", "single", "complete", "mcquitty", "median" or "centroid"
   effects_dist_method = "euclidean",
   effects_pv_nboot = 1000,
   effects_cluster_alpha = 0.05,
@@ -348,20 +348,21 @@ protein_causality <- function(
 
   ######## CAUSAL STRUCTURE LEARNING ########
   if (graph_computation) {
-    outpath_pc  <- get_outpath_pc(outpath_data = outpath_data, file_separator = file_separator,
+    get_outpath_pc <- function_set_parameters(get_outpath_pc, parameters = list(
+                                  outpath_data = outpath_data, file_separator = file_separator,
                                   alpha = alpha, pc_indepTest = pc_indepTest, cor_cov_FUN = cor_cov_FUN,
                                   pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd,
-                                  pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule)
-    get_outpath_pc_graph <- function_set_parameters(get_outpath_pc_graph, list(prefix = outpath_pc))
+                                  pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule))
+    get_outpath_pc_graph <- function_set_parameters(get_outpath_pc_graph, list(prefix = get_outpath_pc()))
 
-    results$summary$outpath_pc <- outpath_pc
+    results$summary$outpath_pc <- get_outpath_pc()
 
-    directories <- strsplit(outpath_pc, file_separator)
+    directories <- strsplit(get_outpath_pc(), file_separator)
     # filename <- directories[[1]][length(directories[[1]])]
     output_dir <- paste(directories[[1]][1:(length(directories[[1]])-1)], collapse = file_separator, sep = file_separator)
     print(paste("Output will be written to ", getwd(), "/", output_dir, "/...", sep = ""))
 
-    create_parent_directory_if_necessary(outpath_pc)
+    create_parent_directory_if_necessary(get_outpath_pc())
 
     # if (!dir.exists(output_dir)) {
     #   dir.create(output_dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
@@ -388,7 +389,7 @@ protein_causality <- function(
     # TODO: gleich pc_func übergeben, alle anderen parameter rausnehmen
     results <- protein_causal_graph(results = results, data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering,
                                     output_dir = output_dir, filename = filename,
-                                    outpath = outpath_pc, type_of_variables = type_of_variables,
+                                    outpath = get_outpath_pc(), type_of_variables = type_of_variables,
                                     indepTest = pc_indepTest, suffStat = pc_suffStat,
                                     alpha = alpha, cor_cov_FUN = cor_cov_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
                                     # caption = caption,
@@ -455,9 +456,9 @@ protein_causality <- function(
   }
 
   ######## CAUSAL STRUCTURE EVALUATION ########
-                                        # if ("evaluation" %in% steps) {
   if (evaluation) {
-    results <- analysis_after_pc(results, data, outpath = get_outpath_pc, protein = protein, position_numbering = position_numbering,
+    get_outpath_pc_evaluation <- function_set_parameters(get_outpath_pc_evaluation, list(prefix = get_outpath_pc()))
+    results <- analysis_after_pc(results, data, outpath = get_outpath_pc_evaluation, protein = protein, position_numbering = position_numbering,
                                  stages = stages, #max_number_of_edges_in_graph = 70,
                                  unabbrev_r_to_info = unabbrev_r_to_info,
                                  print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
@@ -471,15 +472,18 @@ protein_causality <- function(
       } else {
           # TODO: Das geht bestimmt auch ein bisschen eleganter
           plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-              coloring = coloring, colors = colors, caption = caption, outpath = outpath_pc, graph_output_formats = graph_output_formats,
+              coloring = coloring, colors = colors, caption = caption, outpath = get_outpath_pc_graph, graph_output_formats = graph_output_formats,
               combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
           plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-              coloring = coloring, colors = colors, caption = caption, outpath = "", graph_output_formats = graph_output_formats,
+              coloring = coloring, colors = colors, caption = caption, # kein outpath; default: fkt, die "" zurückgibt
+              graph_output_formats = graph_output_formats,
               combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
       }
     }
   }
 
+  # TODO: quick and dirty!!
+  outpath <- get_outpath_pc()
   ######## GRAPH CLUSTERING, PYMOL, LINKCOMM
   if (graph_computation) {
 
@@ -561,6 +565,11 @@ protein_causality <- function(
 
   ######## CAUSAL ANALYSIS ########
   # if ("analysis" %in% steps) {
+
+  # TODO!!!
+  # quick and dirty
+  outpath <- get_outpath_pc()
+
   if (causal_analysis) {
     no_pairwise_effects_computable <- FALSE
     ida_function_w_o_pos_and_results <-

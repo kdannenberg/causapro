@@ -345,7 +345,7 @@ get_only_cols_label <- function(only_cols, remove_cols, only_rows, remove_rows,
   cols_str_rem <- paste(remove_cols, collapse = "-")
   cols_str = ""
   if (nchar(cols_str_only) + nchar(cols_str_rem) > 0) {
-    cols_str = paste(pastes("c", cols_str_only, sep = "+"), cols_str_rem, sep = "-")
+    cols_str = pastes(pastes("c", cols_str_only, sep = "+"), cols_str_rem, sep = "-")
   }
   rows_str_only <- paste(only_rows, collapse = "+")
   rows_str_rem <- paste(remove_rows, collapse = "-")

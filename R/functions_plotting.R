@@ -107,7 +107,8 @@ colors_for_nodes <- function(node_clusters, protein, coloring, colors, clusterin
 # TODO: call plot_graph_by_coloring oder so
 # TODO: add par(mfrow=...), so everything fits on one plane
 plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", graph_layout = "dot", protein,
-                       position_numbering, coloring, colors = NULL, outpath = function() {return("")},
+                       position_numbering, coloring, colors = NULL,
+                       outpath = function(prefix, plot_only_subgraphs, coloring, graph_layout) {return("")},
                        plot_as_subgraphs = FALSE, plot_only_subgraphs = NULL, subgraphs, numerical = TRUE,
                        output_formats = NULL, mute_all_plots = FALSE) {
   ## numerical serves no purpose right now, but it might in the future

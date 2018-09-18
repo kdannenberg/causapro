@@ -100,17 +100,8 @@ analysis_after_pc <- function(results, data, outpath, protein, position_numberin
 # estimate_margin: margin around zero, in which estimates given by localTests(...) are regarded "bad"
 evaluate_DAG <- function(data, graph, results, protein, position_numbering = NULL, outpath, stage = "orig",
                          bad_alpha_threshold = 0.01, estimate_margin = 0.4, compute_localTests_anew) {
-  # ein bisschen quick and dirty
-  # vllt lieber der outpth-function die folgenden Modifikationen übergeben und weiterhin die Funktion aufrufen
-  outpath <- outpath()
-  if (!(stage == "" || is.null(stage))) {
-    outpath <- paste(outpath, stage, sep = "-")
-  }
 
-  # outpath <- paste(outpath, "-r", sep = "")
-  # old: previously, both "-r" and "-localTests" were tested before computing anew
-  # now: I think -localTests is more instructive
-  outpath <- paste(outpath, "-localTests", sep = "")
+  outpath <- function_set_parameters(outpath, list(stage = stage))
 
   r_func <- function(graph, data) {
     d <- data.frame(data, check.names = FALSE)
@@ -122,37 +113,10 @@ evaluate_DAG <- function(data, graph, results, protein, position_numbering = NUL
 
   r_function <- function_set_parameters(r_func, parameters = list(data = data, graph = graph))
 
-  r <- compute_if_not_existent(filename = outpath, FUN = r_function, obj_name = "r" ,
+  r <- compute_if_not_existent(filename = function_set_parameters(outpath, list(object = "r"))(), FUN = r_function, obj_name = "r" ,
                           compute_anew = compute_localTests_anew,
                           fun_loaded_object_ok = function(x) {return(TRUE)},
                           try_old_outpath = FALSE)
-
-  # if ((file.exists(paste(outpath, "-localTests.RData", sep = ""))) && !(compute_localTests_anew)) {
-  #   filename <- paste(outpath, "-localTests.RData", sep = "")
-  #   load(filename)
-  #   if (!exists("r")) {
-  #     print("The file did not contain an object of name 'r'!")
-  #   } else {
-  #     print(paste("Result of localTests() loaded from ", filename, ".", sep = ""))
-  #     save(r, file = paste(outpath, "-r.RData", sep = ""))
-  #   }
-  # } else if ((file.exists(paste(outpath, "-r.RData", sep = ""))) && !(compute_localTests_anew)) {
-  #   filename <- paste(outpath, "-r.RData", sep = "")
-  #   load(filename)
-  #   if (!exists("r")) {
-  #     print("The file did not contain an object of name 'r'!")
-  #   } else {
-  #     print(paste("Result of localTests() loaded from ", filename, ".", sep = ""))
-  #   }
-  # } else {
-  #   d <- data.frame(data, check.names = FALSE)
-  #   colnames(d) <- paste("P", colnames(d), sep="")
-  #   rownames(d) <- paste("R", rownames(d), sep="")
-  #
-  #   r <- localTests(graph, d)
-  #   save(r, file = paste(outpath, "-r.RData", sep = ""))
-  #   print("r saved.")
-  # }
 
   result_position = paste("localTests", stage, "r", sep = "_")
   results[[result_position]] <- r
@@ -163,36 +127,38 @@ evaluate_DAG <- function(data, graph, results, protein, position_numbering = NUL
   interesting_pos <- interesting_positions(protein, position_numbering)
 
   if (length(interesting_pos >= 2)) {
-    if ((file.exists(paste(outpath, "-r_int.RData", sep = ""))) && !(compute_localTests_anew)) {
-    filename <- paste(outpath, "-r_int.RData", sep = "")
-    load(filename)
-    if (!exists("r_int")) {
-      print("The file did not contain an object of name 'r_int'!")
-    } else {
-      print(paste("r_int loaded from ", filename, ".", sep = ""))
-    }
-  } else {
+    r_int_func <- function(interesting_pos, r) {
       interesting_pos <- paste("P", interesting_pos, sep = "")
       print("Computing r_int...")
-        if (!is.null(interesting_pos)) {
-          r_int = c()
-          for (i in interesting_pos) {
-            for (j in interesting_pos) {
-                r_ij <- r[grepl(paste(i, "_|"), rownames(r), fixed=TRUE), ]
-                r_ij <- r_ij[grepl(paste("|_", j), rownames(r_ij), fixed=TRUE), ]
-                r_int <- rbind(r_int, r_ij)
-            }
+      if (!is.null(interesting_pos)) {
+        r_int = c()
+        for (i in interesting_pos) {
+          for (j in interesting_pos) {
+            r_ij <- r[grepl(paste(i, "_|"), rownames(r), fixed=TRUE), ]
+            r_ij <- r_ij[grepl(paste("|_", j), rownames(r_ij), fixed=TRUE), ]
+            r_int <- rbind(r_int, r_ij)
           }
         }
+      }
       print("Computed.")
       r_int <- r_int[order(rownames(r_int)), ] # fkt nicht, wenn r_int empty
-      if (dim(r)[1] > 1000) {
-        save(r_int, file = paste(outpath, "-r_int.RData", sep = ""))
-        print("r_int saved.")
-      }
+      # if (dim(r)[1] > 1000) {
+      #   save(r_int, file = paste(outpath, "-r_int.RData", sep = ""))
+      #   print("r_int saved.")
+      # }
     }
-      result_position = paste("localTests", stage, "r_int", sep = "_")
-      results[[result_position]] <- r_int
+
+
+    r_int_function <- function_set_parameters(r_int_func, list(interesting_pos = interesting_pos, r = r))
+
+    r_int <- compute_if_not_existent(filename = function_set_parameters(outpath, list(object = "r_int"))(),
+                                     FUN = r_int_function, obj_name = "r_int" ,
+                                     compute_anew = compute_localTests_anew,
+                                     fun_loaded_object_ok = function(x) {return(TRUE)},
+                                     try_old_outpath = FALSE)
+
+    result_position = paste("localTests", stage, "r_int", sep = "_")
+    results[[result_position]] <- r_int
   } else {
     print("No interesting positons known, r_int = r")
     r_int <- r
@@ -239,14 +205,16 @@ pairs_of_pos <- function(r) {
 # plotstages: "main", "sub", "anc", "all"
 plot_structure_evaluation<- function(results, stages, plot_types = c("localTests", "graphs"), graph_layout,
                   plot_as_subgraphs = FALSE, plot_only_subgraphs = FALSE, coloring, colors,
-                  outpath = "", caption = "", graph_output_formats,
+                  outpath = function(prefix, plot_only_subgraphs, coloring, graph_layout) {return("")},
+                  caption = "", graph_output_formats,
                   combined_plot = FALSE, position_numbering, protein = protein) {
-  if (!(outpath == "" || is.null(outpath))) {
+  outpath_str <- outpath()
+  if (!(outpath_str == "" || is.null(outpath_str))) {
     for (format in graph_output_formats) {
       if (format == "pdf") {
-        pdf(paste(outpath, "_analysis.pdf", sep = ""))
+        pdf(paste(outpath_str, "-analysis.pdf", sep = ""))
       } else if ((format == "ps") || (format == "postscript")) {
-        postscript(paste(outpath, "_analysis.ps",  sep = ""), paper = "special", width=10, height=8)
+        postscript(paste(outpath_str, "-analysis.ps",  sep = ""), paper = "special", width=10, height=8)
       }
     }
   } else if (!combined_plot) {
@@ -282,7 +250,8 @@ plot_structure_evaluation<- function(results, stages, plot_types = c("localTests
       if (!is.null(results[[stage]]$graph$NEL)) {
         plot_graph(graph = results[[stage]]$graph$NEL, caption = caption, protein = protein, position_numbering = position_numbering,
                    graph_layout = graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-                   coloring = coloring, colors = colors, outpath = "", output_formats = "")
+                   coloring = coloring, colors = colors, output_formats = "")
+                  # kein outpath angegeben! default: fkt, die "" ausgibt.
 
         # colors <- colors_for_graph(protein = protein, position_numbering = position_numbering, coloring = coloring, colors = colors)
         # nAttrs <- list()
@@ -300,7 +269,7 @@ plot_structure_evaluation<- function(results, stages, plot_types = c("localTests
     }
   }
   # TODO: einfach rausgenommen. ist das ok?
-  if (!(outpath == "" || is.null(outpath))) {
+  if (!(outpath_str == "" || is.null(outpath_str))) {
     dev.off()
   }
 

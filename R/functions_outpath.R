@@ -48,6 +48,15 @@ get_outpath_pc_graph <- function(prefix = NULL, plot_only_subgraphs = NULL, colo
   return(str)
 }
 
+get_outpath_pc_evaluation <- function(prefix = "", stage = NULL, object = NULL) {
+  outpath <- pastes(prefix, "localTests", sep = "_")
+  if (grepl("orig", stage)) {
+    stage <- ""
+  }
+  outpath <- pastes(outpath, stage, object, sep = "-")
+  return(outpath)
+}
+
 # TODO: alpha müsste hier raus; -> Verzeichnisstruktur?
 get_outpath_data <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "",
                              alpha, min_pos_var, only_rows_cols_label = "", every_n_th_row,
