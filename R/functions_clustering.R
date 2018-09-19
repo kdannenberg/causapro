@@ -102,7 +102,8 @@ output_node_clustering <- function(node_clustering, #clustering_type,
     call_plot_igraph(g = igraph_plot, clusters = TRUE, #cluster_str = clustering_type,
                      clustering = communities_clustering,
                      clustering_colors = sapply(clustering_colors, adjustcolor, alpha.f = 0.1),
-                     outpath = paste0(outpath,"-graph"), mute_all_plots = mute_all_plots, ...)
+                     outpath = function_set_parameters(outpath, list(object = "graph")),
+                     mute_all_plots = mute_all_plots, ...)
   }
 
 

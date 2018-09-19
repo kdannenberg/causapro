@@ -238,9 +238,13 @@ plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawA
   # print(paste0("n=", n, ", m=", m, ", m/n=", m/n))
   ###### width_of_image <- n / 8
   ###### height_of_image <- (m / n) * (m / 10) + 2
-  postscript(paste(outpath(), ".pdf", sep = ""))
+  # save
+  device_save <- dev.cur()
+  postscript(paste(outpath(), ".ps", sep = ""))
    graph_laidout <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs)
   dev.off()
+  # restore (only the top one, I hope that's enough)
+  dev.set(which = device_save)
   width_of_image <- graph_laidout@boundBox@upRight@x / width_divisor_files  # works because pc_graph has beet laidout by agopen
   suffix = ""
   # if (m/n > 1) {
@@ -324,6 +328,7 @@ call_plot_igraph <- function(g, protein = "PDZ", position_numbering = "crystal",
                         caption = caption, outpath = outpath, output_formats = output_formats, mute_all_plots = mute_all_plots, layout_str = layout_str, plot_as_subgraphs = plot_as_subgraphs, subgraphs = get_subgraphs_igraph(node_clusters = interesting_positions(protein = protein, position_numbering = position_numbering, for_coloring = TRUE, coloring = coloring, colors = colors), protein = protein))
 }
 
+library(prodlim) # for row.match
 #' Plots a given structure using the igraph package. Note that the graph is still passed as an graph object (not an igraph object).
 #'
 #' @param g A graph object as specified in the R graph package.
@@ -341,34 +346,65 @@ call_plot_igraph <- function(g, protein = "PDZ", position_numbering = "crystal",
 #' @return No return value.
 plot_structure_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str, clustering,
                                   clustering_colors = rainbow(length(clustering)), caption,
-                                  outpath, output_formats,
+                                  weight_as_edge_labels = TRUE, outpath, output_formats,
                                   mute_all_plots, layout_str, plot_as_subgraphs, subgraphs) {
+
+  # ToDO: um duplizierten Code zu vermeiden und die neuen Paramter dem plotten überall zu übergeben, alle parameter in die
+  # plotfuntion reinstecken und nur do_the_plotting() oder so aufrufen
+
   ## par(mfrow = c(2,2))
   # kernel
   ig = igraph.from.graphNEL(g)
   V(ig)$color = nodecolor
   E(ig)$color = edgecolor
   ## we plot a given clustering
+
+
   if (clusters) {
     ## edges between clusters are blue, conflict edges red.
     # If both categories apply the edge is colored purple
     E(ig)$color[crossing(clustering, ig)] = "blue"
     E(ig)$color[intersect(which(crossing(clustering,ig)), which(E(ig)$color == "red"))] = "purple"
     if(!mute_all_plots) {
+      ig_double_eges_zero_weight <- set_weight_of_reverse_edges_to_zero(ig)
+      amplification_fct <- function(weight)  {
+          return(((2 * weight)^4)*2)
+      }
+
+      ig_wo_double_edges <- as.undirected(ig, mode = "collapse", edge.attr.comb = "max")
+
+      #gewichte aller knoten, die da nicht drin sind auf null setzen
+      # bei den labels 0 überspringen
+      # ends(ig, es = E(ig_wo_double_edges))
+
+
+      if (weight_as_edge_labels) {
+        # TODO filter duplicates for un(=bi)directed edges
+        E(ig)$label <- sapply(E(ig_double_eges_zero_weight)$weight, function(weight) {
+          if (weight == 0) {
+            return("")
+          } else {
+            return(round(weight, digits = 2))
+          }
+        })
+      }
+
       plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, mark.col = clustering_colors,
-           edge.arrow.size=0.1, vertex.size=10, edge.width=0.8, main = paste(caption, cluster_str))
+           edge.arrow.size = 0.5, vertex.size = 10,
+           edge.width = amplification_fct(E(ig_double_eges_zero_weight)$weight),
+           main = paste(caption, cluster_str))
     }
     for(format in output_formats) {
-      if (!nchar(outpath) == 0) {
+      if (!nchar(outpath()) == 0) {
         if (format == "pdf") {
-          pdf(paste(pastes(outpath, cluster_str, sep = "_"), ".pdf", sep = ""))
+          pdf(paste(pastes(outpath(), cluster_str, sep = "_"), ".pdf", sep = ""))
         } else if ((format == "ps") || (format == "postscript")) {
-          postscript(paste(pastes(outpath, cluster_str, sep = "_"), ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
+          postscript(paste(pastes(outpath(), cluster_str, sep = "_"), ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
         } else if (format == "svg") {
-          svg(paste(pastes(outpath, cluster_str, sep = "_"), ".svg", sep = ""))
+          svg(paste(pastes(outpath(), cluster_str, sep = "_"), ".svg", sep = ""))
         }
         plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, mark.col = clustering_colors,
-             edge.arrow.size=0.1, vertex.size=10, edge.width=0.8, main = paste(caption, cluster_str))
+             edge.arrow.size=0.1, vertex.size=10, edge.width=E(ig)$weight, main = paste(caption, cluster_str))
         dev.off()
       }
     }
@@ -381,6 +417,7 @@ plot_structure_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str
     mem[nodes(g)] = 1
     mem[subgraphs[[1]]] = 2
     cl = make_clusters(ig, mem)
+
     if(!mute_all_plots) {
       ## note that sugiyama does not work too well with CPDAGs (it needs actual DAGs)
       ## therefore it will add new nodes to "solve" the cycle etc
@@ -390,31 +427,31 @@ plot_structure_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str
         if(plot_as_subgraphs) {
           plot(cl, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = paste(caption, layout_str, "as_subgraphs"))
         } else {
-          plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+          plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=E(ig)$weight, main = caption)
         }
       }
     }
     for(format in output_formats) {
       print(output_formats)
-        if (!nchar(outpath) == 0) {
-          if (format == "pdf") {
-            pdf(paste(outpath, "_", layout_str, "_as_sg", ".pdf", sep = ""))
-          } else if ((format == "ps") || (format == "postscript")) {
-            postscript(paste(outpath, "_", layout_str, "_as_sg", ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
-          }  else if(format == "svg") {
-            svg(paste(outpath, "_", layout_str, "_as_sg", ".svg", sep = ""))
-          }
-          if(layout_str == "layout_with_sugiyama") {
-            plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
-          } else {
-            if(plot_as_subgraphs) {
-              plot(cl, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
-            } else {
-              plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
-            }
-          }
-          dev.off()
+      if (!nchar(outpath()) == 0) {
+        if (format == "pdf") {
+          pdf(paste(outpath(), "_", layout_str, "_as_sg", ".pdf", sep = ""))
+        } else if ((format == "ps") || (format == "postscript")) {
+          postscript(paste(outpath(), "_", layout_str, "_as_sg", ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
+        }  else if(format == "svg") {
+          svg(paste(outpath(), "_", layout_str, "_as_sg", ".svg", sep = ""))
         }
+        if (layout_str == "layout_with_sugiyama") {
+          plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+        } else {
+          if(plot_as_subgraphs) {
+            plot(cl, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+          } else {
+            plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+          }
+        }
+        dev.off()
+      }
     }
   }
 }

@@ -175,16 +175,6 @@ protein_causality <- function(
   # INIT
   if (!(mute_all_plots || for_combined_plot)) {
     graphics.off()
-
-    # TODO: graph_clustering_funktion bauen, da rein
-    if (!((plot_analysis && causal_analysis) || (plot_ida && evaluation))) {
-      if (graph_clustering) {
-        cols <- length(graph_cluster_methods) + 1
-      } else {
-        cols <- 1
-      }
-      par(mfrow = c(1, cols))
-    }
   }
 
   # Data file description
@@ -408,15 +398,16 @@ protein_causality <- function(
                                                coloring = coloring, colors = colors)
       subgraphs <- subgraphs_from_node_clusters(node_clustering, graph = results$orig$graph$NEL, protein = protein)
       graph <- subgraphs[[plot_only_subgraphs]]$graph
-      get_outpath_pc_graph <- function_set_parameters(FUN = get_outpath_pc_graph,
+      get_outpath_pc_graph_plot <- function_set_parameters(FUN = get_outpath_pc_graph,
                                                            parameters = list(plot_only_subgraphs = plot_only_subgraphs))
     } else {
+      get_outpath_pc_graph_plot <- get_outpath_pc_graph
       graph <- results$pc@graph
     }
     # outpath_pc_graph <- paste(outpath_pc, get_outpath_pc_graph(graph_layout = graph_layout,
     #                     coloring = coloring, plot_only_subgraphs = plot_only_subgraphs), sep = "_")
     plot_connected_components_in_pymol(protein = protein, position_numbering = position_numbering, graph = graph,
-                                       outpath = get_outpath_pc_graph, show_int_pos = pymol_show_int_pos, show_positions = TRUE,
+                                       outpath = get_outpath_pc_graph_plot, show_int_pos = pymol_show_int_pos, show_positions = TRUE,
                                        file_separator = file_separator, sort_connected_components_by_length =
                                          pymol_sort_connected_components_by_length,
                                        mix_connected_components = pymol_mix_connected_components)
@@ -431,7 +422,7 @@ protein_causality <- function(
 
     # numerical <- (type_of_variables == "continuous")
     # if (!mute_all_plots) {
-      plot_pc(graph = graph, caption = caption, outpath = get_outpath_pc_graph, protein = protein, position_numbering = position_numbering,
+      plot_pc(graph = graph, caption = caption, outpath = get_outpath_pc_graph_plot, protein = protein, position_numbering = position_numbering,
               plot_types = plot_types, coloring = coloring, colors = colors,
               graph_layout = graph_layout, graph_layout_igraph = graph_layout_igraph, plot_as_subgraphs = plot_as_subgraphs,
               plot_only_subgraphs = plot_only_subgraphs, unabbrev_r_to_info = unabbrev_r_to_info, print_r_to_console = print_r_to_console,
@@ -457,8 +448,8 @@ protein_causality <- function(
 
   ######## CAUSAL STRUCTURE EVALUATION ########
   if (evaluation) {
-    get_outpath_pc_evaluation <- function_set_parameters(get_outpath_pc_evaluation, list(prefix = get_outpath_pc()))
-    results <- analysis_after_pc(results, data, outpath = get_outpath_pc_evaluation, protein = protein, position_numbering = position_numbering,
+    get_outpath_graph_evaluation <- function_set_parameters(get_outpath_graph_evaluation, list(prefix = get_outpath_pc()))
+    results <- analysis_after_pc(results, data, outpath = get_outpath_graph_evaluation, protein = protein, position_numbering = position_numbering,
                                  stages = stages, #max_number_of_edges_in_graph = 70,
                                  unabbrev_r_to_info = unabbrev_r_to_info,
                                  print_r_to_console = print_r_to_console, lines_in_abbr_of_r = lines_in_abbr_of_r,
@@ -471,39 +462,50 @@ protein_causality <- function(
         plot_text("Too many edges in the graph. Graph evaluation (probably) infeasible.")
       } else {
           # TODO: Das geht bestimmt auch ein bisschen eleganter
+          # undebug(plot_structure_evaluation)
           plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
-              coloring = coloring, colors = colors, caption = caption, outpath = get_outpath_pc_graph, graph_output_formats = graph_output_formats,
+              coloring = coloring, colors = colors, caption = caption, outpath = get_outpath_pc_graph,
               combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
+          # debug(plot_structure_evaluation)
           plot_structure_evaluation(results, stages, plot_types, graph_layout, plot_as_subgraphs = plot_as_subgraphs, plot_only_subgraphs = plot_only_subgraphs,
               coloring = coloring, colors = colors, caption = caption, # kein outpath; default: fkt, die "" zurückgibt
-              graph_output_formats = graph_output_formats,
+              graph_output_format = graph_output_formats[1],
               combined_plot = for_combined_plot, position_numbering = position_numbering, protein = protein)
       }
     }
   }
 
+  # ToDo: alle gespeicherten RData in eine Datei (results$.....)
   # TODO: quick and dirty!!
-  outpath <- get_outpath_pc()
+  # outpath <- get_outpath_pc()
   ######## GRAPH CLUSTERING, PYMOL, LINKCOMM
   if (graph_computation) {
-
     graphs <- list()
     if (graph_clustering || (linkcommunities && sum(unlist(conflict_edges(results$pc@graph))) > 0)) {
-      outpath_clustering <- outpath
+      # outpath_clustering <- outpath
       if (weighted_graph_for_clusterings) {
-        weighted_graph <- compute_if_not_existent(filename = paste0(outpath_clustering, "-weighted_graph"),
+        weighted_graph <- compute_if_not_existent(filename = function_set_parameters(get_outpath_pc_graph,
+                                                  list(weighted = TRUE))(),
                                                   FUN = function_set_parameters(set_edge_weights_for_graph,
                                                                                 parameters = list(graph = graph, cov = cov(data))),
                                                   obj_name = "weighted_graph")
 
-        outpath_clustering <- paste0(outpath_clustering, "-wgt")
+
+        # outpath_clustering <- paste0(outpath_clustering, "-wgt")
         results$graph$weighted <- weighted_graph
         graphs$for_clustering <- weighted_graph
-        graphs$for_plotting <- results$pc@graph
+        graphs$for_plotting <- abs_edge_weights(weighted_graph)
+        # graphs$for_plotting <- results$pc@graph
+
+        get_outpath_graph_clustering <- function_set_parameters(get_outpath_graph_clustering, list(prefix =
+                                          function_set_parameters(get_outpath_pc_graph, list(weighted = TRUE))()))
 
       } else {
         graphs$for_clustering <- results$pc@graph
         graphs$for_plotting <- results$pc@graph
+
+        get_outpath_graph_clustering <- function_set_parameters(get_outpath_graph_clustering,
+                                                                list(prefix = get_outpath_pc()))
       }
 
       # graphs$for_clustering with edge weights, if desired
@@ -514,7 +516,14 @@ protein_causality <- function(
       }
 
 
+
       if (graph_clustering) {
+        if (!(mute_all_plots || for_combined_plot)) {
+            plot.new()
+            cols <- length(graph_cluster_methods)
+            par(mfrow = c(1, cols))
+        }
+
         for (clustering in graph_cluster_methods) {
           if (clustering == "edge_betweenness") {
             type <- "eb"
@@ -526,16 +535,19 @@ protein_causality <- function(
 
           communities_clustering <- protein_graph_clustering(graphs$for_clustering, clustering = clustering)
           # outpath_clustering
-          outpath_clustering_type <- paste(outpath_clustering, type, sep = "-")
+          # get_outpath_graph_clustering <-
+          # outpath_clustering_type <- paste(outpath_clustering, type, sep = "-")
+
           output_node_clustering(#clustering_type = type,
                                  graph = graphs$for_plotting,
                                  communities_clustering = communities_clustering,
                                  additional_clusters = additional_clusters,
                                  protein = protein, position_numbering = position_numbering,
                                  coloring = coloring, colors = colors,
-                                 output_formats = graph_output_formats, caption = caption,
-                                 outpath = outpath_clustering_type, mute_all_plots = mute_all_plots,
-                                 file_separator = file_separator)
+                                 output_formats = graph_output_formats, caption = paste(caption, type, sep ="\n"),
+                                 outpath = function_set_parameters(get_outpath_graph_clustering,
+                                                                   list(cluster_type = type)),
+                                 mute_all_plots = mute_all_plots, file_separator = file_separator)
         }
 
       }
@@ -544,6 +556,8 @@ protein_causality <- function(
 
 
       if (linkcommunities && sum(unlist(conflict_edges(results$pc@graph))) > 0) {
+        get_outpath_graph_clustering <- function_set_parameters(get_outpath_graph_clustering,
+                                                                list(cluster_type = "linkcomm"))
         cols <- compute_link_communities(graphs$for_clustering, data = data, k = linkcommunities_k, plot_barplot = FALSE,
                                          classify_nodes = TRUE, cluster_method = linkcommunities_cluster_method,
                                          pie_nodes = FALSE, color_edges = TRUE,

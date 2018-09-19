@@ -435,3 +435,41 @@ set_edge_weights_for_graph <- function(graph, cov) {
 
   return(graph)
 }
+
+abs_edge_weights <- function(graph) {
+  if (class(graph)[1] == "graphNEL") {
+    graph@edgeData@data <- lapply(graph@edgeData@data, function(edge) {return(list(weight = abs(edge$weight)))})
+  } else if (class(graph)[1] == "igraph") {
+    E(graph)$weight <- abs(E(graph)$weight)
+  }
+  return(graph)
+}
+
+#' Setzt die gewichte aller Kanten, die eine Gegenkante haben, die lexikographisch kleiner ist (also bei der der Ursprungsknoten
+#' eine kleinere Nummer hat als der Zeilknoten, auf 0.
+#' @details wichtig zum plotten von Kanten, deren Dicke ihrem Gewicht entspreicht (sonst werden manach doppelt so dick)
+set_weight_of_reverse_edges_to_zero <- function(igraph) {
+  ends <- ends(igraph, es = E(igraph))
+  # Kanten, deren Knoten aufsteigend sind, bleiben
+  ends_desc <- ends[which(ends[,1] > ends[,2]),]
+
+  #Kanten deren Knoten absteigend sind, bleiben nur, wenn die Gegenkante nicht existiert... (später)
+  # existierende Gegenkanten
+  ends_switched <- cbind(ends[,2], ends[,1])
+  # ends_unique_edges_asc_switched <- alply(ends_unique_edges_asc_switched, 1, identity)
+
+
+  # Kanten wegschmeißen, wenn sie nicht in den existierenden Gegenkanten sind
+  has_counter_edge <-  which(!is.na(row.match(as.data.frame(ends), as.data.frame(ends_switched))))
+  # apply(ends_unique_edges_desc, 1, function(desc_edge) {if (desc_edge)})
+
+  is_lexicographically_desc <- which(!is.na(row.match(as.data.frame(ends), as.data.frame(ends_desc))))
+
+  set_to_zero <- intersect(has_counter_edge, is_lexicographically_desc)
+
+  E(igraph)$weight[set_to_zero] <- 0
+
+  # sth like
+  # which(!is.na(match(data.frame(t(ends_unique_edges_desc)), data.frame(t(ends_unique_edges_asc_switched)))))
+  return(igraph)
+}

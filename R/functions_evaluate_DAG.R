@@ -203,23 +203,22 @@ pairs_of_pos <- function(r) {
 
 # plottypes: "graphs", "localTests", "both"
 # plotstages: "main", "sub", "anc", "all"
-plot_structure_evaluation<- function(results, stages, plot_types = c("localTests", "graphs"), graph_layout,
+plot_structure_evaluation <- function(results, stages, plot_types = c("localTests", "graphs"), graph_layout,
                   plot_as_subgraphs = FALSE, plot_only_subgraphs = FALSE, coloring, colors,
                   outpath = function(prefix, plot_only_subgraphs, coloring, graph_layout) {return("")},
-                  caption = "", graph_output_formats,
+                  caption = "", graph_output_format,
                   combined_plot = FALSE, position_numbering, protein = protein) {
   outpath_str <- outpath()
-  if (!(outpath_str == "" || is.null(outpath_str))) {
-    for (format in graph_output_formats) {
-      if (format == "pdf") {
+  if ((outpath_str == "" || is.null(outpath_str))) {  # plot in file
+    # for (format in graph_output_format) {
+      if (graph_output_format == "pdf") {
         pdf(paste(outpath_str, "-analysis.pdf", sep = ""))
-      } else if ((format == "ps") || (format == "postscript")) {
+      } else if ((graph_output_format == "ps") || (format == "postscript")) {
         postscript(paste(outpath_str, "-analysis.ps",  sep = ""), paper = "special", width=10, height=8)
       }
-    }
-  } else if (!combined_plot) {
-    graphics.off()
-    # plot.new()
+    # }
+  } else if (!combined_plot) { # plot on canvas
+    plot.new()
   }
 
   if (!combined_plot) {
@@ -269,7 +268,7 @@ plot_structure_evaluation<- function(results, stages, plot_types = c("localTests
     }
   }
   # TODO: einfach rausgenommen. ist das ok?
-  if (!(outpath_str == "" || is.null(outpath_str))) {
+  if ((outpath_str == "" || is.null(outpath_str))) {
     dev.off()
   }
 

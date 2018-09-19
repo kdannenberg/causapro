@@ -12,7 +12,7 @@ source("configuration_data.R")
 # debug(plot_clusters_in_pymol)
 # debug(protein_graph_clustering)
 # debug(partuning_over_alpha_and_minposvar)
-debug(cluster_pairwise_effects)
+# debug(cluster_pairwise_effects)
 
 
 filename = "p38g_NMR-Mut_inact"
@@ -20,7 +20,7 @@ protein = "p38g"
 
 pc_fun <- function_set_parameters(protein_causality, parameters =
                                     list(filename = filename,
-                                         pre_fun_on_data = "div_cols_by_sd",
+                                         # pre_fun_on_data = "div_cols_by_sd",
                                          mute_all_plots = TRUE,
                                          type_of_variables = "continuous"))
 
@@ -71,6 +71,6 @@ pc_fun(alpha = tunes[[4]]$best_alpha, min_pos_var = tunes[[4]]$best_minposvar,
        effects_cluster_cut_height_h = 3)
 
 protein_causality(filename = file_name, alpha = tuning$best_alpha,
-                  min_pos_var = tuning$best_minposvar, causal_analysis = TRUE)
+                  min_pos_var = tuning$best_minposvar, causal_analysis = TRUE, effects_cluster_cut_height_h = 3)
 
 

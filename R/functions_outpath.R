@@ -36,25 +36,34 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
 
 
 get_outpath_pc_graph <- function(prefix = NULL, plot_only_subgraphs = NULL, coloring = NULL,
-                                 graph_layout = NULL) {
+                                 graph_layout = NULL, weighted = FALSE) {
   str <- ""
   if ((nchar(coloring) == 0) || (is.null(coloring)) || (coloring == "auto")) {
     coloring <- ""
   }
-  str <- pastes("graph", pastes_parvalue("col=", coloring), graph_layout,
+  if (weighted) {
+    graph_str <- "graphweighted"
+  } else {
+    graph_str <- "graph"
+  }
+  str <- pastes(graph_str, pastes_parvalue("col=", coloring), graph_layout,
                 pastes_parvalue("col=", coloring), sep = "-")
   str <- pastes(prefix, str, sep = "_")
 
   return(str)
 }
 
-get_outpath_pc_evaluation <- function(prefix = "", stage = NULL, object = NULL) {
+get_outpath_graph_evaluation <- function(prefix = "", stage = NULL, object = NULL) {
   outpath <- pastes(prefix, "localTests", sep = "_")
   if (grepl("orig", stage)) {
     stage <- ""
   }
   outpath <- pastes(outpath, stage, object, sep = "-")
   return(outpath)
+}
+
+get_outpath_graph_clustering <- function(prefix = "", cluster_type = NULL, object = "") {
+  return(pastes(prefix, cluster_type, object, sep = "-"))
 }
 
 # TODO: alpha müsste hier raus; -> Verzeichnisstruktur?
