@@ -25,6 +25,7 @@ set_parameters <- function(FUN, parameters) {
 }
 
 function_set_parameters <- set_parameters
+set_pars <- set_parameters
 
 # for_coloring -> output hierarchical (list with different sorts of interesting positions as vectors), otherwise one vector
 # the for_coloring result of this function can be converted to the other one by conv_for_coloring

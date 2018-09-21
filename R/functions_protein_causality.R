@@ -338,6 +338,7 @@ protein_causality <- function(
 
   ######## CAUSAL STRUCTURE LEARNING ########
   if (graph_computation) {
+    # TODO: Function add_directory(path, dir_name)
     get_outpath_pc <- function_set_parameters(get_outpath_pc, parameters = list(
                                   outpath_data = outpath_data, file_separator = file_separator,
                                   alpha = alpha, pc_indepTest = pc_indepTest, cor_cov_FUN = cor_cov_FUN,
@@ -379,6 +380,7 @@ protein_causality <- function(
     # TODO: gleich pc_func übergeben, alle anderen parameter rausnehmen
     results <- protein_causal_graph(results = results, data = data, protein = protein, type_of_data = type_of_data, source_of_data = source_of_data, position_numbering = position_numbering,
                                     output_dir = output_dir, filename = filename,
+                                    # ToDo: Ffunktion reinziehen
                                     outpath = get_outpath_pc(), type_of_variables = type_of_variables,
                                     indepTest = pc_indepTest, suffStat = pc_suffStat,
                                     alpha = alpha, cor_cov_FUN = cor_cov_FUN, pc_solve_conflicts = pc_solve_conflicts, pc_u2pd = pc_u2pd, pc_conservative = pc_conservative, pc_maj_rule = pc_maj_rule,
@@ -392,6 +394,8 @@ protein_causality <- function(
                                     # plot_no_isolated_nodes = plot_no_isolated_nodes, plot_with_graphviz = plot_with_graphviz
                                     )
 
+    get_outpath_pc_graph_plot <- get_outpath_pc_graph
+    graph <- results$pc@graph
     if (!is.null(plot_only_subgraphs)) {
       # graph@edgeL <- do.call(c, sapply(subgraphs, function(list) {return(list$graph@edgeL)}))
       node_clustering <- interesting_positions(protein, position_numbering, for_coloring = TRUE,
@@ -400,9 +404,6 @@ protein_causality <- function(
       graph <- subgraphs[[plot_only_subgraphs]]$graph
       get_outpath_pc_graph_plot <- function_set_parameters(FUN = get_outpath_pc_graph,
                                                            parameters = list(plot_only_subgraphs = plot_only_subgraphs))
-    } else {
-      get_outpath_pc_graph_plot <- get_outpath_pc_graph
-      graph <- results$pc@graph
     }
     # outpath_pc_graph <- paste(outpath_pc, get_outpath_pc_graph(graph_layout = graph_layout,
     #                     coloring = coloring, plot_only_subgraphs = plot_only_subgraphs), sep = "_")
@@ -476,13 +477,15 @@ protein_causality <- function(
   }
 
   # ToDo: alle gespeicherten RData in eine Datei (results$.....)
-  # TODO: quick and dirty!!
-  # outpath <- get_outpath_pc()
   ######## GRAPH CLUSTERING, PYMOL, LINKCOMM
   if (graph_computation) {
-    graphs <- list()
     if (graph_clustering || (linkcommunities && sum(unlist(conflict_edges(results$pc@graph))) > 0)) {
       # outpath_clustering <- outpath
+      graph <- results$pc@graph
+      if (!sum(unlist(conflict_edges(graph))) == 0) {
+        graph <- kernelize_graph(graph)
+        get_outpath_pc_graph <- function_set_parameters(get_outpath_pc_graph, list(kernelized = TRUE))
+      }
       if (weighted_graph_for_clusterings) {
         weighted_graph <- compute_if_not_existent(filename = function_set_parameters(get_outpath_pc_graph,
                                                   list(weighted = TRUE))(),
@@ -493,20 +496,14 @@ protein_causality <- function(
 
         # outpath_clustering <- paste0(outpath_clustering, "-wgt")
         results$graph$weighted <- weighted_graph
-        graphs$for_clustering <- weighted_graph
-        graphs$for_plotting <- abs_edge_weights(weighted_graph)
-        # graphs$for_plotting <- results$pc@graph
+        graph <- weighted_graph
 
-        get_outpath_graph_clustering <- function_set_parameters(get_outpath_graph_clustering, list(prefix =
-                                          function_set_parameters(get_outpath_pc_graph, list(weighted = TRUE))()))
 
-      } else {
-        graphs$for_clustering <- results$pc@graph
-        graphs$for_plotting <- results$pc@graph
-
-        get_outpath_graph_clustering <- function_set_parameters(get_outpath_graph_clustering,
-                                                                list(prefix = get_outpath_pc()))
+        get_outpath_pc_graph <- function_set_parameters(get_outpath_pc_graph, list(weighted = TRUE))
       }
+
+      get_outpath_graph_clustering <- function_set_parameters(get_outpath_graph_clustering,
+                                                              list(prefix = get_outpath_pc_graph()))
 
       # graphs$for_clustering with edge weights, if desired
       # definitely without edge weights
@@ -533,13 +530,14 @@ protein_causality <- function(
             type <- "igraph"
           }
 
-          communities_clustering <- protein_graph_clustering(graphs$for_clustering, clustering = clustering)
+          communities_clustering <- protein_graph_clustering(graph, clustering = clustering)
           # outpath_clustering
           # get_outpath_graph_clustering <-
           # outpath_clustering_type <- paste(outpath_clustering, type, sep = "-")
 
-          output_node_clustering(#clustering_type = type,
-                                 graph = graphs$for_plotting,
+          output_node_clustering(# clustering_type = type,
+                                 # graph = graphs$for_plotting,
+                                 graph = graph,
                                  communities_clustering = communities_clustering,
                                  additional_clusters = additional_clusters,
                                  protein = protein, position_numbering = position_numbering,
@@ -582,7 +580,7 @@ protein_causality <- function(
 
   # TODO!!!
   # quick and dirty
-  outpath <- get_outpath_pc()
+  get_outpath_ida <- function_set_parameters(get_outpath_ida, list(prefix = get_outpath_pc()))
 
   if (causal_analysis) {
     no_pairwise_effects_computable <- FALSE
@@ -591,7 +589,7 @@ protein_causality <- function(
                               parameters = list(data = data, direction = ida_direction,
                                                 weight_effects_on_by = weight_effects_on_by,
                                                 protein = protein, coloring = "all", no_colors = FALSE,
-                                                outpath = outpath, amplification_exponent = 1,
+                                                outpath = get_outpath_ida(), amplification_exponent = 1,
                                                 amplification_factor = TRUE, rank_effects = FALSE,
                                                 effect_to_color_mode = effect_to_color_mode, pymol_bg_color = "grey",
                                                 mute_all_plots = mute_all_plots, caption = caption,
@@ -605,7 +603,9 @@ protein_causality <- function(
                                                     parameters = list(results = results))
 
     # outpath = paste0(outpath, "_", causal_effects_function, "_interv-at-", intervention_position)
-    outpath = paste0(outpath, "_", causal_effects_function)
+    # outpath = paste0(outpath, "_", causal_effects_function)
+    get_outpath_ida <- function_set_parameters(get_outpath_ida, list(causal_effects_function = causal_effects_function))
+
 
     # plot.new()  # TODO: Muss das sein?!
     if (intervention_position == "all") {
@@ -629,7 +629,7 @@ protein_causality <- function(
         fun_loaded_object_ok <- function_set_parameters(loaded_object_ok, parameters = list(data = data))
 
 
-        all_pairwise_effects <- compute_if_not_existent(filename = paste(outpath, "pairwise_effects", sep="-"),
+        all_pairwise_effects <- compute_if_not_existent(filename = paste(get_outpath_ida(), "pairwise_effects", sep="-"),
                                                         # FUN = function_set_parameters(FUN, parameters = c(results = results)),
                                                         FUN = function_set_parameters(compute_all_pairwise_effects,
                                                                                       parameters = list(data = data, ida_function_w_o_pos = ida_function_w_o_pos)),
@@ -644,7 +644,7 @@ protein_causality <- function(
         set_of_graphs <- determine_set_of_graphs(results = results, data = data, perturbed_position = intervention_position,
                                                  type_of_graph_set = "conflict",
                                                  pc_function = pc_function, ida_function = NULL,
-                                                 s = s, new = FALSE, save = TRUE, outpath = outpath,
+                                                 s = s, new = FALSE, save = TRUE, outpath = get_outpath_ida(),
                                                  pc_maj_rule_conflict = pc_maj_rule_conflict,
                                                  pc_conservative_conflict = pc_conservative_conflict,
                                                  direction = ida_direction, # darf ws nicht "both" sein!
@@ -667,12 +667,7 @@ protein_causality <- function(
             if (length(regarded_graphs_indices) == 0) {
               stop("All conflict graphs excluded by first_graph_i and last_graph_i")
             }
-            if (length(regarded_graphs_indices) == 1) {
-              outpath <- paste0(outpath, "-G", regarded_graphs_indices)
-            }
-            if (length(regarded_graphs_indices) > 1) {
-              outpath <- paste0(outpath, "-G", first_graph_i, "-", last_graph_i)
-            }
+            get_outpath_ida <- function_set_parameters(get_outpath_ida, list(first_graph_i = first_graph_i, last_graph_i = last_graph_i))
           }
           for (i in regarded_graphs_indices) {
           # for (i in 1:2) {
@@ -689,7 +684,7 @@ protein_causality <- function(
             #
             # all_results[[i]]$`ida`[[intervention_position]][[ida_direction]]$`effects` <-
             all_results[[i]] <-
-            compute_if_not_existent(filename = paste(outpath, "pairwise_effects-G", i, sep="-"),
+            compute_if_not_existent(filename = paste(get_outpath_ida(), "pairwise_effects-G", i, sep="-"),
                                                             # FUN = function_set_parameters(FUN, parameters = c(results = results)),
                                                             FUN = function_set_parameters(compute_all_pairwise_effects,
                                                               parameters = list(data = data, ida_function_w_o_pos = ida_function_w_o_pos,
@@ -739,13 +734,15 @@ protein_causality <- function(
         # analyse_set_of_graphs(results = results_copy, protein = "PDZ")
       }
 
+      outpath_pairwise_effects <- function_set_parameters(outpath_pairwise_effects, list(prefix = get_outpath_ida()))
+
       if (!no_pairwise_effects_computable) {
         results <- cluster_pairwise_effects(results = results, pairwise_effects = results$all_pairwise_effects,
                                             pre_fct = effects_pre_cluster_fun, cluster_method = effects_cluster_method,
                                             hclust_method = effects_hclust_method, dist_measure = effects_dist_method,
                                             number_of_clusters_k = effects_cluster_k, cut_height_h = effects_cluster_cut_height_h,
                                             iterations_pv = effects_pv_nboot, alpha = effects_cluster_alpha,
-                                            protein = protein, outpath = outpath, file_separator = file_separator,
+                                            protein = protein, outpath = outpath_pairwise_effects, file_separator = file_separator,
                                             graph = results$pc@graph, mute_all_plots = mute_all_plots)
       }
 

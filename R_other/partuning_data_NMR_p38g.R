@@ -21,8 +21,9 @@ protein = "p38g"
 pc_fun <- function_set_parameters(protein_causality, parameters =
                                     list(filename = filename,
                                          # pre_fun_on_data = "div_cols_by_sd",
-                                         mute_all_plots = TRUE,
-                                         type_of_variables = "continuous"))
+                                         mute_all_plots = TRUE
+                                         # type_of_variables = "continuous",
+                                         ))
 
 pc_fun_with_eval <- function_set_parameters(pc_fun, parameters =
                                               list(evaluation = TRUE,
@@ -37,9 +38,9 @@ var_cutoff = 0
 # alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, seq(0.2, 0.9, 0.1))
 # alphas <- c(1e-20, 1e-10, 1e-5, 0.0001, 0.001, seq(0.01, 0.09, 0.02), 0.1, 0.15, seq(0.2, 0.9, 0.1))
 # alphas <- c(0.0001, seq(0.001, 0.009, 0.001), seq(0.01, 0.09, 0.01), 0.1, 0.15, 0.2)
-# alphas <- c(0.0001, 0.001, seq(0.01, 0.09, 0.02), 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.7, 0.9)
+alphas <- c(0.0001, 0.001, seq(0.01, 0.09, 0.02), 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.7, 0.9)
 # alphas = c(0.001, 0.01, 0.05, 0.1)
-alphas <- c(1e-10, 1e-5, 0.09)
+# alphas <- c(1e-10, 1e-5, 0.09)
 # alphas <- c(0.7)
 # min_pos_vars = c(0, var_cutoff) # kleinste vorhandene Varianz Nov_NMR-Mut_apo: 0.059?? f. 0.73??
 min_pos_vars = c(0) # kleinste vorhandene Varianz Nov_NMR-Mut_apo: 0.059?? f. 0.73??
@@ -66,11 +67,13 @@ tunes[[4]] <- edge_score_w4 <-
                                minposvars = min_pos_vars,
                                protein = protein)
 
+print(paste0("alpha=", tunes[[4]]$best_alpha))
+
 pc_fun(alpha = tunes[[4]]$best_alpha, min_pos_var = tunes[[4]]$best_minposvar,
        causal_analysis = TRUE, intervention_position = "all", effects_pre_cluster_fun = "cor",
        effects_cluster_cut_height_h = 3)
 
-protein_causality(filename = file_name, alpha = tuning$best_alpha,
-                  min_pos_var = tuning$best_minposvar, causal_analysis = TRUE, effects_cluster_cut_height_h = 3)
+# protein_causality(filename = file_name, alpha = tuning$best_alpha,
+#                   min_pos_var = tuning$best_minposvar, causal_analysis = TRUE, effects_cluster_cut_height_h = 3)
 
 

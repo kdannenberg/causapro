@@ -271,9 +271,9 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
 
   pre_cluster_fct <- get(pre_fct)
   pairwise_effects <- pre_cluster_fct(pairwise_effects)
-  outpath <- paste0(outpath, "-prefct=", pre_fct)
 
-
+  # outpath <- paste0(outpath, "-prefct=", pre_fct)
+  outpath <- function_set_parameters(outpath, list(pre_fct = pre_fct))
 
   results$effects_clustering <- list()
   #k-means
@@ -297,18 +297,7 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
     plot_clusters_in_pymol(node_clustering = cl, protein = protein, outpath = outpath,
                            file_separator = file_separator, type_of_clustering = type,
                            length_sort = TRUE)
-  } else {
-    FUN_pv <- function_set_parameters(pvclust, parameters = list(data = pairwise_effects,
-                                                                 method.hclust = hclust_method,
-                                                                 method.dist = dist_measure, nboot = iterations_pv))
-
-    effects_pv <- compute_if_not_existent(filename = paste(outpath, "pv", hclust_method,
-                                                           substr(dist_measure, 0, 3), iterations_pv, sep="-"),
-                                          FUN = FUN_pv,
-                                          obj_name = "effects_pv",
-                                          fun_loaded_object_ok = function(effects_pv) {return(all(colnames(pairwise_effects) == effects_pv$hclust$labels))}
-    )
-
+  } else { # hierarchisch
 
     # fit <- pvclust(data = pairwise_effects, method.hclust="ward",
     #                method.dist="euclidean", nboot = 1000)
@@ -316,10 +305,20 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
     # cl <- cutDendrogramAt(effects_pv$hclust, cutat = 15)
     # membershipvector_from_clusterlist(cl)
 
-
     # TODO: caption
     if ((missing(number_of_clusters_k) || is.null(number_of_clusters_k)) && (missing(cut_height_h) || is.null(cut_height_h))) {
-            high_clusterlist <- pvpick(effects_pv, alpha = alpha)$clusters
+      FUN_pv <- function_set_parameters(pvclust, parameters = list(data = pairwise_effects,
+                                                                   method.hclust = hclust_method,
+                                                                   method.dist = dist_measure, nboot = iterations_pv))
+
+      effects_pv <- compute_if_not_existent(filename = paste(outpath(), "pv", hclust_method,
+                                                             substr(dist_measure, 0, 3), iterations_pv, sep="-"),
+                                            FUN = FUN_pv,
+                                            obj_name = "effects_pv",
+                                            fun_loaded_object_ok = function(effects_pv) {return(all(colnames(pairwise_effects) == effects_pv$hclust$labels))}
+      )
+
+      high_clusterlist <- pvpick(effects_pv, alpha = alpha)$clusters
 
       plot.new()
       plot(effects_pv, hang = -1)
@@ -339,37 +338,43 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
       colors <- rainbow(length(unique(high)))
       # add rectangles around groups highly supported by the data
       pvrect(effects_pv, alpha = alpha, border = colors)
-      type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-alpha=", alpha), sep="-")
-      outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("clusters", type, sep = "-"))
+      type <- paste("HC(pv)", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-alpha=", alpha), sep="-")
+      # TODO: fct
+      outpath <- set_pars(outpath, list(k = number_of_clusters_k, type = type))
+      # outpath <- paste0(outpath(), "-", number_of_clusters_k, pastes("clusters", type, sep = "-"))
       output_dendrogram(cluster_obj = effects_pv, alpha = alpha,
                         clusters = high, colors = colors, caption = caption,
                         outpath = outpath, output_formats = "pdf",
                         mute_all_plots = mute_all_plots)
-    } # else {
-      # effects_pv <- hclust(d = pairwise_effects, method = hclust_method)
-      else if (!(missing(number_of_clusters_k) || is.null(number_of_clusters_k))) {
-        high <- cutree(effects_pv$hclust, k = number_of_clusters_k)
+    }  else {
+      effects_hc <- hclust(d = dist(pairwise_effects), method = hclust_method)
+      if (!(missing(number_of_clusters_k) || is.null(number_of_clusters_k))) {
+        high <- cutree(effects_hc, k = number_of_clusters_k)
         colors <- rainbow(number_of_clusters_k)
-        type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-k=", number_of_clusters_k), sep="-")
+        type <- paste("HC", hclust_method, substr(dist_measure, 0, 3), paste0("k=", number_of_clusters_k), sep="-")
         # rect.hclust(effects_pv$hclust, k = number_of_clusters_k, cluster = high, border = colors)
-        outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("clusters", type, sep = "-"))
-        output_dendrogram(cluster_obj = effects_pv, k = number_of_clusters_k,
+        # TODO: fct
+        outpath <- set_pars(outpath, list(k = number_of_clusters_k, type = type))
+        # outpath <- paste0(outpath(), "-", number_of_clusters_k, pastes("clusters", type, sep = "-"))
+        output_dendrogram(cluster_obj = effects_hc, k = number_of_clusters_k,
                           clusters = high, colors = colors, caption = caption,
                           outpath = outpath, output_formats = "pdf",
                           mute_all_plots = mute_all_plots)
       } else if (!(missing(cut_height_h) || is.null(cut_height_h))) {
-        high <- cutree(effects_pv$hclust, h = cut_height_h)
+        high <- cutree(effects_hc, h = cut_height_h)
         colors <- rainbow(length(unique(high)))
-        type <- paste("effects-pv", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-h=", cut_height_h), sep="-")
-        outpath <- paste0(outpath, "-", number_of_clusters_k, pastes("clusters", type, sep = "-"))
+        type <- paste("HC", hclust_method, substr(dist_measure, 0, 3), paste0("h=", cut_height_h), sep="-")
+        # TODO: fct
+        outpath <- set_pars(outpath, list(k = number_of_clusters_k, type = type))
+        # outpath <- paste0(outpath(), "-", number_of_clusters_k, pastes("clusters", type, sep = "-"))
         # abline(h = cut_height_h, lty = 2)
         # rect.hclust(effects_pv$hclust, h = cut_height_h, cluster = high, border = colors)
-        output_dendrogram(cluster_obj = effects_pv, h = cut_height_h,
+        output_dendrogram(cluster_obj = effects_hc, h = cut_height_h,
                           clusters = high, colors = colors, caption = caption,
                           outpath = outpath, output_formats = "pdf",
                           mute_all_plots = mute_all_plots)
       }
-    # }
+    }
 
     node_clustering <- position_clustering_from_clustering_with_duplicates(clustering_with_duplicates = high)
 
@@ -439,7 +444,7 @@ position_clustering_from_clustering_with_duplicates <- function(clustering_with_
 }
 
 output_dendrogram <- function(cluster_obj, clusters, colors, caption, alpha, h = NULL,
-                              outpath = "", output_formats = "pdf", mute_all_plots = FALSE, ...) {
+                              outpath = empty_str_fct, output_formats = "pdf", mute_all_plots = FALSE, ...) {
   if (!mute_all_plots) {
     plot.new()
     plot(cluster_obj, hang = -1)
@@ -449,18 +454,18 @@ output_dendrogram <- function(cluster_obj, clusters, colors, caption, alpha, h =
     if (!missing(alpha)) {
       pvrect(cluster_obj, alpha = alpha, border = colors, ...)
     } else {
-      rect.hclust(cluster_obj$hclust, h = h, cluster = clusters, border = colors, ...)
+      rect.hclust(cluster_obj, h = h, cluster = clusters, border = colors, ...)
     }
   }
 
   for(format in output_formats) {
-    if (!nchar(outpath) == 0) {
+    if (!nchar(outpath()) == 0) {
       if (format == "pdf") {
-        pdf(paste(outpath, "-dendrogram", ".pdf", sep = ""))
+        pdf(paste(outpath(), "-dendrogram", ".pdf", sep = ""))
       } else if ((format == "ps") || (format == "postscript")) {
-        postscript(paste(outpath, "-dendrogram", ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
+        postscript(paste(outpath(), "-dendrogram", ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
       } else if(format == "svg") {
-        svg(paste(outpath, "-dendrogram", ".svg", sep = ""))
+        svg(paste(outpath(), "-dendrogram", ".svg", sep = ""))
       }
 
       plot(cluster_obj, hang = -1)
@@ -470,7 +475,7 @@ output_dendrogram <- function(cluster_obj, clusters, colors, caption, alpha, h =
       if (!missing(alpha)) {
         pvrect(cluster_obj, alpha = alpha, border = colors, ...)
       } else {
-        rect.hclust(cluster_obj$hclust, h = h, cluster = clusters, border = colors, ...)
+        rect.hclust(cluster_obj, h = h, cluster = clusters, border = colors, ...)
       }
       dev.off()
     }

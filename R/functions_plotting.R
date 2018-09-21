@@ -199,7 +199,7 @@ plot_graph <- function(graph, fillcolor, edgecolor, drawnode, caption = "", grap
 #' @param mute_all_plots A boolean, if TRUE the structure will not be plotted.
 #' @return No return value.
 plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawAgNode, caption="",
-                           graph_layout="dot", outpath=function() {return("")},
+                           graph_layout="dot", outpath=empty_str_fct,
                            plot_as_subgraphs= FALSE, plot_only_subgraphs = NULL, subgraphs = NULL,
                            output_formats = "pdf", mute_all_plots = FALSE,
                            width_divisor_files = 100, height_divisor_files = 100) {
@@ -337,64 +337,103 @@ library(prodlim) # for row.match
 #' @param clusters Boolean indicating if graph should be clustered.
 #' @param clustering Character string choosing a clustering from the ones available in the igraph package.
 #' @param caption A character string, the caption of the plot.
+#' @param weight_amplification_fct for better visual distinguishability, amplify the differences in weight
+#' @param weight_as_edge_labels plot the weight as a label of the edges
 #' @param outpath A character string, the path to the location where the plot should be stored. If an empty string is passed, the plot will not be stored.
 #' @param output_formats A character string, the desired output format. "pdf", "ps" and "svg" are available.
 #' @param mute_all_plots A boolean, if TRUE the structure will not be plotted.
 #' @param layout_str A character string. All graph layouts from igraph are available.
 #' @param plot_as_subgraphs A boolean, indicating if the plot should be divided into multiple subgraphs.
-#' @param subgraphs TODO
+#' @param subgraphs TODO nur wenn keine clusters
+#' @details Note that the absolute value of the edge weights is computing in the beginning of this function.
 #' @return No return value.
-plot_structure_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str, clustering,
+plot_structure_igraph <- function(graph, nodecolor, edgecolor, clusters, cluster_str, clustering,
                                   clustering_colors = rainbow(length(clustering)), caption,
-                                  weight_as_edge_labels = TRUE, outpath, output_formats,
+                                  weight_amplification_fct = function(weight)  {
+                                    return(((2 * weight)^2)*2)
+                                  },
+                                  weight_as_edge_labels = FALSE, outpath, output_formats,
                                   mute_all_plots, layout_str, plot_as_subgraphs, subgraphs) {
 
-  # ToDO: um duplizierten Code zu vermeiden und die neuen Paramter dem plotten überall zu übergeben, alle parameter in die
-  # plotfuntion reinstecken und nur do_the_plotting() oder so aufrufen
-
-  ## par(mfrow = c(2,2))
-  # kernel
-  ig = igraph.from.graphNEL(g)
+  # kernelization wäre wünschenswert, geht hier aber nicht so einfach (z.B. wegen der schon übergebenen Cluster)
+  # if (!sum(unlist(conflict_edges(graph))) == 0) {
+  #   graph <- kernelize_graph(graph)
+  # }
+  ig = igraph.from.graphNEL(graph)
+  E(ig)$weight <- abs(E(ig)$weight)
   V(ig)$color = nodecolor
   E(ig)$color = edgecolor
-  ## we plot a given clustering
 
-
-  if (clusters) {
+  if (!(missing(clustering) || is.null(clustering))) {          # clustering vorgegebn
     ## edges between clusters are blue, conflict edges red.
     # If both categories apply the edge is colored purple
     E(ig)$color[crossing(clustering, ig)] = "blue"
     E(ig)$color[intersect(which(crossing(clustering,ig)), which(E(ig)$color == "red"))] = "purple"
-    if(!mute_all_plots) {
-      ig_double_eges_zero_weight <- set_weight_of_reverse_edges_to_zero(ig)
-      amplification_fct <- function(weight)  {
-          return(((2 * weight)^4)*2)
-      }
-
-      ig_wo_double_edges <- as.undirected(ig, mode = "collapse", edge.attr.comb = "max")
-
-      #gewichte aller knoten, die da nicht drin sind auf null setzen
-      # bei den labels 0 überspringen
-      # ends(ig, es = E(ig_wo_double_edges))
-
-
-      if (weight_as_edge_labels) {
-        # TODO filter duplicates for un(=bi)directed edges
-        E(ig)$label <- sapply(E(ig_double_eges_zero_weight)$weight, function(weight) {
-          if (weight == 0) {
-            return("")
-          } else {
-            return(round(weight, digits = 2))
-          }
-        })
-      }
-
-      plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, mark.col = clustering_colors,
-           edge.arrow.size = 0.5, vertex.size = 10,
-           edge.width = amplification_fct(E(ig_double_eges_zero_weight)$weight),
-           main = paste(caption, cluster_str))
+    caption <- paste(caption, cluster_str)
+  } else {
+    ## plotting a given layout
+    layout_fct = get(layout_str)
+    layout = layout_fct(ig)
+    if (plot_as_subgraphs) {
+    ## I make my own communities, only way I found to emulate subgraph (from Rgraphviz)
+     mem = c()
+     mem[nodes(graph)] = 1
+     mem[subgraphs[[1]]] = 2
+     clustering = make_clusters(ig, mem)
+     clustering_colors = NULL
+     caption <- paste(caption, layout_str, "as_subgraphs")
     }
-    for(format in output_formats) {
+  }
+
+  # ToDO: um duplizierten Code zu vermeiden und die neuen Paramter dem plotten überall zu übergeben, alle parameter in die
+  # plotfuntion reinstecken und nur do_the_plotting() oder so aufrufen
+
+  edge_width <- E(ig)$weight
+  if (is.weighted(ig) && any(E(ig)$weight != 1)) {
+    # edge width by weight, to avoid double weighting of bidirectional edges, set one of those' weight to 0
+    ig_plot_weights <- set_weight_of_reverse_edges_to_zero(ig)
+
+    edge_width <- weight_amplification_fct(E(ig_plot_weights)$weight)
+
+    # ig_wo_double_edges <- as.undirected(ig, mode = "collapse", edge.attr.comb = "max")
+
+    # Gewichte aller knoten, die da nicht drin sind, auf null setzen
+    # bei den labels 0 überspringen
+    # ends(ig, es = E(ig_wo_double_edges))
+
+
+    if (weight_as_edge_labels) {
+      # TODO filter duplicates for un(=bi)directed edges
+      E(ig)$label <- sapply(E(ig_plot_weights)$weight, function(weight) {
+        if (weight == 0) {
+          return("")
+        } else {
+          return(round(weight, digits = 2))
+        }
+      })
+    }
+  }
+
+  # parameters for both communities and igraph plotting
+  do_the_plotting <- function_set_parameters(plot, list(edge.arrow.size=0.1, vertex.size = 10,
+                                                        vertex.size=8, edge.width=edge_width,
+                                                        label.color = "green",
+                                                        main = caption))
+
+  ## we plot a given clustering
+  if (!(missing(clustering) || is.null(clustering))) {
+    ## edges between clusters are blue, conflict edges red.
+    # If both categories apply the edge is colored purple
+      # old call (for subgraphs)
+      # plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color,
+      #      edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = main)
+
+    do_the_plotting <- function_set_parameters(do_the_plotting, list(x = clustering, y = ig, col = V(ig)$color,
+          edge.color = E(ig)$color, mark.col = clustering_colors, frame.color = clustering_colors))
+      if (!mute_all_plots) {
+        do_the_plotting()
+      }
+    for (format in output_formats) {
       if (!nchar(outpath()) == 0) {
         if (format == "pdf") {
           pdf(paste(pastes(outpath(), cluster_str, sep = "_"), ".pdf", sep = ""))
@@ -403,33 +442,23 @@ plot_structure_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str
         } else if (format == "svg") {
           svg(paste(pastes(outpath(), cluster_str, sep = "_"), ".svg", sep = ""))
         }
-        plot(clustering, ig, col = V(ig)$color, edge.color = E(ig)$color, mark.col = clustering_colors,
-             edge.arrow.size=0.1, vertex.size=10, edge.width=E(ig)$weight, main = paste(caption, cluster_str))
+        # plot(x = clustering, y = ig, col = V(ig)$color, edge.color = E(ig)$color, mark.col = clustering_colors,
+        #      edge.arrow.size=0.1, vertex.size=10, edge.width=E(ig)$weight, main = paste(caption, cluster_str))
+        do_the_plotting()
         dev.off()
       }
     }
-  } else {
-    ## plotting a given layout
-    layout_fct = get(layout_str)
-    layout = layout_fct(ig)
-    ## I make my own communities, only way I found to emulate subgraph (from Rgraphviz)
-    mem = c()
-    mem[nodes(g)] = 1
-    mem[subgraphs[[1]]] = 2
-    cl = make_clusters(ig, mem)
-
-    if(!mute_all_plots) {
+  } else { ## kein clustring, keine subgraphs
+    if (layout_str == "layout_with_sugiyama") {
+      layout <- layout$extd_graph
+    }
+    do_the_plotting <- function_set_parameters(do_the_plotting, list(ig, layout = layout))
+    if (!mute_all_plots) {
       ## note that sugiyama does not work too well with CPDAGs (it needs actual DAGs)
       ## therefore it will add new nodes to "solve" the cycle etc
-      if(layout_str == "layout_with_sugiyama") {
-        plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
-      } else {
-        if(plot_as_subgraphs) {
-          plot(cl, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = paste(caption, layout_str, "as_subgraphs"))
-        } else {
-          plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=E(ig)$weight, main = caption)
-        }
-      }
+
+      # plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
+      do_the_plotting()
     }
     for(format in output_formats) {
       print(output_formats)
@@ -438,18 +467,10 @@ plot_structure_igraph <- function(g, nodecolor, edgecolor, clusters, cluster_str
           pdf(paste(outpath(), "_", layout_str, "_as_sg", ".pdf", sep = ""))
         } else if ((format == "ps") || (format == "postscript")) {
           postscript(paste(outpath(), "_", layout_str, "_as_sg", ".ps", sep = ""), paper = "special", width = 10, height = 9, fonts=c("serif", "Palatino"))
-        }  else if(format == "svg") {
+        }  else if (format == "svg") {
           svg(paste(outpath(), "_", layout_str, "_as_sg", ".svg", sep = ""))
         }
-        if (layout_str == "layout_with_sugiyama") {
-          plot(layout$extd_graph, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
-        } else {
-          if(plot_as_subgraphs) {
-            plot(cl, ig, col = V(ig)$color, edge.color = E(ig)$color, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
-          } else {
-            plot(ig, layout = layout, edge.arrow.size=0.1, vertex.size=8, edge.width=0.8, main = caption)
-          }
-        }
+        do_the_plotting()
         dev.off()
       }
     }

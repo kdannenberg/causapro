@@ -1,13 +1,16 @@
 # paste if non of the arguments is empty, return empty string otherwise
-pastes_parvalue <- function(parameter_name, value, sep = " ") {
+pastes_parvalue <- function(parameter_name, value, sep = "=") {
   if (is.null(parameter_name) || is.null(value) ||
       missing(parameter_name)  || missing(value) ||
-      nchar(parameter_name == 0) || nchar(value == 0)) {
+      nchar(parameter_name) == 0 || nchar(value) == 0) {
     return("")
   } else {
-    return(paste(parameter_name, value, sep = " "))
+    return(paste(parameter_name, value, sep = sep))
   }
 }
+
+empty_str_fct <- function() {return("")}
+
 
 # Projekt erstmal wieder aufgegeben.
 get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "",
@@ -35,40 +38,9 @@ get_outpath <- function(protein, type_of_data, subtype_of_data = "", data_set = 
 }
 
 
-get_outpath_pc_graph <- function(prefix = NULL, plot_only_subgraphs = NULL, coloring = NULL,
-                                 graph_layout = NULL, weighted = FALSE) {
-  str <- ""
-  if ((nchar(coloring) == 0) || (is.null(coloring)) || (coloring == "auto")) {
-    coloring <- ""
-  }
-  if (weighted) {
-    graph_str <- "graphweighted"
-  } else {
-    graph_str <- "graph"
-  }
-  str <- pastes(graph_str, pastes_parvalue("col=", coloring), graph_layout,
-                pastes_parvalue("col=", coloring), sep = "-")
-  str <- pastes(prefix, str, sep = "_")
 
-  return(str)
-}
-
-get_outpath_graph_evaluation <- function(prefix = "", stage = NULL, object = NULL) {
-  outpath <- pastes(prefix, "localTests", sep = "_")
-  if (grepl("orig", stage)) {
-    stage <- ""
-  }
-  outpath <- pastes(outpath, stage, object, sep = "-")
-  return(outpath)
-}
-
-get_outpath_graph_clustering <- function(prefix = "", cluster_type = NULL, object = "") {
-  return(pastes(prefix, cluster_type, object, sep = "-"))
-}
-
-# TODO: alpha müsste hier raus; -> Verzeichnisstruktur?
 get_outpath_data <- function(protein, type_of_data, subtype_of_data = "", data_set = "", suffix = "",
-                             alpha, min_pos_var, only_rows_cols_label = "", every_n_th_row,
+                             min_pos_var, only_rows_cols_label = "", every_n_th_row,
                              pre_fun_on_data, cor_cov_FUN = "", type_of_variables = "",
                              file_separator = "/", filename_suffix, main_dir = "Outputs") {   ## last two options: only for get_old_outpath
   dir_1 <- protein
@@ -129,6 +101,61 @@ get_outpath_data <- function(protein, type_of_data, subtype_of_data = "", data_s
 
   return(paste(output_dir, filename, sep = file_separator))
 }
+
+get_outpath_pc_graph <- function(prefix = NULL, plot_only_subgraphs = NULL, coloring = NULL,
+                                 graph_layout = NULL, weighted = FALSE, kernelized = TRUE) {
+  str <- ""
+  if ((nchar(coloring) == 0) || (is.null(coloring)) || (coloring == "auto")) {
+    coloring <- ""
+  }
+  graph_str <- "graph"
+  if (weighted) {
+    graph_str <- paste(graph_str, "weighted")
+  }
+  if (kernelized) {
+    kern <- paste("kern", graph_str)
+  }
+  str <- pastes(graph_str, pastes_parvalue("col", coloring), graph_layout,
+                pastes_parvalue("col", coloring), sep = "-")
+  str <- pastes(prefix, str, sep = "_")
+
+  return(str)
+}
+
+get_outpath_graph_evaluation <- function(prefix = "", stage = NULL, object = NULL) {
+  outpath <- pastes(prefix, "localTests", sep = "_")
+  if (grepl("orig", stage)) {
+    stage <- ""
+  }
+  outpath <- pastes(outpath, stage, object, sep = "-")
+  return(outpath)
+}
+
+get_outpath_graph_clustering <- function(prefix = "", cluster_type = NULL, object = "") {
+  return(pastes(prefix, cluster_type, object, sep = "-"))
+}
+
+get_outpath_ida <- function(prefix = "", causal_effects_function = "", first_graph_i = NULL, last_graph_i = NULL, object = "") {
+  outpath <- pastes(causal_effects_function, sep = "-")
+  if (!is.null(first_graph_i) && !is.null(last_graph_i)) {
+    regarded_graphs_indices <- first_graph_i:last_graph_i
+    if (length(regarded_graphs_indices) == 1) {
+      outpath <- paste0(outpath, "-G", regarded_graphs_indices)
+    }
+    if (length(regarded_graphs_indices) > 1) {
+      outpath <- paste0(outpath, "-G", first_graph_i, "-", last_graph_i)
+    }
+  }
+  outpath <- pastes(outpath, object, sep = "-")
+  return(pastes(prefix, outpath, sep = "_"))
+}
+
+outpath_pairwise_effects <- function(prefix = "", pre_fct = "", k = "", type = "", object = "") {
+  outpath <- pastes("CLUST", pastes_parvalue("prefct", pre_fct), type, pastes_parvalue(pastes_parvalue(">", k, sep = ""), "clusters", sep = "-"), object, sep = "-")
+  return(pastes(prefix, outpath, sep = "_"))
+}
+
+
 
 get_outpath_suff_pc <- function(alpha, pc_indepTest = "", cor_cov_FUN, pc_solve_conflicts,
                             pc_u2pd, pc_conservative, pc_maj_rule) {
