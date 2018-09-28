@@ -243,6 +243,7 @@ plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawA
   postscript(paste(outpath(), ".ps", sep = ""))
    graph_laidout <- agopen(graph, layoutType = graph_layout, nodeAttrs = nAttrs, edgeAttrs = eAttrs, name = "pc", subGList = subgraphs)
   dev.off()
+  file.remove(paste(outpath(), ".ps", sep = ""))
   # restore (only the top one, I hope that's enough)
   dev.set(which = device_save)
   width_of_image <- graph_laidout@boundBox@upRight@x / width_divisor_files  # works because pc_graph has beet laidout by agopen
@@ -284,6 +285,7 @@ plot_structure <- function(graph, fillcolor=NULL, edgecolor=NULL, drawnode=drawA
   }
 }
 
+
 # function that computes the edgecolors of a given graph
 # edges with weight 2 (conflict edges) are colored red
 get_eAttrs <- function(graph, igraph=FALSE) {
@@ -317,7 +319,7 @@ get_eAttrs <- function(graph, igraph=FALSE) {
 ## the igraph library is used, but options for the graph library will be added later
 
 ## wrapper around plot function below
-call_plot_igraph <- function(g, protein = "PDZ", position_numbering = "crystal", coloring = "",
+call_plot_igraph <- function(g, protein, position_numbering = "", coloring = "",
                              colors = "", clusters = FALSE, cluster_str = "", clustering,
                              clustering_colors, caption = "", outpath = "", output_formats = "pdf",
                              mute_all_plots = FALSE, layout_str = "layout_nicely", plot_as_subgraphs = "FALSE") {

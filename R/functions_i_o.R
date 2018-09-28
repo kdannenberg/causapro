@@ -506,41 +506,6 @@ print_pc_results_to_info_file <- function(outpath, pc) {
   sink()
 }
 
-outpath_for_ida <- function(outpath, direction, weight_effects_on_by, option_nr, neg_effects, perturbed_position, amplification_exponent,
-                            amplification_factor, no_colors, rank_effects, effect_to_color_mode) {
-  outpath <- paste0(outpath, "-totaleffects(", neg_effects, ")")
-
-  out_file <- outpath
-
-  out_file <- paste0(out_file, "-", direction, "-pos", perturbed_position)
-
-  if (option_nr != "") {
-    out_file <- paste0(out_file, "-#", option_nr)
-  }
-
-  if (effect_to_color_mode == "opacity") {
-    out_file <- paste0(out_file, "-opac")
-  }
-  if (rank_effects && !(no_colors)) {
-    out_file <- paste0(out_file, "-ranked")
-  } else {
-    if (amplification_exponent != 1) {
-      out_file <- paste0(out_file, "-amplExp=", amplification_exponent)
-    }
-    if (amplification_factor) {
-      out_file <- paste0(out_file, "-amplFac")
-    }
-  }
-  if (no_colors) {
-    out_file <- paste0(out_file, "-bw")
-  }
-
-  # print(out_file)
-  # if (!mute_all_plots) {    ### HÄÄÄÄ???
-    return(out_file)
-  # }
-}
-
 get_conservation <- function(measure, protein) {
   type_of_data <- paste0("D", measure)
   data_description <- get_data_description(protein = protein, type_of_data = type_of_data)

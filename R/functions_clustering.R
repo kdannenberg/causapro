@@ -57,7 +57,7 @@ output_node_clustering <- function(node_clustering, #clustering_type,
     if (missing(node_clustering)) {
       node_clustering <- node_clustering_from_igraph_clustering(communities_clustering = communities_clustering, unname = TRUE)
     }
-    if (missing(graph)) {
+    if (missing(graph) || is.null(graph)) {
       graph <- communities_clustering$graph
     }
     # if (missing(clustering_type)) {
@@ -99,7 +99,7 @@ output_node_clustering <- function(node_clustering, #clustering_type,
     #                  clustering = communities_clustering,
     #                  clustering_colors = sapply(clustering_colors, adjustcolor, alpha.f = 0.1),
     #                  outpath = paste0(outpath,"-", length(node_clustering), "_", "clusters"), ...)
-    call_plot_igraph(g = igraph_plot, clusters = TRUE, #cluster_str = clustering_type,
+    call_plot_igraph(g = igraph_plot, protein = protein, clusters = TRUE, #cluster_str = clustering_type,
                      clustering = communities_clustering,
                      clustering_colors = sapply(clustering_colors, adjustcolor, alpha.f = 0.1),
                      outpath = function_set_parameters(outpath, list(object = "graph")),
@@ -338,7 +338,7 @@ cluster_pairwise_effects <- function(results, pairwise_effects, pre_fct = "ident
       colors <- rainbow(length(unique(high)))
       # add rectangles around groups highly supported by the data
       pvrect(effects_pv, alpha = alpha, border = colors)
-      type <- paste("HC(pv)", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-alpha=", alpha), sep="-")
+      type <- paste("HC", hclust_method, substr(dist_measure, 0, 3), iterations_pv, paste0("iter-alpha=", alpha), sep="-")
       # TODO: fct
       outpath <- set_pars(outpath, list(k = number_of_clusters_k, type = type))
       # outpath <- paste0(outpath(), "-", number_of_clusters_k, pastes("clusters", type, sep = "-"))

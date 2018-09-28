@@ -1,8 +1,9 @@
 # set seq_view, 1 # Sequence on
 
-pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/", seq_on = TRUE) {
+pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/", seq_on = TRUE) { # file separator is currently ignored.
+  # Instead, both "/" are printed (and tried by pymol)
   if (missing(pdb_file)) {
-    pdb_file <- paste("..", "..", "..", "", sep = file_separator)
+    pdb_file <- paste("..", "..", "..", "", sep = "/")
     if (protein == "GTB") {
       # pdb_file <- "../../../5bxc.pdb"
       pdb_file <- paste0(pdb_file, "5bxc.pdb")
@@ -25,6 +26,7 @@ pymol_header <- function(protein, pdb_file, chain = "all", file_separator = "/",
   }
   cat("delete all\n")
   cat("load", pdb_file,"\n")
+  cat("load", gsub("/", "\\", pdb_file, fixed = TRUE),"\n")
   cat("hide all\n")
   cat("show cartoon,", chain, "\n")
   cat("color white\n")
@@ -76,12 +78,11 @@ res_str_to_resi_and_chain <- function(colname) {
 ## most general; TODO: can the other fucntions (except for the paths) be implemented using this one?
 # length_sort - cluster are sorted din decreasing order of their size
 # mix cluster are mixed so that neigbouring clusters are as long as possible from each other (overrides length_sort)
-## was macht core?
+## was macht core? # ich glaube das sagt, dass das in eine bestehende pdb-Datei reingeschrieben wird
 plot_clusters_in_pymol <- function(node_clustering, protein, outpath, pdb_file,
                                    label = TRUE, no_colors = FALSE, show_positions = TRUE,
                                    file_separator = "/", type_of_clustering = "", bg_color = "grey",
                                    length_sort = FALSE, mix = FALSE, core = FALSE) {
-
   if (length_sort) {
     node_clustering <- reorder_list_of_lists(node_clustering, ordering = "sort", sort_mode = "length", sort_descending = TRUE)
   }
@@ -178,7 +179,7 @@ plot_connected_components_in_pymol <- function(protein, position_numbering, grap
   pymol_header(protein = protein, file_separator = file_separator, pdb_file = pdb_file)
   colors <- rainbow(length(connected_components))
   if (!only_dist) {
-    plot_clusters_in_pymol(node_clustering = connected_components, protein = protein, outpath = outpath(), # TODO: die innere FKt auch auf outpath-fkt umstellen
+    plot_clusters_in_pymol(node_clustering = connected_components, protein = protein, outpath = outpath,
                            pdb_file = pdb_file, label = label, no_colors = no_colors, show_positions = show_positions,
                            file_separator = file_separator, type_of_clustering = "connected_components",
                            bg_color = bg_color, length_sort = sort_connected_components_by_length,
@@ -315,7 +316,7 @@ plot_total_effects_in_pymol <- function(positions_with_colors_by_effect, pos_wit
                                         perturbed_position, protein, outpath, label = TRUE, ranked = TRUE,
                                         amplification_exponent = 10, amplification_factor = FALSE, index = "", no_colors = FALSE, bg_color = "black", orig_effects) {
   # out_file <- paste0(outpath, "-total_effects")
-  outpath <- paste0(outpath, ".pml")
+  outpath <- paste0(outpath(), ".pml")
 
   sink(file = outpath)
   pymol_header(protein = protein)

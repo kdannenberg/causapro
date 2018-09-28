@@ -174,6 +174,7 @@ compute_link_communities <- function(graph, data, k, base_colors, plot_barplot =
                subgraphs = subgraphs, output_formats = graph_output_formats)
   # }
     plot_clusters_in_pymol(node_clustering = node_clusters, protein = protein,
+                           # outpath = outpath(),
                            outpath = outpath,
                            type_of_clustering = paste("linkcomm", cluster_method, sep = "-"))
   return(cols)

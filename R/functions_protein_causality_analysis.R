@@ -37,7 +37,12 @@ plot_pc <- function(graph, caption, outpath, protein, position_numbering, plot_t
 
   if (plot_no_isolated_nodes) {
     if (!sum(unlist(conflict_edges(graph))) == 0) {
-      graph <- kernelize_graph(graph)
+      tryCatch(graph <- kernelize_graph(graph), error = function(cond) {
+        message(paste("Graph has not been kernelized due to an error:", cond, sep = "\n"))
+      }, warning = function(cond) {
+        message(paste("Graph has been kernelized with a warning:", cond, sep = "\n"))
+      })
+      # graph <- kernelize_graph(graph)
     } else {
       if (!mute_all_plots) {
         plot_text(text = "No non-isolated nodes. (No Edges.)")

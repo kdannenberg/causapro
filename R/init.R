@@ -11,6 +11,7 @@ source_all_function_scripts <- function() {
   source("functions_graphs.R")
   source("functions_i_o.R")
   source("functions_linkcommunities.R")
+  source("functions_outpath.R")
   source("functions_partuning.R")
   source("functions_partuning_framework.R")
   source("functions_plotting.R")

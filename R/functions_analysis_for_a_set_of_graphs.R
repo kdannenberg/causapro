@@ -469,7 +469,8 @@ determine_set_of_graphs <- function(results, data, perturbed_position, type_of_g
       }
       if (new || is.null(outpath_where_graphs_exist)) {
         if (missing(results)) {
-          results <- pc_function(pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", pc_maj_rule = pc_maj_rule_conflict, pc_conservative = pc_conservative_conflict, evaluation = FALSE, causal_analysis = FALSE)
+          results <- pc_function(pc_solve_conflicts = TRUE, pc_u2pd = "relaxed", pc_maj_rule = pc_maj_rule_conflict,
+                                 pc_conservative = pc_conservative_conflict, evaluation = FALSE, causal_analysis = FALSE)
         }
 
         edges <- conflict_edges(results$pc@graph)

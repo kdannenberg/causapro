@@ -122,8 +122,8 @@ tunes[[4]] <- edge_score_w4 <-
 
 #
 
-protein_causality(filename = file_name, alpha = tuning$best_alpha,
-min_pos_var = tuning$best_minposvar, causal_analysis = TRUE, intervention_position = "all")
+# protein_causality(filename = file_name, alpha = tuning$best_alpha,
+# min_pos_var = tuning$best_minposvar, causal_analysis = TRUE, intervention_position = "all")
 
 # pc_fun(alpha = 0.01, min_pos_var = tunes[[4]]$best_minposvar,
 #        causal_analysis = TRUE, intervention_position = "all",

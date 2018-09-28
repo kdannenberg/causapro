@@ -11,8 +11,13 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
                 results, protein, coloring = "all", effect_hue_by = "effect", #effect_hue_by = "variance",
                 outpath, plot_scaled_effects = FALSE, amplification_exponent = 1, amplification_factor = TRUE, rank_effects = FALSE,
                 effect_to_color_mode = "#FFFFFF", pymol = TRUE, pymol_bg_color = "black", caption, no_colors,
-                show_neg_causation = TRUE, neg_effects = "", analysis = TRUE, percentile = 0.75, mute_all_plots = FALSE,
+                show_neg_causation = TRUE, neg_effects = "",
+                analysis = (tolower(protein) == "pdz"), percentile = 0.75, mute_all_plots = FALSE,
                 causal_effects_function, cov_FUN) {
+
+
+  outpath <- set_pars(outpath, list(perturbed_position = perturbed_position))
+
   if (!is.null(slotNames(results)) && all(slotNames(results) == c("nodes", "edgeL", "edgeData", "nodeData", "renderInfo", "graphData"))) {
     graph = results
   } else {
@@ -27,7 +32,12 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
   cat("\n")
   for (dir in direction) {
     ## computation rausgezogen, returned effects
-    effects <- compute_causal_effects_ida(data=data, perturbed_position = perturbed_position, weight_effects_on_by = weight_effects_on_by, outpath = outpath, causal_effects_function= causal_effects_function, cov_FUN = cov_FUN, dir = dir, graph = graph)
+    outpath_dir <- set_pars(outpath, list(direction = dir))
+
+    effects <- compute_causal_effects_ida(data = data, perturbed_position = perturbed_position,
+                                          weight_effects_on_by = weight_effects_on_by, outpath = outpath_dir,
+                                          causal_effects_function = causal_effects_function,
+                                          cov_FUN = cov_FUN, dir = dir, graph = graph)
     cat("CAUSAL EFFECTS ")
     cat(toupper(dir))
     cat(" POSITION ")
@@ -56,14 +66,18 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
       current_effects <- as.matrix(effects[,i])
       rownames(current_effects) <- rownames(effects)
 
-      if (dim(effects)[2] <= 1) {
-        index <- ""
-      } else {
+      # if (dim(effects)[2] <= 1) {
+      #   index <- ""
+      # } else {
         index <- i
-      }
-      current_outpath <- outpath_for_ida(outpath = outpath, direction = dir, option_nr = index, neg_effects = neg_effects, perturbed_position = perturbed_position,
-                                 amplification_exponent = amplification_exponent, amplification_factor = amplification_factor,
-                                 no_colors = no_colors, rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode)
+      # }
+
+      cur_outpath_ida <- set_pars(outpath_dir, list(option_nr = index))
+
+      cur_outpath_ida_plot <- set_pars(get_outpath_ida_plot, list(prefix = cur_outpath_ida(), amplification_exponent = amplification_exponent,
+                                                                  amplification_factor = amplification_factor, no_colors = no_colors,
+                                                                  rank_effects = rank_effects, effect_to_color_mode = effect_to_color_mode))
+
 
       current_scaled_effects <- scale_effects(current_effects, rank = rank_effects, amplification_factor = amplification_factor, neg_effects = neg_effects)
       scaled_effects <- cbind(scaled_effects, current_scaled_effects)
@@ -85,16 +99,16 @@ causal_effects_ida <- function(data, perturbed_position, direction = "both", wei
 
       if (pymol) {
         plot_total_effects_in_pymol(positions_with_colors_by_effect = colors_by_effect, perturbed_position = perturbed_position,
-                                    protein = protein, outpath = current_outpath, amplification_exponent = amplification_exponent,
+                                    protein = protein, outpath = cur_outpath_ida_plot, amplification_exponent = amplification_exponent,
                                     amplification_factor = amplification_factor, ranked = opacity_ranked,
                                     index = colnames(effects)[i], no_colors = no_colors, bg_color = pymol_bg_color, orig_effects = current_effects)
       }
 
       plot_causal_effects_ida(perturbed_position = perturbed_position, current_effects = current_effects,
-                                dir = dir, colors_by_effect = colors_by_effect,
-                                type = colnames(effects)[i],
-                                scaled_effects = switch(plot_scaled_effects + 1, NULL, current_scaled_effects),
-                                outpath = current_outpath, mute = mute_all_plots)
+                              dir = dir, colors_by_effect = colors_by_effect,
+                              type = colnames(effects)[i],
+                              scaled_effects = switch(plot_scaled_effects + 1, NULL, current_scaled_effects),
+                              outpath = cur_outpath_ida_plot, mute = mute_all_plots)
       if (analysis) {
         statistics_of_influenced_positions(effects = current_effects, percentile = percentile, interesting_positions = int_pos, print = TRUE)
 
@@ -176,8 +190,9 @@ plot_causal_effects_ida <- function(perturbed_position, current_effects, dir,
                                     colors_by_effect, int_pos, scaled_effects,
                                     type = "", border_col_perturbed_pos = "#000000", #NULL = as given in colors_by_effect
                                     border_col_other = "#000000", caption,
-                                    mute = FALSE, outpath = "", output_format = "pdf") {
+                                    mute = FALSE, outpath = empty_str_fct, output_format = "pdf") {
 
+  outpath <- outpath()
   ## graphics.off()
   ## par(mfrow=c(m,n))
   ## plot.new()
@@ -338,7 +353,7 @@ compute_causal_effects_ida <- function(data, perturbed_position, weight_effects_
       if (grepl(pattern = "reset", tolower(causal_effects_function))) {
         ## GGF. danach Effekte von nicht verbundenen Knoten auf null setzten
         effects <- set_effects_of_unconnected_positions_to_zero(effects, graph = graph, perturbed_position = perturbed_position, dir = dir)
-        outpath <- paste0(outpath, "_ida_reset")
+        # outpath <- paste0(outpath, "_ida_reset")
       }
     } else if (grepl(pattern = "causaleffect", tolower(causal_effects_function)) || grepl(pattern = "causal_effect", tolower(causal_effects_function))) {
       ## CAUSALEFFECTS
