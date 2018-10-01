@@ -63,10 +63,7 @@ interesting_positions <- function(protein, position_numbering = "crystal", for_c
   } else {
     interesting_pos <- NULL     ## list?!
     if ((protein == "pdz") || (protein == "PDZ")) {
-      if (missing(position_numbering)) {
-        position_numbering <- "crystal"
-      }
-      if (grepl("crystal", position_numbering)) {
+      if (is.null(position_numbering) || position_numbering == "" || grepl("crystal", position_numbering)) {
         if (coloring == "es") {
           ligand = c(318, 322, 323, 324, 326, 327, 328, 330, 331, 332, 334, 337, 348, 352, 366, 373, 380)
           cluster = c(304, 305, 306, 309, 312, 354, 355, 357, 391, 395)

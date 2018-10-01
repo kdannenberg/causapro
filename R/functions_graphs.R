@@ -262,6 +262,7 @@ remove_dummies <- function(graphs) {
   return(graphs)
 }
 
+#' Enumerate the set ogf graphs represented by a conflict graph
 enumerate_graphs <- function(graph, direct_adjacent_undirected_edges = TRUE, direct_unambig_undirected_edges = FALSE) {
   am = t(wgtMatrix(graph))
   n = dim(am)[1]

@@ -461,7 +461,7 @@ protein_causality <- function(
     ### end
   }
 
-  ######## CAUSAL STRUCTURE EVALUATION ########
+  ######## EVALUATION OF THE CAUSAL STRUCTURE ########
   if (evaluation) {
     get_outpath_graph_evaluation <- function_set_parameters(get_outpath_graph_evaluation, list(prefix = get_outpath_pc()))
     results <- analysis_after_pc(results, data, outpath = get_outpath_graph_evaluation, protein = protein, position_numbering = position_numbering,
@@ -643,19 +643,36 @@ protein_causality <- function(
 
         #Hier war früher cluster_pairwise_effects
       } else {
-        # TODO: überarbeiten!!! Alles strange: Warum muss die Funktion ida und pc aufrufen?!
-        set_of_graphs <- determine_set_of_graphs(results = results, data = data, perturbed_position = intervention_position,
-                                                 type_of_graph_set = "conflict",
-                                                 pc_function = pc_function, ida_function = NULL,
-                                                 s = 0, new = FALSE, save = TRUE, outpath = get_outpath_pc(),  # wtf ist s? 0?
-                                                 pc_maj_rule_conflict = pc_maj_rule_conflict,
-                                                 pc_conservative_conflict = pc_conservative_conflict,
-                                                 direction = ida_direction, # darf ws nicht "both" sein!
-                                                 suffix_effects_type = paste0("pos-", intervention_position),
-                                                 max_conflict_edges = max_conflict_edges, no_results = TRUE)
+        # all_graphs <- enumerate_graphs(results$pc@graph)
 
-        all_graphs <- set_of_graphs#$graphs
-        # all_results <- set_of_graphs$results
+        all_graphs <- compute_if_not_existent(filename = paste0(get_outpath_pc(), "-conflict-graphs.RData"),
+                                              # FUN = function_set_parameters(FUN, parameters = c(results = results)),
+                                              FUN = set_pars(enumerate_graphs, list(graph = results$pc@graph)), # nicht der weightedgraph, da der die Konfliktkanteninformation nicht mehr enthält,
+                                              obj_name = "all_graphs",
+                                              fun_loaded_object_ok = set_pars(function(g1, g2) {
+                                                return(all.equal(g1$nodeL, g2$nodeL))
+                                              }, parameters = list(g2 = results$pc@graph)))
+
+
+        # set_of_graphs <- determine_set_of_graphs(results = results, data = data, perturbed_position = intervention_position,
+        #                                          type_of_graph_set = "conflict",
+        #                                          pc_function = pc_function, ida_function = NULL,
+        #                                          s = 0, new = FALSE, save = TRUE, outpath = get_outpath_pc(),  # wtf ist s? 0?
+        #                                          pc_maj_rule_conflict = pc_maj_rule_conflict,
+        #                                          pc_conservative_conflict = pc_conservative_conflict,
+        #                                          direction = ida_direction, # darf ws nicht "both" sein!
+        #                                          suffix_effects_type = paste0("pos-", intervention_position),
+        #                                          max_conflict_edges = max_conflict_edges, no_results = TRUE)
+        #
+#         }
+# scheint das gleiche Ergebnis zu liefern
+        # for (i in 1:length(all_graphs)) {
+        #     if (!compare_graphs(all_graphs[[i]], set_of_graphs[[i]])) {
+        #       print(paste("nope", i))
+        #     } else {
+        #      print("ok")
+        #    }
+        # }
 
 
         # TODO
