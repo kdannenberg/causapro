@@ -649,8 +649,9 @@ protein_causality <- function(
                                               # FUN = function_set_parameters(FUN, parameters = c(results = results)),
                                               FUN = set_pars(enumerate_graphs, list(graph = results$pc@graph)), # nicht der weightedgraph, da der die Konfliktkanteninformation nicht mehr enthält,
                                               obj_name = "all_graphs",
-                                              fun_loaded_object_ok = set_pars(function(g1, g2) {
-                                                return(all.equal(g1$nodeL, g2$nodeL))
+                                              fun_loaded_object_ok = set_pars(function(g1_list, g2) {
+                                                return(all(unlist(lapply(g1_list, function(g1, g2) {
+                                                  all.equal(g1@nodes, g2@nodes)}, g2))))
                                               }, parameters = list(g2 = results$pc@graph)))
 
 
